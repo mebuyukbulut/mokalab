@@ -2,6 +2,7 @@
 // #include <windows.h>
 // #include <commdlg.h>
 #include <fstream>
+#include <algorithm>
 #include "Logger.h"
 //#include <chrono>
 //#include <thread>
@@ -16,6 +17,13 @@ std::string FileUtils::readFile(const std::string& filePath)
 
 std::string FileUtils::openFileDialog(const wchar_t* filter) {
     LOG_ERROR("FileUtils is OS dependent!");
+    char filename[1024];
+    FILE *f = popen("zenity --file-selection", "r");
+    fgets(filename, 1024, f);
+    std::string path(filename);
+    trimLeft(path);
+    trimRight(path);
+    return path;
     // OPENFILENAME ofn;       // Common dialog box structure
     // wchar_t szFile[260] = { 0 }; // Buffer for file name
     // ZeroMemory(&ofn, sizeof(ofn));
@@ -36,7 +44,7 @@ std::string FileUtils::openFileDialog(const wchar_t* filter) {
 
     //     //return ofn.lpstrFile;
     // }
-    return {};
+    //return {};
 }
 
 std::wstring FileUtils::UTF8ToWString(const std::string& str)
@@ -68,4 +76,20 @@ std::wstring FileUtils::ANSIToWString(const std::string& str)
     //     &wstrTo[0], size_needed);
     // return wstrTo;
     return {};
+}
+
+inline void FileUtils::trimLeft(std::string &s)
+{
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), 
+    [](unsigned char ch) {
+        return !std::isspace(ch);
+    }));
+}
+
+inline void FileUtils::trimRight(std::string &s)
+ {
+    s.erase(std::find_if(s.rbegin(), s.rend(), 
+    [](unsigned char ch) {
+        return !std::isspace(ch);
+    }).base(), s.end());
 }

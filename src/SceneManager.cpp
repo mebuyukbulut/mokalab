@@ -787,7 +787,7 @@ void SceneManager::addModel(std::string path, std::string entityName, bool loadA
     if (!entityName.empty())
         entity->name = getUniqueName(entityName);
     else {
-        unsigned int slashIndex = path.find_last_of('\\');
+        unsigned int slashIndex = path.find_last_of('/');
         unsigned int pointIndex = path.find_last_of('.');
         std::string directory = path.substr(0, slashIndex);
         std::string modelName = path.substr(slashIndex+1, pointIndex-slashIndex -1);
