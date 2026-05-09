@@ -13,21 +13,13 @@ enum class EventType {
     EngineExit,
     ModelOpened,
 
-    // AddPointLight,
-    // AddDirectionalLight,
-    // AddSpotLight,
     AddLight,
-
-    // AddCube,
-    // AddCone,
-    // AddCylinder,
-    // AddPlane,
-    // AddTorus,
     AddPrimitive,
     AddMonkey, 
 
     Delete,
     Select, 
+    MouseDrag,
 
     SaveScene,
     LoadScene,
@@ -59,6 +51,12 @@ struct EventData_Point : EventData{
 struct EventData_DoublePoint : EventData{
     glm::vec3 vecA{};
     glm::vec3 vecB{};
+
+    EventData_DoublePoint() { 
+        vecA = glm::vec3(0,0,0); 
+        vecB = glm::vec3(0,0,0); 
+    }
+    EventData_DoublePoint(glm::vec3 vecA, glm::vec3 vecB) : vecA{vecA}, vecB{vecB}{}
 };
 
 struct EventData_Check : EventData{
@@ -91,11 +89,3 @@ private:
 
 
 inline EventDispatcher dispatcher{}; // declared and defined in one place
-
-
-// EventData bir base class olmalı ve event türüne göre farklı subclasslar türetmeliyiz
-// Event::data member variable'ı bir pointer olmalı belki bir unique pointer. 
-// Neden? 
-// 1. Data gerekmeyen tipler için null atayabiliriz
-// 2. Data gerektiren tipler için subclass yollayabiliriz
-// 3. Unique ptr ile resource leak'i engelliyebiliriz.

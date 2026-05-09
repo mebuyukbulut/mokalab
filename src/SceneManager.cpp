@@ -99,34 +99,40 @@ void SceneManager::initCommands()
 
     dispatcher.subscribe(EventType::Delete, [&](std::unique_ptr<EventData> e) {
         deleteSelected();
-        });
+    });
     dispatcher.subscribe(EventType::Select, [&](std::unique_ptr<EventData> e) {
         std::unique_ptr<EventData_Point> p(static_cast<EventData_Point*>(e.release()));
         mousePos = glm::vec2(p->vec.x, p->vec.y);
         isViewportSelect = true;
-        });
+    });
 
     dispatcher.subscribe(EventType::ScenePopup, [&](std::unique_ptr<EventData> e) {
         isScenePopupOpen = true;
-        });
+    });
     dispatcher.subscribe(EventType::SaveScene, [&](std::unique_ptr<EventData> e) {
         saveScene();
-        });
+    });
     dispatcher.subscribe(EventType::LoadScene, [&](std::unique_ptr<EventData> e) {
         loadScene("");
-        });
+    });
 
 
     dispatcher.subscribe(EventType::ModelOpened, [&](std::unique_ptr<EventData> e) {
         std::unique_ptr<EventData_Text> t(static_cast<EventData_Text*>(e.release()));
         std::string modelPath = t->text;
         addModel(modelPath, "", true);
-        });
+    });
 
     dispatcher.subscribe(EventType::FocusToSelectedObject, [&](std::unique_ptr<EventData> e) {
         if(Entity* selectedEntity = getSelectedEntity())
             _camera->resetFrame(selectedEntity->transform.get());
-        });
+    });
+
+    dispatcher.subscribe(EventType::MouseDrag, [&](std::unique_ptr<EventData> e){
+        std::unique_ptr<EventData_DoublePoint> points ( static_cast<EventData_DoublePoint*>(e.release()));
+        LOG_TRACE("vecA x: {}\ty:{}\tz:{}",points->vecA.x, points->vecA.y, points->vecA.z);
+        LOG_TRACE("vecB x: {}\ty:{}\tz:{}",points->vecB.x, points->vecB.y, points->vecB.z);
+    });
 
 }
 void SceneManager::initDefaults()

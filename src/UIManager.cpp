@@ -315,7 +315,7 @@ void UIManager::shaderPanel()
 
 void UIManager::creditsPanel(){
     if (ImGui::Begin("Credits")) {
-		ImGui::Text("Model Viewer by Muhammet Esat BUYUKBULUT");
+		ImGui::Text("Mokalab by Muhammet Esat BUYUKBULUT");
 		ImGui::Text("@2025");
 
         //openmesh ekle 

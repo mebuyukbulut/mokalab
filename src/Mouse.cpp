@@ -30,12 +30,34 @@ void Mouse::init(GLFWwindow* window, UIManager* UI)
 
 void Mouse::update(float deltaTime)
 {
+    static bool isFirstLeftPress = true;
+
     if (_mouseLeftPress) {
         _mouseLeftTime += deltaTime;
-        // buraya drag logic yazabiliriz
-        // fakat önce eventdispatcher ı esnekleştirmemiz gerekli
+
+        ImVec2 mp = ImGui::GetMousePos();
+        _dragPosEnd = glm::vec2(mp.x, mp.y);
+
+        if(isFirstLeftPress){
+            isFirstLeftPress = false; 
+            _dragPosBegin = _dragPosEnd;    
+        }
+        
+        if(glm::distance(_dragPosBegin, _dragPosEnd) > 10 && !_isDragActive)
+            _isDragActive = true;            
+        
+
+        if(_isDragActive){
+            glm::vec3 vecA = glm::vec3(_dragPosBegin, 0);
+            glm::vec3 vecB = glm::vec3(_dragPosEnd, 0);
+            Event e{ 
+                EventType::MouseDrag,
+                std::make_unique<EventData_DoublePoint>(vecA, vecB) };                
+            dispatcher.dispatch(e);
+        }
+        
     }
-    else {
+    else { // mouse left released
         if (_mouseLeftTime > 0) {
             if (_mouseLeftTime <= _timeThresholdPress){
                 ImVec2 mousePos = ImGui::GetMousePos();
@@ -46,6 +68,9 @@ void Mouse::update(float deltaTime)
             }
             _mouseLeftTime = 0;     
         }
+
+        isFirstLeftPress = true;
+        _isDragActive = false;   
     }
 
 }

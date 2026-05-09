@@ -1,5 +1,7 @@
 #pragma once
 
+#include <glm/glm.hpp>
+
 struct GLFWwindow;
 class UIManager;
 
@@ -16,6 +18,11 @@ class Mouse
 
 	float _timeThresholdPress = 0.2; // second 
 	float _mouseLeftTime = 0; 
+
+	glm::vec2 _dragPosBegin{};
+	glm::vec2 _dragPosEnd{};
+	bool _isDragActive{false};
+
 
 	float _rotSens = .4f; // rotation sensitivity
 	float _moveSens = 0.01f; // move sensitivity
