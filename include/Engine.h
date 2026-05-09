@@ -13,6 +13,7 @@
 #include "LightManager.h"
 #include "Time.h"
 #include "Mouse.h"
+#include "InputManager.h"
 #include "Config.h"
 #include "ParticleSystem.h"
 
@@ -26,6 +27,7 @@ class Engine
 	std::shared_ptr<Camera> _camera{new OrbitCamera()};
 	UIManager _UI{};
 	Mouse _mouse{};
+	InputManager _IM{}; // Input Manager
 	Time time{};
 	//Config config;
 	ParticleSystem ps{};

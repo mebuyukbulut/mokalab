@@ -23,8 +23,8 @@ void Engine::initWindow()
 {   // glfw: initialize and configure
     // ------------------------------
     glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 
@@ -121,6 +121,7 @@ void Engine::init(){
 
 	initUI();
 
+
     LOG_SUCCESS("Engine was initialized");
 }
 void Engine::mainLoop()
@@ -133,7 +134,8 @@ void Engine::mainLoop()
     // render loop
     while (!glfwWindowShouldClose(_window))
     {
-        processInput(_window);
+        //processInput(_window);
+        _IM.processInput(_window);
         //_renderer.beginFrame();
 
         time.update();
@@ -178,32 +180,3 @@ void Engine::framebuffer_size_callback(GLFWwindow* window, int width, int height
         app->_renderer.resizeViewport(width, height);
     }
 }
-
-// process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
-// ---------------------------------------------------------------------------------------------------------
-void  Engine::processInput(GLFWwindow* window)
-{
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-
-    if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
-        if(Entity* selectedEntity = SM.getSelectedEntity())
-            _camera->resetFrame(selectedEntity->transform.get());
-        
-
-    if (glfwGetKey(window, GLFW_KEY_DELETE) == GLFW_PRESS) {
-        Event e{ EventType::Delete, EventData{} };
-        dispatcher.dispatch(e);
-    }
-
-
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        Event e{ EventType::ScenePopup, EventData{} };
-        dispatcher.dispatch(e);
-    }
-
-
-
-
-}
-

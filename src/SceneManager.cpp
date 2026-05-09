@@ -129,6 +129,11 @@ void SceneManager::initCommands()
         addModel(modelPath, "", true);
         });
 
+    dispatcher.subscribe(EventType::FocusToSelectedObject, [&](const Event& e) {
+        if(Entity* selectedEntity = getSelectedEntity())
+            _camera->resetFrame(selectedEntity->transform.get());
+        });
+
 }
 void SceneManager::initDefaults()
 {

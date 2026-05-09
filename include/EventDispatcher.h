@@ -32,7 +32,8 @@ enum class EventType {
 
     SetMainWindowTitle,
 
-    ScenePopup
+    ScenePopup,
+    FocusToSelectedObject,
 };
 
 struct EventData {
