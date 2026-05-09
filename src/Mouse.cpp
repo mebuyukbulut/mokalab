@@ -19,17 +19,29 @@ void Mouse::init(GLFWwindow* window, UIManager* UI)
     glfwSetScrollCallback(window, Mouse::scroll_callback);
 }
 
+
+// Source - https://stackoverflow.com/a/37195173
+// Posted by Drop, modified by community. See post 'Timeline' for change history
+// Retrieved 2026-05-09, License - CC BY-SA 3.0
+// state                  released               pressed                released
+// timeline             -------------|------------------------------|---------------
+//                                   ^                              ^
+// mouse_callback calls          GLFW_PRESS                    GLFW_RELEASE
+
 void Mouse::update(float deltaTime)
 {
     if (_mouseLeftPress) {
         _mouseLeftTime += deltaTime;
+        // buraya drag logic yazabiliriz
+        // fakat önce eventdispatcher ı esnekleştirmemiz gerekli
     }
     else {
         if (_mouseLeftTime > 0) {
             if (_mouseLeftTime <= _timeThresholdPress){
-                Event e{ EventType::Select };
                 ImVec2 mousePos = ImGui::GetMousePos();
-                e.data.vec = glm::vec3(mousePos.x, mousePos.y, 0);
+                Event e{ 
+                    EventType::Select,
+                    std::make_unique<EventData_Point>(mousePos.x, mousePos.y, 0) };                
                 dispatcher.dispatch(e);
             }
             _mouseLeftTime = 0;     
@@ -87,19 +99,25 @@ void Mouse::mouse_cursor_callback(GLFWwindow* window, double xposIn, double ypos
         yoffset = glm::radians(_this->_rotSens) * yoffset;
         glm::vec3 vec(xoffset, yoffset, 0);
 
-        Event e{ EventType::onRotate, EventData{glm::vec3(xoffset,yoffset,0)}};
+        Event e{ 
+            EventType::onRotate, 
+            std::make_unique<EventData_Point>(glm::vec3(xoffset,yoffset,0))};
         dispatcher.dispatch(e);
     }
     else { //_mouseRightPress
         glm::vec3 vec(xoffset * _this->_moveSens, yoffset * _this->_moveSens, 0);
-        Event e{ EventType::onMove, EventData{vec} };
+        Event e{ 
+            EventType::onMove, 
+            std::make_unique<EventData_Point>(vec) };
         dispatcher.dispatch(e);
     }
 }
 void Mouse::scroll_callback(GLFWwindow* window, double xoffset, double yoffset){
     if (!_UI->isHoverOnUI()) {
         glm::vec3 vec(0, yoffset, 0);
-        Event e{ EventType::onZoom, EventData{vec} };
+        Event e{ 
+            EventType::onZoom, 
+            std::make_unique<EventData_Point>(vec) };
         dispatcher.dispatch(e);
     }
 }

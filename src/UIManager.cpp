@@ -17,6 +17,7 @@
 #include "ParticleSystem.h"
 #include "Entity.h"
 #include "SceneManager.h"
+#include "Builtin.h"
 
 void UIManager::init(GLFWwindow* window, std::shared_ptr<Camera> camera) {
 	_window = window;
@@ -174,25 +175,27 @@ void UIManager::mainMenu(){
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Exit")) { 
-                Event e{ EventType::EngineExit, EventData{} };
+                Event e{ EventType::EngineExit, {} };
                 dispatcher.dispatch(e);
             }
             if (ImGui::MenuItem("Open", "Ctrl+O")) {
-                EventData ed{};
-                ed.text = FileUtils::openFileDialog();
-                Event e{ EventType::ModelOpened, ed };
+                std::string filePath = FileUtils::openFileDialog();
+                Event e{
+                    EventType::ModelOpened,
+                    std::make_unique<EventData_Text>(filePath)
+                };
                 dispatcher.dispatch(e);
             }
             if (ImGui::MenuItem("Save", "Ctrl+S")) {
                 //EventData ed{};
                 //ed.text = FileUtils::openFileDialog();
-                Event e{ EventType::SaveScene, EventData{} };
+                Event e{ EventType::SaveScene, {} };
                 dispatcher.dispatch(e);
             }
             if (ImGui::MenuItem("Load")) {
                 //EventData ed{};
                 //ed.text = FileUtils::openFileDialog();
-                Event e{ EventType::LoadScene, EventData{} };
+                Event e{ EventType::LoadScene, {} };
                 dispatcher.dispatch(e);
             }
             ImGui::EndMenu();
@@ -217,15 +220,24 @@ void UIManager::mainMenu(){
         if (ImGui::BeginMenu("Add")) {
             if (ImGui::BeginMenu("Add Light")) {
                 if (ImGui::MenuItem("Add Point Light")) {
-                    Event e{ EventType::AddPointLight };
+                    Event e{ 
+                        EventType::AddLight,
+                        std::make_unique<EventData_Text>(Builtin::LightType::Point)
+                    };
                     dispatcher.dispatch(e);
                 }
                 if (ImGui::MenuItem("Add Spot Light")) {
-                    Event e{ EventType::AddSpotLight };
+                    Event e{ 
+                        EventType::AddLight,
+                        std::make_unique<EventData_Text>(Builtin::LightType::Spot)
+                    };
                     dispatcher.dispatch(e);
                 }
                 if (ImGui::MenuItem("Add Direction Light")) {
-                    Event e{ EventType::AddDirectionalLight };
+                    Event e{ 
+                        EventType::AddLight,
+                        std::make_unique<EventData_Text>(Builtin::LightType::Directional)
+                    };
                     dispatcher.dispatch(e);
                 }
                 ImGui::EndMenu();
@@ -233,23 +245,38 @@ void UIManager::mainMenu(){
 
             if (ImGui::BeginMenu("Add Shape")) {
                 if (ImGui::MenuItem("Add Cube")) {
-                    Event e{ EventType::AddCube };
+                    Event e{ 
+                        EventType::AddPrimitive,
+                        std::make_unique<EventData_Text>(Builtin::Model::Cube)
+                    };
                     dispatcher.dispatch(e);
                 }
                 if (ImGui::MenuItem("Add Cone")) {
-                    Event e{ EventType::AddCone };
+                    Event e{ 
+                        EventType::AddPrimitive,
+                        std::make_unique<EventData_Text>(Builtin::Model::Cube)
+                    };
                     dispatcher.dispatch(e);
                 }
                 if (ImGui::MenuItem("Add Cylinder")) {
-                    Event e{ EventType::AddCylinder };
+                    Event e{ 
+                        EventType::AddPrimitive,
+                        std::make_unique<EventData_Text>(Builtin::Model::Cylinder)
+                    };
                     dispatcher.dispatch(e);
                 }
                 if (ImGui::MenuItem("Add Plane")) {
-                    Event e{ EventType::AddPlane };
+                    Event e{ 
+                        EventType::AddPrimitive,
+                        std::make_unique<EventData_Text>(Builtin::Model::Plane)
+                    };
                     dispatcher.dispatch(e);
                 }
                 if (ImGui::MenuItem("Add Torus")) {
-                    Event e{ EventType::AddTorus };
+                    Event e{ 
+                        EventType::AddPrimitive,
+                        std::make_unique<EventData_Text>(Builtin::Model::Torus)
+                    };
                     dispatcher.dispatch(e);
                 }
                 if (ImGui::MenuItem("Add Monkey")) {
@@ -275,9 +302,11 @@ void UIManager::shaderPanel()
 
     if (ImGui::Begin("Shader Controls")) {
         if (ImGui::Combo("Shader", &currentItem, items, IM_ARRAYSIZE(items))) {
-            EventData ed{};
-            ed.text = items[currentItem];
-            Event e{ EventType::ShaderSelected, ed };
+            std::string itemStr = items[currentItem];
+            Event e{ 
+                EventType::ShaderSelected, 
+                std::make_unique<EventData_Text>(itemStr)
+            };
             dispatcher.dispatch(e);
         }
     }

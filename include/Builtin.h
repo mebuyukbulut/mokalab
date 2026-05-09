@@ -130,4 +130,11 @@ namespace Builtin
         };
         
     }
+
+    namespace LightType
+    {
+        inline constexpr const char* Point       = "builtin::lightType::point";
+        inline constexpr const char* Directional = "builtin::lightType::directional";
+        inline constexpr const char* Spot        = "builtin::lightType::spot";
+    }
 }

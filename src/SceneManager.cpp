@@ -73,63 +73,57 @@ void SceneManager::collectRenderData(SceneRenderData &renderData)
 
 void SceneManager::initCommands()
 {
-    dispatcher.subscribe(EventType::AddPointLight, [&](const Event& e) {
-        addLight(LightType::Point);
-        });
-    dispatcher.subscribe(EventType::AddSpotLight, [&](const Event& e) {
-        addLight(LightType::Spot);
-        });
-    dispatcher.subscribe(EventType::AddDirectionalLight, [&](const Event& e) {
-        addLight(LightType::Directional);
-        });
+    dispatcher.subscribe(EventType::AddLight, [&](std::unique_ptr<EventData> e) {
+        std::unique_ptr<EventData_Text> t(static_cast<EventData_Text*>(e.release()));
+        if(t->text == Builtin::LightType::Point)
+            addLight(LightType::Point);
+        else if(t->text == Builtin::LightType::Spot)
+            addLight(LightType::Spot);
+        else if(t->text == Builtin::LightType::Directional)
+            addLight(LightType::Directional);
+    });
 
-    dispatcher.subscribe(EventType::AddCube, [&](const Event& e) {
-        addModel(Builtin::Model::Cube, "Cube");
-        });
-    dispatcher.subscribe(EventType::AddCone, [&](const Event& e) {
-        addModel(Builtin::Model::Cone, "Cone");
-        });
-    dispatcher.subscribe(EventType::AddCylinder, [&](const Event& e) {
-        addModel(Builtin::Model::Cylinder, "Cylinder");
-        });
-    dispatcher.subscribe(EventType::AddPlane, [&](const Event& e) {
-        addModel(Builtin::Model::Plane, "Plane");
-        });
-    dispatcher.subscribe(EventType::AddTorus, [&](const Event& e) {
-        addModel(Builtin::Model::Torus, "Torus");
-        });
-    dispatcher.subscribe(EventType::AddMonkey, [&](const Event& e) {
+    dispatcher.subscribe(EventType::AddPrimitive, [&](std::unique_ptr<EventData> e) {
+        std::unique_ptr<EventData_Text> t(static_cast<EventData_Text*>(e.release()));
+        std::string pathStr = t->text;
+        std::string::iterator beginPos = pathStr.begin() + pathStr.find_last_of(':') + 1 ; 
+        std::string modelName = std::string(beginPos, pathStr.end());
+        addModel(pathStr, modelName);
+    });
 
+    dispatcher.subscribe(EventType::AddMonkey, [&](std::unique_ptr<EventData> e) {
         std::filesystem::path AssetRoot = std::filesystem::current_path().parent_path() / "assets";
         auto model = AssetRoot / "models/monkey/monkey.obj";
         addModel(model.c_str(), "Monkey", true);
-        });
+    });
 
-    dispatcher.subscribe(EventType::Delete, [&](const Event& e) {
+    dispatcher.subscribe(EventType::Delete, [&](std::unique_ptr<EventData> e) {
         deleteSelected();
         });
-    dispatcher.subscribe(EventType::Select, [&](const Event& e) {
-        mousePos = glm::vec2(e.data.vec.x, e.data.vec.y);
+    dispatcher.subscribe(EventType::Select, [&](std::unique_ptr<EventData> e) {
+        std::unique_ptr<EventData_Point> p(static_cast<EventData_Point*>(e.release()));
+        mousePos = glm::vec2(p->vec.x, p->vec.y);
         isViewportSelect = true;
         });
 
-    dispatcher.subscribe(EventType::ScenePopup, [&](const Event& e) {
+    dispatcher.subscribe(EventType::ScenePopup, [&](std::unique_ptr<EventData> e) {
         isScenePopupOpen = true;
         });
-    dispatcher.subscribe(EventType::SaveScene, [&](const Event& e) {
+    dispatcher.subscribe(EventType::SaveScene, [&](std::unique_ptr<EventData> e) {
         saveScene();
         });
-    dispatcher.subscribe(EventType::LoadScene, [&](const Event& e) {
+    dispatcher.subscribe(EventType::LoadScene, [&](std::unique_ptr<EventData> e) {
         loadScene("");
         });
 
 
-    dispatcher.subscribe(EventType::ModelOpened, [&](const Event& e) {
-        std::string modelPath = e.data.text;
+    dispatcher.subscribe(EventType::ModelOpened, [&](std::unique_ptr<EventData> e) {
+        std::unique_ptr<EventData_Text> t(static_cast<EventData_Text*>(e.release()));
+        std::string modelPath = t->text;
         addModel(modelPath, "", true);
         });
 
-    dispatcher.subscribe(EventType::FocusToSelectedObject, [&](const Event& e) {
+    dispatcher.subscribe(EventType::FocusToSelectedObject, [&](std::unique_ptr<EventData> e) {
         if(Entity* selectedEntity = getSelectedEntity())
             _camera->resetFrame(selectedEntity->transform.get());
         });
@@ -549,15 +543,21 @@ void SceneManager::onInspect()
     {
         if (ImGui::BeginMenu("Add Light")) {
             if (ImGui::MenuItem("Add Point Light")) {
-                Event e{ EventType::AddPointLight };
+                Event e{ 
+                    EventType::AddLight,
+                    std::make_unique<EventData_Text>(Builtin::LightType::Point)};
                 dispatcher.dispatch(e);
             }
             if (ImGui::MenuItem("Add Spot Light")) {
-                Event e{ EventType::AddSpotLight };
+                Event e{ 
+                    EventType::AddLight,
+                    std::make_unique<EventData_Text>(Builtin::LightType::Spot)};
                 dispatcher.dispatch(e);
             }
             if (ImGui::MenuItem("Add Direction Light")) {
-                Event e{ EventType::AddDirectionalLight };
+                Event e{ 
+                    EventType::AddLight,
+                    std::make_unique<EventData_Text>(Builtin::LightType::Directional)};
                 dispatcher.dispatch(e);
             }
             ImGui::EndMenu();
@@ -565,23 +565,33 @@ void SceneManager::onInspect()
 
         if (ImGui::BeginMenu("Add Shape")) {
             if (ImGui::MenuItem("Add Cube")) {
-                Event e{ EventType::AddCube };
+                Event e{ 
+                    EventType::AddPrimitive,
+                    std::make_unique<EventData_Text>(Builtin::Model::Cube)};
                 dispatcher.dispatch(e);
             }
             if (ImGui::MenuItem("Add Cone")) {
-                Event e{ EventType::AddCone };
+                Event e{ 
+                    EventType::AddPrimitive,
+                    std::make_unique<EventData_Text>(Builtin::Model::Cone)};
                 dispatcher.dispatch(e);
             }
             if (ImGui::MenuItem("Add Cylinder")) {
-                Event e{ EventType::AddCylinder };
+                Event e{ 
+                    EventType::AddPrimitive,
+                    std::make_unique<EventData_Text>(Builtin::Model::Cylinder)};
                 dispatcher.dispatch(e);
             }
             if (ImGui::MenuItem("Add Plane")) {
-                Event e{ EventType::AddPlane };
+                Event e{ 
+                    EventType::AddPrimitive,
+                    std::make_unique<EventData_Text>(Builtin::Model::Plane)};
                 dispatcher.dispatch(e);
             }
             if (ImGui::MenuItem("Add Torus")) {
-                Event e{ EventType::AddTorus };
+                Event e{ 
+                    EventType::AddPrimitive,
+                    std::make_unique<EventData_Text>(Builtin::Model::Torus)};
                 dispatcher.dispatch(e);
             }
             ImGui::EndMenu();
@@ -883,7 +893,12 @@ void SceneManager::deserialize(const YAML::Node& node)
 {
     auto sceneNameNode = node["Scene"];
     std::string scene_name = sceneNameNode.as<std::string>();
-    dispatcher.dispatch(Event{ EventType::SetMainWindowTitle, EventData{.text = "Model Viewer - " + scene_name} });
+
+    Event windowTitleTextEvent{
+        EventType::SetMainWindowTitle, 
+        std::make_unique<EventData_Text>("Model Viewer - " + scene_name)
+    };
+    dispatcher.dispatch(windowTitleTextEvent);
 
     auto versionNode = node["Version"]; // dosya versiyonu
 

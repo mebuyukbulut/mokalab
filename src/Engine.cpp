@@ -47,24 +47,28 @@ void Engine::initWindow()
     glfwSetFramebufferSizeCallback(_window, Engine::framebuffer_size_callback);
     glfwSetDropCallback(_window, [](GLFWwindow* window, int count, const char** paths) {
         for (int i = 0; i < count; ++i) {
-            Event e{ EventType::ModelOpened, EventData{} };
-            e.data.text = std::string(paths[i]);
+            Event e{ EventType::ModelOpened, {} };
+            e.data = std::make_unique<EventData_Text>(std::string(paths[i]));
             dispatcher.dispatch(e);
         }
         });
 
     _mouse.init(_window, &_UI);
-    dispatcher.subscribe(EventType::onMove, [&](const Event& e) {
-        _camera->move({ e.data.vec.x, e.data.vec.y, e.data.vec.z });
+    dispatcher.subscribe(EventType::onMove, [&](std::unique_ptr<EventData> e) {
+        std::unique_ptr<EventData_Point> p(static_cast<EventData_Point*>(e.release()));
+        _camera->move(p->vec);
         });
-    dispatcher.subscribe(EventType::onRotate, [&](const Event& e) {
-        _camera->rotate({ e.data.vec.x, e.data.vec.y, e.data.vec.z });
+    dispatcher.subscribe(EventType::onRotate, [&](std::unique_ptr<EventData> e) {
+        std::unique_ptr<EventData_Point> p(static_cast<EventData_Point*>(e.release()));
+        _camera->rotate(p->vec);
         });
-    dispatcher.subscribe(EventType::onZoom, [&](const Event& e) {
-        _camera->zoom(e.data.vec.y);
+    dispatcher.subscribe(EventType::onZoom, [&](std::unique_ptr<EventData> e) {
+        std::unique_ptr<EventData_Point> p(static_cast<EventData_Point*>(e.release()));
+        _camera->zoom(p->vec.y);
         });
-    dispatcher.subscribe(EventType::SetMainWindowTitle, [&](const Event& e) {
-        glfwSetWindowTitle(_window, e.data.text.c_str());
+    dispatcher.subscribe(EventType::SetMainWindowTitle, [&](std::unique_ptr<EventData> e) {
+        std::unique_ptr<EventData_Text> t(static_cast<EventData_Text*>(e.release()));
+        glfwSetWindowTitle(_window, t->text.c_str());
 		});
 }
 
@@ -93,10 +97,10 @@ void Engine::initUI()
     _UI.init(_window, _camera);
 	//_UI.setWindowSize(SCR_WIDTH, SCR_HEIGHT);
     
-    dispatcher.subscribe(EventType::ShaderSelected, [&](const Event& e) {
+    dispatcher.subscribe(EventType::ShaderSelected, [&](std::unique_ptr<EventData> e) {
         //_renderer.setShader(e.data.text,Renderer::ShaderType::Main);
         });
-    dispatcher.subscribe(EventType::EngineExit, [&](const Event& e) {
+    dispatcher.subscribe(EventType::EngineExit, [&](std::unique_ptr<EventData> e) {
         SM.saveScene();
         glfwSetWindowShouldClose(_window, true);
         });

@@ -9,18 +9,18 @@ void InputManager::processInput(GLFWwindow *window)
         glfwSetWindowShouldClose(window, true);
 
     if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS){
-        Event e{ EventType::FocusToSelectedObject, EventData{} };
+        Event e{ EventType::FocusToSelectedObject, {} };
         dispatcher.dispatch(e);
     }
 
     if (glfwGetKey(window, GLFW_KEY_DELETE) == GLFW_PRESS) {
-        Event e{ EventType::Delete, EventData{} };
+        Event e{ EventType::Delete, {} };
         dispatcher.dispatch(e);
     }
 
 
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        Event e{ EventType::ScenePopup, EventData{} };
+        Event e{ EventType::ScenePopup, {} };
         dispatcher.dispatch(e);
     }
 }
