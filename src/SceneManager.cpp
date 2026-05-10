@@ -690,7 +690,7 @@ void SceneManager::onInspect()
     ImGui::SameLine();
     if (ImGui::ImageButton(
             "r",
-            (ImTextureID)(intptr_t)g_Assets.get<Texture>(Builtin::Icon::EditorTool::Translate)->getId(),
+            (ImTextureID)(intptr_t)g_Assets.get<Texture>(Builtin::Icon::EditorTool::Rotate)->getId(),
             ImVec2(32, 32), ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), tint))
     {
         mCurrentGizmoOperation = ImGuizmo::ROTATE;

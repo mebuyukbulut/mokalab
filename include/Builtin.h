@@ -158,7 +158,7 @@ namespace Builtin
             EditorTool::Select,
             EditorTool::BoxSelect,
             EditorTool::Translate,
-            //EditorTool::Rotate,
+            EditorTool::Rotate,
             EditorTool::Scale,
             ViewMode::Lit,
             ViewMode::Matcap,
