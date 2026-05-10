@@ -555,8 +555,8 @@ void SceneManager::onInspect()
         isScenePopupOpen = false;
         ImGui::OpenPopup("SceneContextMenu");
     }
-
-    if (ImGui::BeginPopupContextWindow("SceneContextMenu",2)) // sağ tıkla pencere boşluğuna tıklanırsa
+    
+    if (ImGui::BeginPopupContextWindow("SceneContextMenu", ImGuiPopupFlags_::ImGuiPopupFlags_None)) // sağ tıkla pencere boşluğuna tıklanırsa
     {
         if (ImGui::BeginMenu("Add Light")) {
             if (ImGui::MenuItem("Add Point Light")) {

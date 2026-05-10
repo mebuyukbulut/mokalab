@@ -78,10 +78,10 @@ void Mouse::update(float deltaTime)
 void Mouse::mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
     
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS && !_UI->isHoverOnUI()) {
+    if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS && !_UI->isHoverOnUI()) {
         _this->_mouseLeftPress = true;
     }
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
+    if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_RELEASE) {
         _this->_mouseLeftPress = false;
         _this->_firstMouse = true;
     }
