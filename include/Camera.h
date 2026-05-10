@@ -9,6 +9,7 @@ class Camera
 protected:
 	glm::vec2 _windowSize;
 	bool isDirty{ true };
+	bool isFrozen{ false }; // box select aktif ise frozen yoksa değil
 
 	float _fov; // field of view
 	float _aspectRatio; // width / height

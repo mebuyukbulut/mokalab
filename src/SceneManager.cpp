@@ -23,7 +23,7 @@
 #include "AssetManager.h"
 #include "RenderComponent.h"
 #include "Builtin.h"
-
+#include "Texture.h"
 #include "FX.h"
 
 FXRegistry fxReg{};
@@ -146,6 +146,17 @@ void SceneManager::initDefaults()
         g_Assets.get<Model>(key);
 
     std::filesystem::path AssetRoot = std::filesystem::current_path().parent_path() / "assets";
+
+    // Load icons
+    for(const char* key : Builtin::Icon::All){
+        TextureSettings ts;
+        auto iconPath = AssetRoot / ("icons/" + std::string(key) + ".png");
+        LOG_TRACE("{}", iconPath.c_str());
+        ts.realPath = iconPath.c_str();
+        g_Assets.get<Texture>(key, &ts, false); // data is not unique ptr so cannot be async
+    }
+    
+
     auto model = AssetRoot / "models/monkey/monkey.obj";
     
     g_Assets.get<Model>(model.c_str(), nullptr, true);
@@ -643,7 +654,7 @@ void SceneManager::onInspect()
     // viewport toolbar BEGIN
     // https://gist.github.com/rmitton/f80cbb028fca4495ab1859a155db4cd8
     float menuBarHeight = 25;
-    float toolbarSize = 30;
+    float toolbarSize = 34;
     ImGuiWindow* viewport = ImGui::GetCurrentWindow();
     //ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x, viewport->Pos.y + menuBarHeight));
@@ -659,33 +670,95 @@ void SceneManager::onInspect()
         | ImGuiWindowFlags_NoSavedSettings
         ;
 
+
+
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
     ImGui::Begin("TOOLBAR", NULL, window_flags);
 
-    //_GizmoState
-    if(ImGui::Button("T", ImVec2(0, 37))) // translate 
+    ImVec4 tint = false
+    ? ImVec4(0.4f, 0.7f, 1.0f, 1.0f)
+    : ImVec4(1, 1, 1, 1);
+
+    
+    if (ImGui::ImageButton(
+            "t",
+            (ImTextureID)(intptr_t)g_Assets.get<Texture>(Builtin::Icon::EditorTool::Translate)->getId(),
+            ImVec2(32, 32), ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), tint))
+    {
         mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
+    }    
     ImGui::SameLine();
-    if (ImGui::Button("R", ImVec2(0, 37))) // rotate
+    if (ImGui::ImageButton(
+            "r",
+            (ImTextureID)(intptr_t)g_Assets.get<Texture>(Builtin::Icon::EditorTool::Translate)->getId(),
+            ImVec2(32, 32), ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), tint))
+    {
         mCurrentGizmoOperation = ImGuizmo::ROTATE;
-    ImGui::SameLine();
-    if (ImGui::Button("S", ImVec2(0, 37))) // scale
+    } 
+    ImGui::SameLine();   
+    if (ImGui::ImageButton(
+            "s",
+            (ImTextureID)(intptr_t)g_Assets.get<Texture>(Builtin::Icon::EditorTool::Scale)->getId(),
+            ImVec2(32, 32), ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), tint))
+    {
         mCurrentGizmoOperation = ImGuizmo::SCALE;
-    //ImGui::Button("Toolbar goes here", ImVec2(0, 37));
-
+    }
     ImGui::SameLine();
-	ImGui::Dummy(ImVec2(0, 240)); // boşluk olsun 
-
+	
+    ImGui::Dummy(ImVec2(0, 240)); // boşluk olsun 
     ImGui::SameLine();
-	// view mode buttons
-    if (ImGui::Button("P", ImVec2(0, 37))) // Solid (material) view 
+
+    if (ImGui::ImageButton(
+            "p",
+            (ImTextureID)(intptr_t)g_Assets.get<Texture>(Builtin::Icon::ViewMode::Lit)->getId(),
+            ImVec2(32, 32), ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), tint))
+    {
         _renderer->setViewMode(ViewMode::Material);
+    }
     ImGui::SameLine();
-    if (ImGui::Button("M", ImVec2(0, 37))) // Matcap view
+
+    if (ImGui::ImageButton(
+            "m",
+            (ImTextureID)(intptr_t)g_Assets.get<Texture>(Builtin::Icon::ViewMode::Matcap)->getId(),
+            ImVec2(32, 32), ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), tint))
+    {
         _renderer->setViewMode(ViewMode::Matcap);
+    }
     ImGui::SameLine();
-    if (ImGui::Button("W", ImVec2(0, 37))) // Wireframe view
-		_renderer->setViewMode(ViewMode::Wireframe);
+
+    if (ImGui::ImageButton(
+            "w",
+            (ImTextureID)(intptr_t)g_Assets.get<Texture>(Builtin::Icon::ViewMode::Wireframe)->getId(),
+            ImVec2(32, 32), ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), tint))
+    {
+        _renderer->setViewMode(ViewMode::Wireframe);
+    }
+
+
+
+    // if(ImGui::Button("T", ImVec2(0, 37))) // translate 
+    //     mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
+    // ImGui::SameLine();
+    // if (ImGui::Button("R", ImVec2(0, 37))) // rotate
+    //     mCurrentGizmoOperation = ImGuizmo::ROTATE;
+    // ImGui::SameLine();
+    // if (ImGui::Button("S", ImVec2(0, 37))) // scale
+    //     mCurrentGizmoOperation = ImGuizmo::SCALE;
+    // //ImGui::Button("Toolbar goes here", ImVec2(0, 37));
+
+    // ImGui::SameLine();
+	// ImGui::Dummy(ImVec2(0, 240)); // boşluk olsun 
+
+    // ImGui::SameLine();
+	// // view mode buttons
+    // if (ImGui::Button("P", ImVec2(0, 37))) // Solid (material) view 
+    //     _renderer->setViewMode(ViewMode::Material);
+    // ImGui::SameLine();
+    // if (ImGui::Button("M", ImVec2(0, 37))) // Matcap view
+    //     _renderer->setViewMode(ViewMode::Matcap);
+    // ImGui::SameLine();
+    // if (ImGui::Button("W", ImVec2(0, 37))) // Wireframe view
+	// 	_renderer->setViewMode(ViewMode::Wireframe);
 
     ImGui::End();
     ImGui::PopStyleVar();

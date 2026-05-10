@@ -24,10 +24,12 @@ enum class AssetLoadStatus {
 
 struct IAssetSettings { virtual ~IAssetSettings() = default; };
 
+
 struct TextureSettings : IAssetSettings {
     bool flipUVs = true;
     bool generateMipmaps = true;
     //int filterMode = GL_LINEAR; // OpenGL enum
+    std::string realPath{};
 };
 
 struct ModelSettings : IAssetSettings {

@@ -45,17 +45,31 @@ void Texture::load(std::filesystem::path path, IAssetSettings* settings)
     // Sanal yolla model yükleme
     for(std::string key : Builtin::Texture::All){
         if(key == pathStr){
+            // Generated textures
             loadInternal(pathStr);
             _loadStatus = AssetLoadStatus::Complete;
             return;
         }
     }
 
+    for(std::string key : Builtin::Icon::All){
+        if(key == pathStr){
+            TextureSettings* ts = static_cast<TextureSettings*>(settings);
+            ts->realPath;
+            _loadStatus = AssetLoadStatus::LoadingToCPU;
+            _data = stbi_load(ts->realPath.c_str(), &_width, &_height, &_nrChannels, 0);
+            //LOG_INFO("{} is ready to upload.", _path.c_str());
+            _loadStatus = AssetLoadStatus::ReadyToUpload;
+            return;            
+        }
+    }
+
+
     //_type = GL_TEXTURE_CUBE_MAP;
 
     _loadStatus = AssetLoadStatus::LoadingToCPU;
     _data = stbi_load(path.string().c_str(), &_width, &_height, &_nrChannels, 0);
-    LOG_INFO("{} is ready to upload.", _path.c_str());
+    //LOG_INFO("{} is ready to upload.", _path.c_str());
     _loadStatus = AssetLoadStatus::ReadyToUpload;
 }
 

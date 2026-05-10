@@ -137,4 +137,32 @@ namespace Builtin
         inline constexpr const char* Directional = "builtin::lightType::directional";
         inline constexpr const char* Spot        = "builtin::lightType::spot";
     }
+
+    namespace Icon{
+        namespace EditorTool{
+            inline constexpr const char* Select    = "builtin::editorTool::select";
+            inline constexpr const char* BoxSelect = "builtin::editorTool::boxSelect";
+            inline constexpr const char* Translate = "builtin::editorTool::translate";
+            inline constexpr const char* Rotate    = "builtin::editorTool::rotate";
+            inline constexpr const char* Scale     = "builtin::editorTool::scale";
+
+        }
+        namespace ViewMode
+        {
+            inline constexpr const char* Lit        = "builtin::viewMode::Lit";
+            inline constexpr const char* Matcap     = "builtin::viewMode::Matcap";
+            inline constexpr const char* Wireframe  = "builtin::viewMode::Wireframe";
+        }
+
+        inline constexpr const char* All[] = {
+            EditorTool::Select,
+            EditorTool::BoxSelect,
+            EditorTool::Translate,
+            //EditorTool::Rotate,
+            EditorTool::Scale,
+            ViewMode::Lit,
+            ViewMode::Matcap,
+            ViewMode::Wireframe,
+        };
+    }
 }
