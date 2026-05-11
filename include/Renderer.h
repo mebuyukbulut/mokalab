@@ -76,10 +76,6 @@ public:
 
 
 
-
-
-
-
 // 
 class ShadowMapTarget {
 	GLuint fbo;
@@ -102,6 +98,26 @@ public:
 
 
 
+class SelectionRenderTarget {
+	GLuint fbo;
+	Texture* idTex{};
+	Texture* depthTex{};
+	int width, height;
+
+public:
+	SelectionRenderTarget();
+	~SelectionRenderTarget();
+	void create(int width, int height);
+	void destroy();
+	bool resize(int width, int height);
+	void bind();
+	void unbind();
+
+	// Getters
+	GLuint framebuffer() const;
+    Texture& idTexture() const;
+    Texture& depthBuffer() const;
+};
 
 
 
@@ -124,6 +140,7 @@ private:
 	ColorRenderTarget _postProcA{}, _postProcB{};
 	ColorRenderTarget* _finalTarget{};
 	ShadowMapTarget _shadowMapTarget{};
+	SelectionRenderTarget _st{};
 	FrameUniforms _frameUniforms{};
 
 	ViewMode _viewMode{ ViewMode::Material };

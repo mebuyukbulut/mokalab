@@ -556,7 +556,9 @@ void SceneManager::onInspect()
         ImGui::OpenPopup("SceneContextMenu");
     }
     
-    if (ImGui::BeginPopupContextWindow("SceneContextMenu", ImGuiPopupFlags_::ImGuiPopupFlags_None)) // sağ tıkla pencere boşluğuna tıklanırsa
+    // ImGui::BeginPopupContextWindow("SceneContextMenu", ImGuiPopupFlags_::ImGuiPopupFlags_None) -> sağ tıkla pencere boşluğuna tıklanırsa açar. 
+    // Fakat biz mouse tuşuyla değil keyboard Key ile açmak istiyoruz. 
+    if (ImGui::BeginPopup("SceneContextMenu")) 
     {
         if (ImGui::BeginMenu("Add Light")) {
             if (ImGui::MenuItem("Add Point Light")) {

@@ -27,6 +27,7 @@ public:
 	void set(const std::string& name, const glm::vec4& vec);
 	void set(const std::string& name, float value);
 	void set(const std::string& name, int value);
+	void set(const std::string& name, uint32_t value);
 
 
 public:

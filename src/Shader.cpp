@@ -119,6 +119,12 @@ void Shader::set(const std::string& name, int value){
     glUniform1i(location, value);
 }
 
+void Shader::set(const std::string& name, uint32_t value){
+    int location = getUniformLocation(name);
+    if(location < 0) return;
+    glUniform1ui(location, value);
+}
+
 void Shader::load(std::filesystem::path path, IAssetSettings* settings)
 {    
     std::string vertexShaderName{};

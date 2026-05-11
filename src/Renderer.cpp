@@ -317,6 +317,7 @@ void Renderer::init(std::shared_ptr<Camera> camera) {
     _postProcA.create(300,300); // create default frame buffer for viewport
     _postProcB.create(300,300);
     _shadowMapTarget.create(2048,2048);
+    _st.create(300,300);
 
 }
 void Renderer::terminate() {
@@ -331,24 +332,26 @@ void Renderer::renderScene(const SceneRenderData &renderData, bool isViewportSel
     _shadowMapTarget.unbind();
 
 
-
-
     _frameUniforms.update(_camera->getViewMatrix(), _camera->getProjectionMatrix(), _camera->getPosition());
-    _rt.bind();
+    
 
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);    
+    _st.bind();
     clearBuffer();
 
     if(isViewportSelect){
         selectionPass(renderData);
-        
-        unsigned char data[4];
-        glReadPixels(mousePos.x, mousePos.y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, data);
-        uint32_t pickedID = data[0] + (data[1] << 8) + (data[2] << 16);
-        //LOG_TRACE(std::to_string(pickedID));
+        uint32_t pickedID = 0;
+        //unsigned char data[4];
+        glReadPixels(mousePos.x, mousePos.y, 1, 1, GL_RED_INTEGER, GL_UNSIGNED_INT, &pickedID);
+        //uint32_t pickedID = data[0] + (data[1] << 8) + (data[2] << 16);
+        LOG_TRACE("Picked ID: {}", pickedID);
         lastSelectedID = pickedID;
     }   
+    
+    _rt.bind();
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);    
     clearBuffer();
+
 
     backgroundPass();
     if      (_viewMode == ViewMode::Material)   materialPass(renderData.renderItems);
@@ -406,8 +409,9 @@ void Renderer::clearBuffer(){ glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 void Renderer::resizeViewport(int width, int height)
 {
     bool isResized = _rt.resize(width, height); 
-    _postProcA.resize(width,height); 
+    _postProcA.resize(width,height) ; 
     _postProcB.resize(width,height); 
+    _st.resize(width,height); 
 
     if(isResized)
         _camera->setWindowSize(width,height);
@@ -428,7 +432,7 @@ void Renderer::drawModelWithShader(Model* model, const glm::mat4& transform, Sha
     shader->use();
     shader->set("model", transform);
     if(ID)
-        shader->set("objectID", (int)ID);
+        shader->set("objectID", ID);
 
     model->draw(shader, bindMaterial);
 }
@@ -449,6 +453,8 @@ void Renderer::setViewMode(ViewMode mode) {_viewMode = mode; }
 ViewMode Renderer::getViewMode()          {return _viewMode; }
 
 void Renderer::setCamera(std::shared_ptr<Camera> camera) { _camera = camera; }
+
+
 
 ColorRenderTarget::ColorRenderTarget()
 {
@@ -579,3 +585,70 @@ void ShadowMapTarget::unbind()
 
 GLuint ShadowMapTarget::framebuffer() const { return fbo; }
 Texture& ShadowMapTarget::depthBuffer() const { return *depthMap; }
+
+
+
+SelectionRenderTarget::SelectionRenderTarget()
+{
+    idTex = new Texture();
+    depthTex = new Texture();
+}
+SelectionRenderTarget::~SelectionRenderTarget()
+{
+    // neden fbo yu destroy etmedik? Etmemiz lazım!
+    delete idTex;
+    delete depthTex;
+}
+
+void SelectionRenderTarget::create(int width, int height)
+{
+    this->width = width; this->height = height; 
+
+    idTex->createIdTexture(width, height);
+    depthTex->createDepthTexture(width, height);
+
+    glGenFramebuffers(1, &fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, idTex->getId(), 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTex->getId(), 0);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        LOG_ERROR("SelectionRenderTarget incomplete!");
+
+    unbind();
+}
+
+void SelectionRenderTarget::destroy()
+{
+    glDeleteFramebuffers(1, &fbo);
+    idTex->destroy();
+    depthTex->destroy();
+}
+
+bool SelectionRenderTarget::resize(int width, int height)
+{    
+    if (width == this->width && height == this->height // if(newSize == oldSize) -> do not create new framebuffer
+        || (!width || !height) )// or if(newSize.x == 0 || newSize.y == 0) -> do not create new framebuffer
+        return false; 
+
+    // Eski GPU kaynaklarını serbest bırak
+    destroy();
+
+    // Yeni boyutla tekrar oluştur
+    create(width, height);
+    return true; 
+}
+
+void SelectionRenderTarget::bind()
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glViewport(0, 0, width, height);
+}
+void SelectionRenderTarget::unbind()
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+GLuint SelectionRenderTarget::framebuffer()   const { return fbo; }
+Texture &SelectionRenderTarget::idTexture()   const { return *idTex; }
+Texture &SelectionRenderTarget::depthBuffer() const { return *depthTex; }
