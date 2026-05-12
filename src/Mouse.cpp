@@ -58,17 +58,16 @@ void Mouse::update(float deltaTime)
         
     }
     else { // mouse left released
-        if (_mouseLeftTime > 0) {
-            if (_mouseLeftTime <= _timeThresholdPress){
-                ImVec2 mousePos = ImGui::GetMousePos();
-                Event e{ 
-                    EventType::Select,
-                    std::make_unique<EventData_Point>(mousePos.x, mousePos.y, 0) };                
-                dispatcher.dispatch(e);
-            }
-            _mouseLeftTime = 0;     
+        if (!_isDragActive && _mouseLeftTime && _mouseLeftTime <= _timeThresholdPress){
+            ImVec2 mousePos = ImGui::GetMousePos();
+            Event e{ 
+                EventType::Select,
+                std::make_unique<EventData_Point>(mousePos.x, mousePos.y, 0) };                
+            dispatcher.dispatch(e);
+            
         }
 
+        _mouseLeftTime = 0.0f; 
         isFirstLeftPress = true;
         _isDragActive = false;   
     }
@@ -77,14 +76,25 @@ void Mouse::update(float deltaTime)
 
 void Mouse::mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
+    // is Cursor On Viewport = !_UI->isHoverOnUI()
     
-    if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS && !_UI->isHoverOnUI()) {
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS && !_UI->isHoverOnUI()) {
         _this->_mouseLeftPress = true;
     }
-    if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_RELEASE) {
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
         _this->_mouseLeftPress = false;
         _this->_firstMouse = true;
     }
+
+
+    if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS && !_UI->isHoverOnUI()) {
+        _this->_mouseMiddlePress = true;
+    }
+    if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_RELEASE) {
+        _this->_mouseMiddlePress = false;
+        _this->_firstMouse = true;
+    }
+
 
     if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS && !_UI->isHoverOnUI())
         _this->_mouseRightPress = true;
@@ -96,16 +106,18 @@ void Mouse::mouse_button_callback(GLFWwindow* window, int button, int action, in
 }
 void Mouse::mouse_cursor_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
-    if (!(_this->_mouseLeftPress || _this->_mouseRightPress)) return;
+    if (!(_this->_mouseLeftPress || _this->_mouseMiddlePress ||_this->_mouseRightPress)) return;
 
+    // Eğer Imguizmo kullanılıyorsa mouse hareketini yoksay 
     if (ImGuizmo::IsUsing()) {
         _this->_mouseLeftPress = false;
+        _this->_mouseMiddlePress = false;
         _this->_mouseRightPress = false;
         _this->_firstMouse = true;
         return;
     }
 
-
+    // İlk tıklanma noktasını al
     if (_this->_firstMouse) {
         _this->_mouseLastX = xposIn;
         _this->_mouseLastY = yposIn;
@@ -113,13 +125,23 @@ void Mouse::mouse_cursor_callback(GLFWwindow* window, double xposIn, double ypos
         return;
     }
 
+    // ilk ve son noktalar arasındaki delta pozisyonu bul. 
     float xoffset = xposIn - _this->_mouseLastX;
     float yoffset = _this->_mouseLastY - yposIn; // reversed since y-coordinates go from bottom to top
 
     _this->_mouseLastX = xposIn;
     _this->_mouseLastY = yposIn;
 
+
+    // gerekli komutları çalıştır 
+    // box select 
+    // rotate
+    // move 
+    // belki de bunların burada olması doğru değildir. 
     if (_this->_mouseLeftPress) {
+        // update fonksiyonunda bu kısmı handle ediyoruz.
+    }
+    else if(_this->_mouseMiddlePress){
         xoffset = glm::radians(_this->_rotSens) * xoffset;
         yoffset = glm::radians(_this->_rotSens) * yoffset;
         glm::vec3 vec(xoffset, yoffset, 0);
@@ -129,7 +151,7 @@ void Mouse::mouse_cursor_callback(GLFWwindow* window, double xposIn, double ypos
             std::make_unique<EventData_Point>(glm::vec3(xoffset,yoffset,0))};
         dispatcher.dispatch(e);
     }
-    else { //_mouseRightPress
+    else if(_this->_mouseRightPress){ 
         glm::vec3 vec(xoffset * _this->_moveSens, yoffset * _this->_moveSens, 0);
         Event e{ 
             EventType::onMove, 

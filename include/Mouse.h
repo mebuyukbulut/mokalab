@@ -13,6 +13,7 @@ class Mouse
 	float _mouseLastX = 0;
 	float _mouseLastY = 0;
 	bool _mouseLeftPress = false;
+	bool _mouseMiddlePress = false; 
 	bool _mouseRightPress = false;
 	bool _firstMouse = true;
 
