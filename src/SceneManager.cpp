@@ -100,11 +100,24 @@ void SceneManager::initCommands()
     dispatcher.subscribe(EventType::Delete, [&](std::unique_ptr<EventData> e) {
         deleteSelected();
     });
+
+
     dispatcher.subscribe(EventType::Select, [&](std::unique_ptr<EventData> e) {
         std::unique_ptr<EventData_Point> p(static_cast<EventData_Point*>(e.release()));
-        mousePos = glm::vec2(p->vec.x, p->vec.y);
+        mouseBeginPos = glm::vec2(p->vec.x, p->vec.y);
+        mouseEndPos = glm::vec2(p->vec.x, p->vec.y);
         isViewportSelect = true;
     });
+    dispatcher.subscribe(EventType::MouseDrag, [&](std::unique_ptr<EventData> e){
+        std::unique_ptr<EventData_DoublePoint> p ( static_cast<EventData_DoublePoint*>(e.release()));
+        mouseBeginPos = glm::vec2(p->vecA.x, p->vecA.y);
+        mouseEndPos = glm::vec2(p->vecB.x, p->vecB.y);
+        isViewportSelect = true;
+        isBoxSelectActive = true;
+        // LOG_TRACE("vecA x: {}\ty:{}\tz:{}",points->vecA.x, points->vecA.y, points->vecA.z);
+        // LOG_TRACE("vecB x: {}\ty:{}\tz:{}",points->vecB.x, points->vecB.y, points->vecB.z);
+    });
+
 
     dispatcher.subscribe(EventType::ScenePopup, [&](std::unique_ptr<EventData> e) {
         isScenePopupOpen = true;
@@ -128,11 +141,6 @@ void SceneManager::initCommands()
             _camera->resetFrame(selectedEntity->transform.get());
     });
 
-    dispatcher.subscribe(EventType::MouseDrag, [&](std::unique_ptr<EventData> e){
-        std::unique_ptr<EventData_DoublePoint> points ( static_cast<EventData_DoublePoint*>(e.release()));
-        LOG_TRACE("vecA x: {}\ty:{}\tz:{}",points->vecA.x, points->vecA.y, points->vecA.z);
-        LOG_TRACE("vecB x: {}\ty:{}\tz:{}",points->vecB.x, points->vecB.y, points->vecB.z);
-    });
 
 }
 void SceneManager::initDefaults()
@@ -192,39 +200,55 @@ void SceneManager::draw() {
     _lightMng->queryLights(renderData.lightItems);
 
 
-
-
-
+    
     // mouse click ile ekranda öge yakalama
     if (isViewportSelect && ImGuizmo::IsOver())
         isViewportSelect = false;
 
-    // calculate mouse position relative to viewport
-    glm::vec2 mPos = glm::vec2(mousePos.x, mousePos.y);
-    glm::vec2 panelPos = glm::vec2(viewportPos.x, viewportPos.y);
-    glm::vec2 panelSize = glm::vec2(viewportPanelSize.x, viewportPanelSize.y);
-    mPos = mPos - panelPos;
-    mPos.y = panelSize.y - mPos.y;
+    _renderer->renderScene(renderData, isViewportSelect);
 
-    _renderer->renderScene(renderData, isViewportSelect, mPos);
 
-    if (isViewportSelect) {
+    static int selectionCooldown = 0; 
+    if (isViewportSelect && !selectionCooldown) {
+        selectionCooldown = 10;
+        glm::vec2 vecA = mouseBeginPos;
+        glm::vec2 vecB = mouseEndPos;
+        glm::vec2 panelPos = viewportPos;
+        glm::vec2 panelSize = viewportPanelSize;
+
+        vecA = vecA - panelPos;
+        vecA.y = panelSize.y - vecA.y;
+ 
+        vecB = vecB - panelPos;
+        vecB.y = panelSize.y - vecB.y;
+
+
 		// get ID from framebuffer and object selection: 
-        uint32_t selectedID = _renderer->getSelection(mPos);
-        LOG_TRACE("selection UUID: {}", std::to_string(selectedID));
+        std::vector<uint32_t> selectedIDs = _renderer->getSelections(vecA, vecB);
 
-        if (selectedID != 0)
-        {
-            selectedID -= 1; // because we added +1 when drawing
+        // for(uint32_t i : selectedIDs)
+        //     LOG_TRACE("selection UUID: {}", std::to_string(i));
+
+
+        if (!selectedIDs.empty())
+        {                
             if (!ImGui::GetIO().KeyCtrl)
                 deselectAll();
-            select(_entities[selectedID].get());
+
+            for(uint32_t selectedID : selectedIDs){
+                selectedID--; // because we added +1 when drawing
+                select(_entities[selectedID].get());
+            }
 		}
         else
             deselectAll();
 
         isViewportSelect = false;
     }
+    if(selectionCooldown){
+        selectionCooldown--; 
+    }
+
 
 }
 
@@ -550,7 +574,6 @@ void SceneManager::onInspect()
     
 
     //ImGui::OpenPopupOnItemClick("SceneContextMenu", ImGuiPopupFlags_None);
-    
     if (isScenePopupOpen) {
         isScenePopupOpen = false;
         ImGui::OpenPopup("SceneContextMenu");
@@ -652,6 +675,64 @@ void SceneManager::onInspect()
     viewportPos = glm::vec2(cursorScreenPos.x, cursorScreenPos.y);
     ImGui::Image((ImTextureID)(intptr_t)_renderer->getViewportImage(),
         panelSize, ImVec2(0, 1), ImVec2(1, 0));
+
+
+    // box select kare çizimi (gemini ile yapıldı)
+    {
+        // 1. Viewport'un başladığı ekran koordinatlarını al
+        ImVec2 canvas_p0 = ImGui::GetCursorScreenPos();    // Resmin sol üst köşesi
+        ImVec2 canvas_sz = ImGui::GetContentRegionAvail(); // Resmin boyutu
+        ImVec2 canvas_p1 = ImVec2(canvas_p0.x + canvas_sz.x, canvas_p0.y + canvas_sz.y);
+
+        // 2. Fare etkileşimlerini takip et
+        ImGuiIO& io = ImGui::GetIO();
+        static ImVec2 start_pos;
+        static bool is_selecting = false;
+
+        // Fare sol tıklandığında başlangıç noktasını kaydet
+        if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+            start_pos = io.MousePos;
+            is_selecting = true;
+        }
+
+        // Seçim işlemi devam ediyorsa çizim yap
+        if (is_selecting) {
+            ImVec2 current_pos = io.MousePos;
+
+            // Seçim kutusunun sınırlarını belirle (Min ve Max noktaları)
+            ImVec2 rect_min = ImVec2(ImMin(start_pos.x, current_pos.x), ImMin(start_pos.y, current_pos.y));
+            ImVec2 rect_max = ImVec2(ImMax(start_pos.x, current_pos.x), ImMax(start_pos.y, current_pos.y));
+            
+
+            // Çizim listesini al
+            ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+            // -- ÇİZİM KOMUTLARI --
+            
+            // 1. Saydam İç Dolgu (Mavi, 0.3 Alpha)
+            draw_list->AddRectFilled(rect_min, rect_max, IM_COL32(0, 120, 255, 80));
+
+            // 2. Belirgin Kenarlık (Mavi, Tam Opak)
+            draw_list->AddRect(rect_min, rect_max, IM_COL32(0, 120, 255, 255), 0.0f, 0, 2.0f);
+
+            // Fare bırakıldığında seçimi bitir
+            if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+                is_selecting = false;
+                // Burada senin Renderer::getSelections fonksiyonunu çağırabilirsin!
+                // Çok mantıklı bir öneri olduğu için bunu burada bırakıyorum.
+                // Şuanlık box selection yaparken her frame de çağırıyoruz ama bu çok performans dostu değil
+                // Lakin son frame de çağırmak da user experience açısından iyi değil. O sebeple bir orta yol bulmak lazım
+            }
+        }
+    }
+
+
+
+
+
+
+
+
 
     // viewport toolbar BEGIN
     // https://gist.github.com/rmitton/f80cbb028fca4495ab1859a155db4cd8

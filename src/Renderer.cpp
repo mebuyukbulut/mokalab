@@ -14,6 +14,7 @@
 #include "LightManager.h"
 #include "Builtin.h"
 #include "FX.h"
+#include <execution>
 
 void Renderer::initMatcap() {
     //matcapTexture = TextureFactory::load("data/matcaps/basic_1.png", false);
@@ -324,7 +325,7 @@ void Renderer::terminate() {
     //_shaderManager.terminate(); 
 }
 
-void Renderer::renderScene(const SceneRenderData &renderData, bool isViewportSelect, glm::vec2 mousePos)
+void Renderer::renderScene(const SceneRenderData &renderData, bool isViewportSelect)
 {
     _shadowMapTarget.bind();
     clearBuffer();
@@ -335,18 +336,13 @@ void Renderer::renderScene(const SceneRenderData &renderData, bool isViewportSel
     _frameUniforms.update(_camera->getViewMatrix(), _camera->getProjectionMatrix(), _camera->getPosition());
     
 
-    _st.bind();
-    clearBuffer();
 
     if(isViewportSelect){
+        _st.bind();
         selectionPass(renderData);
-        uint32_t pickedID = 0;
-        //unsigned char data[4];
-        glReadPixels(mousePos.x, mousePos.y, 1, 1, GL_RED_INTEGER, GL_UNSIGNED_INT, &pickedID);
-        //uint32_t pickedID = data[0] + (data[1] << 8) + (data[2] << 16);
-        LOG_TRACE("Picked ID: {}", pickedID);
-        lastSelectedID = pickedID;
-    }   
+    }
+
+    
     
     _rt.bind();
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);    
@@ -362,7 +358,7 @@ void Renderer::renderScene(const SceneRenderData &renderData, bool isViewportSel
     lightPass(renderData.lightItems);
     gridPass();
 
-    //outlinePass(renderData); 
+    outlinePass(renderData); 
 
     _rt.unbind();
 
@@ -437,16 +433,40 @@ void Renderer::drawModelWithShader(Model* model, const glm::mat4& transform, Sha
     model->draw(shader, bindMaterial);
 }
 
-
-uint32_t Renderer::getSelection(glm::vec2 mousePos)
+// only return non-zero values. 
+std::vector<uint32_t> Renderer::getSelections(glm::vec2 mousePosBegin, glm::vec2 mousePosEnd)
 {
-    // unsigned char data[4];
-    // glReadPixels(mousePos.x, mousePos.y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, data);
-    // uint32_t pickedID = data[0] + (data[1] << 8) + (data[2] << 16);
-    // //LOG_TRACE(std::to_string(pickedID));
+    uint32_t x = glm::min(mousePosBegin.x, mousePosEnd.x);
+    uint32_t y = glm::min(mousePosBegin.y, mousePosEnd.y);
 
-    // return pickedID;
-    return lastSelectedID;
+    glm::vec2 delta = glm::abs(mousePosEnd-mousePosBegin) + glm::vec2(1,1);
+    uint32_t deltaX = delta.x;
+    uint32_t deltaY = delta.y; 
+    // LOG_CRITICAL("{}, {}", deltaX, deltaY);
+
+    static std::vector<uint32_t> pickedIDs;   
+    pickedIDs.resize(deltaX*deltaY);
+    
+
+    
+    _st.bind();
+    glReadPixels(x, y, deltaX, deltaY, GL_RED_INTEGER, GL_UNSIGNED_INT, pickedIDs.data());
+    _st.unbind();
+
+    if (pickedIDs.size() > 100000) { // Sadece 100 bin elemandan fazlaysa paralel yap
+        std::sort(std::execution::par, pickedIDs.begin(), pickedIDs.end());
+        auto last = std::unique(std::execution::par, pickedIDs.begin(), pickedIDs.end());
+        pickedIDs.erase(last, pickedIDs.end());
+    } else {
+        std::sort(pickedIDs.begin(), pickedIDs.end());
+        auto last = std::unique(pickedIDs.begin(), pickedIDs.end());
+        pickedIDs.erase(last, pickedIDs.end());
+    }
+
+    // 5. Sıfırı (arkaplan/boşluk) temizle
+    pickedIDs.erase(std::remove(pickedIDs.begin(), pickedIDs.end(), 0), pickedIDs.end());
+    
+    return pickedIDs;
 }
 
 void Renderer::setViewMode(ViewMode mode) {_viewMode = mode; }

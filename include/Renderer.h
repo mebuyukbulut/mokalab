@@ -190,7 +190,7 @@ public:
 	void init(std::shared_ptr<Camera> camera);
 	void terminate();
 
-	void renderScene(const SceneRenderData &renderData, bool isViewportSelect, glm::vec2 mousePos);
+	void renderScene(const SceneRenderData &renderData, bool isViewportSelect);
 	void clearBuffer();
 
 	void resizeViewport(int width, int height);
@@ -198,7 +198,7 @@ public:
 	GLuint getDebugImage();
 	
 
-	uint32_t getSelection(glm::vec2 mousePos);
+	std::vector<uint32_t> getSelections(glm::vec2 mousePosBegin, glm::vec2 mousePosEnd);
 
 	void setViewMode(ViewMode mode);
 	ViewMode getViewMode();

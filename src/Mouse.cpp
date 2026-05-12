@@ -30,19 +30,11 @@ void Mouse::init(GLFWwindow* window, UIManager* UI)
 
 void Mouse::update(float deltaTime)
 {
-    static bool isFirstLeftPress = true;
 
     if (_mouseLeftPress) {
         _mouseLeftTime += deltaTime;
 
-        ImVec2 mp = ImGui::GetMousePos();
-        _dragPosEnd = glm::vec2(mp.x, mp.y);
 
-        if(isFirstLeftPress){
-            isFirstLeftPress = false; 
-            _dragPosBegin = _dragPosEnd;    
-        }
-        
         if(glm::distance(_dragPosBegin, _dragPosEnd) > 10 && !_isDragActive)
             _isDragActive = true;            
         
@@ -66,9 +58,9 @@ void Mouse::update(float deltaTime)
             dispatcher.dispatch(e);
             
         }
-
+        _dragPosBegin = glm::vec2(0, 0);
+        _dragPosEnd = glm::vec2(0, 0);
         _mouseLeftTime = 0.0f; 
-        isFirstLeftPress = true;
         _isDragActive = false;   
     }
 
@@ -121,9 +113,11 @@ void Mouse::mouse_cursor_callback(GLFWwindow* window, double xposIn, double ypos
     if (_this->_firstMouse) {
         _this->_mouseLastX = xposIn;
         _this->_mouseLastY = yposIn;
+        _this->_dragPosBegin = glm::vec2(xposIn, yposIn);
         _this->_firstMouse = false;
         return;
     }
+    _this->_dragPosEnd = glm::vec2(xposIn, yposIn);
 
     // ilk ve son noktalar arasındaki delta pozisyonu bul. 
     float xoffset = xposIn - _this->_mouseLastX;

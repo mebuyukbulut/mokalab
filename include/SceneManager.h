@@ -30,9 +30,12 @@ class SceneManager : public Object
 
     bool isScenePopupOpen = false;
     bool isViewportSelect = false; 
-    glm::vec2 mousePos{};
-    glm::vec2 viewportPos; // ImVec2
-    glm::vec2 viewportPanelSize; // ImVec2
+    bool isBoxSelectActive = false; 
+
+    glm::vec2 mouseBeginPos{};
+    glm::vec2 mouseEndPos{};
+    glm::vec2 viewportPos; 
+    glm::vec2 viewportPanelSize; 
 
 
     void collectRenderData(SceneRenderData& renderData);
