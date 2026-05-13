@@ -444,7 +444,7 @@ std::vector<uint32_t> Renderer::getSelections(glm::vec2 mousePosBegin, glm::vec2
     uint32_t deltaY = delta.y; 
     // LOG_CRITICAL("{}, {}", deltaX, deltaY);
 
-    static std::vector<uint32_t> pickedIDs;   
+    std::vector<uint32_t> pickedIDs;   
     pickedIDs.resize(deltaX*deltaY);
     
 

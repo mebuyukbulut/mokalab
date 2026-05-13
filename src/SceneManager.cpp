@@ -210,7 +210,7 @@ void SceneManager::draw() {
 
     static int selectionCooldown = 0; 
     if (isViewportSelect && !selectionCooldown) {
-        selectionCooldown = 10;
+        selectionCooldown = 5;
         glm::vec2 vecA = mouseBeginPos;
         glm::vec2 vecB = mouseEndPos;
         glm::vec2 panelPos = viewportPos;
