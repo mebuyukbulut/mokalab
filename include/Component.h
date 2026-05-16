@@ -69,7 +69,7 @@ public:
 
 // Gerekirse bu sınıfı farklı dosyaya taşıyabiliriz
 class ComponentFactory {
-    static inline std::unordered_map< ComponentType, std::function<Component*()> > _registry;
+    static inline std::unordered_map<ComponentType, std::function<Component*()> > _registry;
 
 public:
     static void registerType(const ComponentType& name, std::function<Component*()> creator) {
