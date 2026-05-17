@@ -123,17 +123,19 @@ void SceneManager::initCommands()
         isScenePopupOpen = true;
     });
     dispatcher.subscribe(EventType::SaveScene, [&](std::unique_ptr<EventData> e) {
-        saveScene();
+        std::unique_ptr<EventData_Text> t(static_cast<EventData_Text*>(e.release()));
+        std::string thePath = t->text;
+        saveScene(thePath);
     });
     dispatcher.subscribe(EventType::LoadScene, [&](std::unique_ptr<EventData> e) {
-        loadScene("");
+        std::unique_ptr<EventData_Text> t(static_cast<EventData_Text*>(e.release()));
+        std::string thePath = t->text;
+        loadScene(thePath);
     });
-
-
     dispatcher.subscribe(EventType::ModelOpened, [&](std::unique_ptr<EventData> e) {
         std::unique_ptr<EventData_Text> t(static_cast<EventData_Text*>(e.release()));
-        std::string modelPath = t->text;
-        addModel(modelPath, "", true);
+        std::string thePath = t->text;
+        addModel(thePath, "", true);
     });
 
     dispatcher.subscribe(EventType::FocusToSelectedObject, [&](std::unique_ptr<EventData> e) {
@@ -302,9 +304,16 @@ void SceneManager::deselectAll(){
 
 void SceneManager::loadScene(std::string path) {
     LOG_TRACE("Loading scene...");
+    if(path.empty()){
+        LOG_ERROR("The path is empty!");
+        return;
+    }
 
-    // 1. Aşama tüm entity'leri oluşturma 
-	path = "save0.yaml";
+    if(path.empty()){
+        LOG_ERROR("The path is empty!");
+        return;
+    }
+
 	clearScene(); // delete all entities first
     YAML::Node root = YAML::LoadFile(path);
     deserialize(root);
@@ -315,12 +324,16 @@ void SceneManager::loadScene(std::string path) {
 
 
 }
-void SceneManager::saveScene() {
+void SceneManager::saveScene(std::string path) {
     LOG_TRACE("Scene is saving");
+    if(path.empty()){
+        LOG_ERROR("The path is empty!");
+        return;
+    }
+
     YAML::Emitter out;
     serialize(out);
 
-    std::string path = "save0.yaml";
     std::ofstream fout(path);
     fout << out.c_str();
     LOG_INFO("Scene saved");

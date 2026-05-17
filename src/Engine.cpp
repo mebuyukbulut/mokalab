@@ -101,7 +101,7 @@ void Engine::initUI()
         //_renderer.setShader(e.data.text,Renderer::ShaderType::Main);
         });
     dispatcher.subscribe(EventType::EngineExit, [&](std::unique_ptr<EventData> e) {
-        SM.saveScene();
+        SM.saveScene("");
         glfwSetWindowShouldClose(_window, true);
         });
 

@@ -1,0 +1,21 @@
+---
+Scene: istanbul
+Version: 1.0
+Entities:
+  - UUID: 0xC1CA99521082B516
+    name: Monkey
+    transform:
+      UUID: 0xDB9DBEC4C6BA1D88
+      name: Object_15825014418006744456
+      componentType: Transform
+      position: [1.9636574, 0.19474413, -2.2390823]
+      orientation: [1, 0, 0, 0]
+      rotation: [0, -0, 0]
+      scale: [1, 1, 1]
+      parentUUID: 0
+    components:
+      - UUID: 0x3CF62234B029956F
+        name: Object_4392736096235656559
+        componentType: Model
+        path: /home/esat/dev/graphics/mokalab/assets/models/monkey/monkey.obj
+...

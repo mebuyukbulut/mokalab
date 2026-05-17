@@ -5,7 +5,7 @@
 
 // TO DO Material Manager sıkıntısın hallet
 const bool RenderComponent::registered = []() {
-    ComponentFactory::registerType(ComponentType::Model, []() { return new RenderComponent(); });
+    ComponentFactory::registerType(ComponentType::Model, []() { return std::make_unique<RenderComponent>(); });
     return true;
     }();
 

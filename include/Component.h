@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "Object.h"
 #include <functional>
-
+#include <memory>
 enum class ComponentType {
     None,
     Transform,
@@ -69,14 +69,14 @@ public:
 
 // Gerekirse bu sınıfı farklı dosyaya taşıyabiliriz
 class ComponentFactory {
-    static inline std::unordered_map<ComponentType, std::function<Component*()> > _registry;
+    static inline std::unordered_map<ComponentType, std::function<std::unique_ptr<Component>()> > _registry;
 
 public:
-    static void registerType(const ComponentType& name, std::function<Component*()> creator) {
+    static void registerType(const ComponentType& name, std::function<std::unique_ptr<Component>()> creator) {
         _registry[name] = creator;
     }
 
-    static Component* create(const ComponentType& name) {
+    static std::unique_ptr<Component> create(const ComponentType& name) {
         if (_registry.contains(name)) return _registry[name]();
         return nullptr;
     }

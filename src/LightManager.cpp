@@ -18,15 +18,15 @@
 
 
 const bool PointLight::registered = []() {
-    ComponentFactory::registerType(ComponentType::PointLight, []() { return new PointLight(); });
+    ComponentFactory::registerType(ComponentType::PointLight, []() { return std::make_unique<PointLight>(); });
     return true;
     }();
 const bool SpotLight::registered = []() {
-    ComponentFactory::registerType(ComponentType::SpotLight, []() { return new SpotLight(); });
+    ComponentFactory::registerType(ComponentType::SpotLight, []() { return std::make_unique<SpotLight>(); });
     return true;
     }();
 const bool DirectionalLight::registered = []() {
-    ComponentFactory::registerType(ComponentType::DirectionalLight, []() { return new DirectionalLight(); });
+    ComponentFactory::registerType(ComponentType::DirectionalLight, []() { return std::make_unique<DirectionalLight>(); });
     return true;
     }();
 

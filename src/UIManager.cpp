@@ -186,16 +186,20 @@ void UIManager::mainMenu(){
                 };
                 dispatcher.dispatch(e);
             }
-            if (ImGui::MenuItem("Save", "Ctrl+S")) {
-                //EventData ed{};
-                //ed.text = FileUtils::openFileDialog();
-                Event e{ EventType::SaveScene, {} };
+            if (ImGui::MenuItem("Save", "Ctrl+S")) {               
+                std::string filePath = FileUtils::openFileDialog(L"",true);
+                Event e{
+                    EventType::SaveScene,
+                    std::make_unique<EventData_Text>(filePath)
+                };
                 dispatcher.dispatch(e);
             }
-            if (ImGui::MenuItem("Load")) {
-                //EventData ed{};
-                //ed.text = FileUtils::openFileDialog();
-                Event e{ EventType::LoadScene, {} };
+            if (ImGui::MenuItem("Load")) {                
+                std::string filePath = FileUtils::openFileDialog();
+                Event e{
+                    EventType::LoadScene,
+                    std::make_unique<EventData_Text>(filePath)
+                };
                 dispatcher.dispatch(e);
             }
             ImGui::EndMenu();

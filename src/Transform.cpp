@@ -14,7 +14,7 @@
 
 
 const bool Transform::registered = []() {
-    ComponentFactory::registerType(ComponentType::Transform, []() { return new Transform(); });
+    ComponentFactory::registerType(ComponentType::Transform, []() { return std::make_unique<Transform>(); });
     return true;
     }();
 

@@ -67,7 +67,7 @@ public:
 
 
     void loadScene(std::string path);
-    void saveScene();
+    void saveScene(std::string path);
 
     void drawHierarchyTreeRecursive(Entity* entity);
 	void onInspect() override;

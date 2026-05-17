@@ -15,11 +15,31 @@ std::string FileUtils::readFile(const std::string& filePath)
     return file_contents;
 }
 
-std::string FileUtils::openFileDialog(const wchar_t* filter) {
-    LOG_ERROR("FileUtils is OS dependent!");
+std::string FileUtils::openFileDialog(const wchar_t* filter, bool isSaveMode) {
+    //LOG_ERROR("FileUtils is OS dependent!");
     char filename[1024];
-    FILE *f = popen("zenity --file-selection", "r");
-    fgets(filename, 1024, f);
+    FILE *f{};
+
+    if(isSaveMode)
+        f = popen("zenity --file-selection --save", "r");
+    else
+        f = popen("zenity --file-selection", "r");
+
+
+    if (!f) {
+        LOG_ERROR("Zenity başlatılamadı!");
+        return "";
+    }
+    
+    // Kullanıcı iptal ederse fgets nullptr döner
+    if (fgets(filename, sizeof(filename), f) == nullptr) {
+        pclose(f);
+        return ""; // Seçim yapılmadı
+    }
+
+    pclose(f);
+
+
     std::string path(filename);
     trimLeft(path);
     trimRight(path);
