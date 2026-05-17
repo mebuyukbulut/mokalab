@@ -75,14 +75,12 @@ void Entity::deserialize(const YAML::Node& node)
         ComponentType type = ComponentUtils::FromString(typeStr);
 
         if (ComponentType::Model == type) {
-            std::unique_ptr<RenderComponent> renderComponent(static_cast<RenderComponent*>(ComponentFactory::create(type).release()));
-            // Component* a = ComponentFactory::create(type);
-            // RenderComponent* renderComponent = dynamic_cast<RenderComponent*>(a);
+            auto renderComponent = ComponentFactory::create<RenderComponent>(type);
             renderComponent->deserialize(componentNode);
             addComponent(std::move(renderComponent));
         }
         else {
-            std::unique_ptr<Component> aComponent = ComponentFactory::create(type);
+            std::unique_ptr<Component> aComponent = ComponentFactory::create<Component>(type);
             //Component* a = ComponentFactory::create(type);
             aComponent->deserialize(componentNode);
             addComponent(std::move(aComponent));

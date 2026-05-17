@@ -76,8 +76,20 @@ public:
         _registry[name] = creator;
     }
 
-    static std::unique_ptr<Component> create(const ComponentType& name) {
-        if (_registry.contains(name)) return _registry[name]();
+    template <typename T>
+    static std::unique_ptr<T> create(const ComponentType& name) {
+        if (_registry.contains(name)) {
+            std::unique_ptr<Component> baseComponent = _registry[name]();
+
+            if(!baseComponent) return nullptr;
+
+            T* derived = dynamic_cast<T*>(baseComponent.get());
+
+            if(derived){
+                baseComponent.release();
+                return std::unique_ptr<T>(derived);
+            }
+        }
         return nullptr;
     }
 };
