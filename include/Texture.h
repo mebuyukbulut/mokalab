@@ -27,6 +27,7 @@ public:
 	void uploadToGPU() override;
 
 	void createColorTexture(uint32_t width, uint32_t height);
+	void createColorTextureHDR(uint32_t width, uint32_t height);
 	void createDepthTexture(uint32_t width, uint32_t height);
 	void createIdTexture(uint32_t width, uint32_t height);
 	void createShadowDepthTexture(uint32_t width, uint32_t height);

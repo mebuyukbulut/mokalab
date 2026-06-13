@@ -345,18 +345,21 @@ void Renderer::renderScene(const SceneRenderData &renderData, bool isViewportSel
     
     
     _rt.bind();
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);    
+    glClearColor(0.2f, 0.3f, 0.3f, 0.0f);    
     clearBuffer();
 
 
-    backgroundPass();
-    if      (_viewMode == ViewMode::Material)   materialPass(renderData.renderItems);
+    //backgroundPass();
+    if(_viewMode == ViewMode::Material){
+        materialPass(renderData.renderItems);
+
+    }   
     else if (_viewMode == ViewMode::Matcap)     matcapPass(renderData.renderItems);
     else if (_viewMode == ViewMode::Wireframe)  wireframePass(renderData.renderItems);
     
     // World-space Overlay Effects
-    lightPass(renderData.lightItems);
-    gridPass();
+    //lightPass(renderData.lightItems);
+    //gridPass();
 
     outlinePass(renderData); 
 
@@ -366,32 +369,22 @@ void Renderer::renderScene(const SceneRenderData &renderData, bool isViewportSel
     // Post Processing START
     glDisable(GL_DEPTH_TEST);
 
+    postProcessPass(_rt, _postProcA, g_Assets.get<Shader>(Builtin::FX::GammaCorrection).get());
+    
     const std::vector<FXInstance>& postProcessStack = fxReg->getActiveFXStack();
-    if(postProcessStack.size() == 0) {
-        _finalTarget = &_rt; 
-    }
-    else if(postProcessStack.size() == 1) {
-        postProcessPass(_rt, _postProcA, postProcessStack[0].getShader());
-        _finalTarget = &_postProcA; 
-    }
-    else{
-        postProcessPass(_rt, _postProcA, postProcessStack[0].getShader());
-        int i ;
-        for(i = 1; i < postProcessStack.size(); i++){
-            if(i%2)
-                postProcessPass(_postProcA, _postProcB, postProcessStack[i].getShader());
-            else
-                postProcessPass(_postProcB, _postProcA, postProcessStack[i].getShader());      
-        }
 
+    int i ;
+    for(i = 0; i < postProcessStack.size(); i++){
         if(i%2)
-            _finalTarget = &_postProcA; 
+            postProcessPass(_postProcA, _postProcB, postProcessStack[i].getShader());
         else
-            _finalTarget = &_postProcB; 
-
+            postProcessPass(_postProcB, _postProcA, postProcessStack[i].getShader());      
     }
-    // postProcessPass(_rt, _postProcA, g_Assets.get<Shader>(Builtin::FX::Grayscale).get());
-    // postProcessPass(_postProcA, _postProcB, g_Assets.get<Shader>(Builtin::FX::Pixelate).get());
+
+    if(i%2)
+        _finalTarget = &_postProcB; 
+    else
+        _finalTarget = &_postProcA; 
 
     
 
@@ -492,7 +485,7 @@ void ColorRenderTarget::create(int width, int height)
 {
     this->width = width; this->height = height; 
 
-    colorTex->createColorTexture(width, height);
+    colorTex->createColorTextureHDR(width, height);
     depthTex->createDepthTexture(width, height);
 
     glGenFramebuffers(1, &fbo);

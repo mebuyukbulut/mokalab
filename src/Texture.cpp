@@ -127,6 +127,18 @@ void Texture::createColorTexture(uint32_t width, uint32_t height)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
+void Texture::createColorTextureHDR(uint32_t width, uint32_t height)
+{    
+    _type = GL_TEXTURE_2D;
+
+    glGenTextures(1, &_id);
+    glBindTexture(GL_TEXTURE_2D, _id);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0,
+        GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+}
+
 void Texture::createDepthTexture(uint32_t width, uint32_t height)
 {
     _type = GL_TEXTURE_2D; 
