@@ -341,6 +341,7 @@ void Renderer::init(std::shared_ptr<Camera> camera) {
     _rt.create(300,300); // create default frame buffer for viewport
     _postProcA.create(300,300); // create default frame buffer for viewport
     _postProcB.create(300,300);
+    _bgRT.create(300,300);
     _shadowMapTarget.create(2048,2048);
     _st.create(300,300);
 
@@ -366,14 +367,17 @@ void Renderer::renderScene(const SceneRenderData &renderData, bool isViewportSel
         selectionPass(renderData);
     }
 
-    
+    _bgRT.bind();
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);    
+    clearBuffer();
+    backgroundPass();
+    _bgRT.unbind();
     
     _rt.bind();
-    glClearColor(0.2f, 0.3f, 0.3f, 0.0f);    
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);    
     clearBuffer();
 
 
-    //backgroundPass();
     if(_viewMode == ViewMode::Material){
         materialPass(renderData.renderItems);
 
@@ -393,7 +397,25 @@ void Renderer::renderScene(const SceneRenderData &renderData, bool isViewportSel
     // Post Processing START
     glDisable(GL_DEPTH_TEST);
 
-    postProcessPass(_rt.colorTexture(), _postProcA, g_Assets.get<Shader>(Builtin::FX::GammaCorrection).get());
+
+    postProcessPass(_rt.bloomTexture(), _postProcA, g_Assets.get<Shader>(Builtin::FX::BlurHorizontal).get());
+    postProcessPass(_postProcA, _postProcB, g_Assets.get<Shader>(Builtin::FX::BlurVertical).get());
+
+    _postProcA.bind();
+    clearBuffer();
+    Shader* prePostShader = g_Assets.get<Shader>(Builtin::FX::PrePost).get();
+    prePostShader->use();
+    prePostShader->set("frameTex0", 0); 
+    prePostShader->set("frameTex1", 1); 
+    prePostShader->set("frameTex2", 2); 
+    _rt.colorTexture().bind(0); // HDR 
+    _postProcB.colorTexture().bind(1); // bloom
+    _bgRT.colorTexture().bind(2); // background
+    drawModelWithShader(_bgModel, glm::mat4(1.0), prePostShader, false); 
+    _postProcA.unbind();
+
+
+    //postProcessPass(_rt.colorTexture(), _postProcA, g_Assets.get<Shader>(Builtin::FX::GammaCorrection).get());
     
     const std::vector<FXInstance>& postProcessStack = fxReg->getActiveFXStack();
 
@@ -425,6 +447,7 @@ void Renderer::resizeViewport(int width, int height)
     _postProcA.resize(width,height) ; 
     _postProcB.resize(width,height); 
     _st.resize(width,height); 
+    _bgRT.resize(width,height);
 
     if(isResized)
         _camera->setWindowSize(width,height);
@@ -432,7 +455,10 @@ void Renderer::resizeViewport(int width, int height)
 
 GLuint Renderer::getViewportImage()
 {
-    return _finalTarget->colorTexture().getId(); 
+    return _finalTarget->colorTexture().getId(); // original
+    //return _bgRT.colorTexture().getId();
+    //return _rt.bloomTexture().getId(); 
+    //return _postProcB.colorTexture().getId(); 
 }
 
 GLuint Renderer::getDebugImage()
@@ -519,6 +545,11 @@ void MultiRenderTarget::create(int width, int height)
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTex->getId(), 0);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, bloomTex->getId(), 0);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTex->getId(), 0);
+
+    // Hangi attachment'ların aktif olduğunu GPU'ya bildir
+    GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+    glDrawBuffers(2, drawBuffers);
+    // -----------------------
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         LOG_ERROR("MultiRenderTarget incomplete!");

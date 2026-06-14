@@ -308,4 +308,25 @@ std::vector<FXInstanceDefinition> FXRegistry::FXInstanceDefinitionStack{
         "fullscreen_tris.vert", "pixelate.frag", 
         {{&Builtin::FX::Params::Pixelate_Values}}},
 
+    FXInstanceDefinition{
+        Builtin::FX::BlurHorizontal,
+        "BlurHorizontal", 
+        "tooltip", 
+        "fullscreen_tris.vert", "blur_horizontal.frag", 
+        {}},
+
+    FXInstanceDefinition{
+        Builtin::FX::BlurVertical,
+        "BlurVertical", 
+        "tooltip", 
+        "fullscreen_tris.vert", "blur_vertical.frag", 
+        {}},
+
+    FXInstanceDefinition{
+        Builtin::FX::PrePost,
+        "PrePost", 
+        "tooltip", 
+        "fullscreen_tris.vert", "pre_post.frag", 
+        {}},
+
 };

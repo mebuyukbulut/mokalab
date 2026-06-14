@@ -162,7 +162,7 @@ public:
 	};
 private:
 	MultiRenderTarget _rt{};
-	ColorRenderTarget _postProcA{}, _postProcB{};
+	ColorRenderTarget _postProcA{}, _postProcB{}, _bgRT;
 	ColorRenderTarget* _finalTarget{};
 	ShadowMapTarget _shadowMapTarget{};
 	SelectionRenderTarget _st{};

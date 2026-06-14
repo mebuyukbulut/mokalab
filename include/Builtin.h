@@ -117,6 +117,9 @@ namespace Builtin
         inline constexpr const char* GammaCorrection = "builtin::fx::gammaCorrection";
         inline constexpr const char* Posterize       = "builtin::fx::posterize";
         inline constexpr const char* Pixelate        = "builtin::fx::pixelate";
+        inline constexpr const char* BlurHorizontal  = "builtin::fx::blurHorizontal";
+        inline constexpr const char* BlurVertical    = "builtin::fx::blurVertical";
+        inline constexpr const char* PrePost         = "builtin::fx::prePost";
 
         inline constexpr const char* All[] = {
             Grayscale,
@@ -126,7 +129,10 @@ namespace Builtin
             Vignette,
             GammaCorrection,
             Posterize,
-            Pixelate
+            Pixelate,
+            BlurHorizontal,
+            BlurVertical,
+            PrePost
         };
         
     }
