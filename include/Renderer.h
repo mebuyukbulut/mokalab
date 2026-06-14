@@ -53,6 +53,31 @@ public:
 // A render buffer that can hold color and depth values 
 // For know we use it for render scene in 3D viewport 
 // and selection 
+
+class MultiRenderTarget {
+	GLuint fbo;
+	Texture* colorTex{};
+	Texture* bloomTex{};
+	Texture* depthTex{};
+	int width, height;
+
+public:
+	MultiRenderTarget();
+	~MultiRenderTarget();
+	void create(int width, int height);
+	void destroy();
+	bool resize(int width, int height);
+	void bind();
+	void unbind();
+
+	// Getters
+	GLuint framebuffer() const;
+    Texture& colorTexture() const;
+    Texture& bloomTexture() const;
+    Texture& depthBuffer() const;
+
+};
+
 class ColorRenderTarget {
 	GLuint fbo;
 	Texture* colorTex{};
@@ -136,7 +161,7 @@ public:
 		Material, 
 	};
 private:
-	ColorRenderTarget _rt{};
+	MultiRenderTarget _rt{};
 	ColorRenderTarget _postProcA{}, _postProcB{};
 	ColorRenderTarget* _finalTarget{};
 	ShadowMapTarget _shadowMapTarget{};
@@ -181,6 +206,8 @@ private:
 	void selectionPass(const SceneRenderData &renderData);
 	void outlinePass(const SceneRenderData &renderData);
 	void postProcessPass(const ColorRenderTarget& sourceTarget, ColorRenderTarget& destinationTarget, Shader* shader);
+	void postProcessPass(Texture& sourceTarget, ColorRenderTarget& destinationTarget, Shader* shader);
+	void postProcessPass(Texture& sourceTarget0, Texture& sourceTarget1, ColorRenderTarget& destinationTarget, Shader* shader);
 
 	void drawModelWithShader(Model* model, const glm::mat4& transform, Shader* shader, bool bindMaterial = true, uint32_t ID = 0);
 

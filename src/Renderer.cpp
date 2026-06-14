@@ -228,6 +228,30 @@ void Renderer::postProcessPass(const ColorRenderTarget& sourceTarget, ColorRende
 
     destinationTarget.unbind();
 }
+void Renderer::postProcessPass(Texture& sourceTarget, ColorRenderTarget& destinationTarget, Shader* shader)
+{
+    destinationTarget.bind();
+    clearBuffer();
+    shader->use();
+    shader->set("frameTex", 0); 
+    sourceTarget.bind(0); 
+    drawModelWithShader(_bgModel, glm::mat4(1.0), shader, false); 
+
+    destinationTarget.unbind();
+}
+void Renderer::postProcessPass(Texture& sourceTarget0, Texture& sourceTarget1, ColorRenderTarget& destinationTarget, Shader* shader)
+{
+    destinationTarget.bind();
+    clearBuffer();
+    shader->use();
+    shader->set("frameTex0", 0); 
+    shader->set("frameTex1", 1); 
+    sourceTarget0.bind(0); 
+    sourceTarget1.bind(1); 
+    drawModelWithShader(_bgModel, glm::mat4(1.0), shader, false); 
+
+    destinationTarget.unbind();
+}
 
 void Renderer::init(std::shared_ptr<Camera> camera) {
     _frameUniforms.init(); 
@@ -358,8 +382,8 @@ void Renderer::renderScene(const SceneRenderData &renderData, bool isViewportSel
     else if (_viewMode == ViewMode::Wireframe)  wireframePass(renderData.renderItems);
     
     // World-space Overlay Effects
-    //lightPass(renderData.lightItems);
-    //gridPass();
+    lightPass(renderData.lightItems);
+    gridPass();
 
     outlinePass(renderData); 
 
@@ -369,16 +393,16 @@ void Renderer::renderScene(const SceneRenderData &renderData, bool isViewportSel
     // Post Processing START
     glDisable(GL_DEPTH_TEST);
 
-    postProcessPass(_rt, _postProcA, g_Assets.get<Shader>(Builtin::FX::GammaCorrection).get());
+    postProcessPass(_rt.colorTexture(), _postProcA, g_Assets.get<Shader>(Builtin::FX::GammaCorrection).get());
     
     const std::vector<FXInstance>& postProcessStack = fxReg->getActiveFXStack();
 
-    int i ;
-    for(i = 0; i < postProcessStack.size(); i++){
+    int i{};
+    for(; i < postProcessStack.size(); i++){
         if(i%2)
-            postProcessPass(_postProcA, _postProcB, postProcessStack[i].getShader());
+            postProcessPass(_postProcB, _postProcA, postProcessStack[i].getShader());
         else
-            postProcessPass(_postProcB, _postProcA, postProcessStack[i].getShader());      
+            postProcessPass(_postProcA, _postProcB, postProcessStack[i].getShader());      
     }
 
     if(i%2)
@@ -466,6 +490,79 @@ void Renderer::setViewMode(ViewMode mode) {_viewMode = mode; }
 ViewMode Renderer::getViewMode()          {return _viewMode; }
 
 void Renderer::setCamera(std::shared_ptr<Camera> camera) { _camera = camera; }
+
+
+MultiRenderTarget::MultiRenderTarget()
+{
+    colorTex = new Texture();
+    bloomTex = new Texture();
+    depthTex = new Texture();
+}
+
+MultiRenderTarget::~MultiRenderTarget()
+{
+    delete colorTex;
+    delete bloomTex;
+    delete depthTex;
+}
+
+void MultiRenderTarget::create(int width, int height)
+{
+    this->width = width; this->height = height; 
+
+    colorTex->createColorTextureHDR(width, height);
+    bloomTex->createColorTextureHDR(width, height);
+    depthTex->createDepthTexture(width, height);
+
+    glGenFramebuffers(1, &fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTex->getId(), 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, bloomTex->getId(), 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTex->getId(), 0);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        LOG_ERROR("MultiRenderTarget incomplete!");
+
+    unbind(); // bu burada gereksiz gibi ama bakalım
+}
+
+void MultiRenderTarget::destroy()
+{    
+    glDeleteFramebuffers(1, &fbo);
+    colorTex->destroy();
+    bloomTex->destroy();
+    depthTex->destroy();
+}
+
+bool MultiRenderTarget::resize(int width, int height)
+{    
+    if (width == this->width && height == this->height // if(newSize == oldSize) -> do not create new framebuffer
+        || (!width || !height) )// or if(newSize.x == 0 || newSize.y == 0) -> do not create new framebuffer
+        return false; 
+
+    // Eski GPU kaynaklarını serbest bırak
+    destroy();
+
+    // Yeni boyutla tekrar oluştur
+    create(width, height);
+    return true; 
+}
+
+void MultiRenderTarget::bind(){
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glViewport(0, 0, width, height);
+}
+
+void MultiRenderTarget::unbind(){
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+GLuint MultiRenderTarget::framebuffer()  const { return fbo; }
+Texture& MultiRenderTarget::colorTexture() const { return *colorTex; }
+Texture& MultiRenderTarget::bloomTexture() const { return *bloomTex; }
+Texture& MultiRenderTarget::depthBuffer()  const { return *depthTex; }
+
+
 
 
 
