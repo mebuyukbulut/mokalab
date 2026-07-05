@@ -6,6 +6,7 @@
 
 > Built from scratch in Modern C++ and OpenGL. No engine. No shortcuts.
 
+## Demo Video
 [![Demo Video](https://img.youtube.com/vi/fZnJDtRmH1w/maxresdefault.jpg)](https://www.youtube.com/watch?v=fZnJDtRmH1w)
 
 ---
