@@ -116,6 +116,13 @@ FaceHandle EMesh::addFace(const std::vector<VertexHandle> &verts)
             b = next(he);
         }
         // valid -> valid için bir şey yapmamız gerek yok. 
+        else
+            continue;
+
+
+        if(true){
+            LOG_TRACE("A: {} \t B: {}", a, b);
+        }
 
         // outer he's arası bağlantı yapılır: 
         _halfEdges[a].next = b;

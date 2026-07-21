@@ -78,59 +78,84 @@ void Mesh::terminate(){
 
 Mesh MeshFactory::createCube()
 {
-    std::vector<Vertex> cubeVertices =
-    {
-        // Front (+Z)
-        {{-0.5f, -0.5f,  0.5f}, { 0,  0,  1}, {0, 0}},
-        {{ 0.5f, -0.5f,  0.5f}, { 0,  0,  1}, {1, 0}},
-        {{ 0.5f,  0.5f,  0.5f}, { 0,  0,  1}, {1, 1}},
-        {{-0.5f,  0.5f,  0.5f}, { 0,  0,  1}, {0, 1}},
 
-        // Back (-Z)
-        {{ 0.5f, -0.5f, -0.5f}, { 0,  0, -1}, {0, 0}},
-        {{-0.5f, -0.5f, -0.5f}, { 0,  0, -1}, {1, 0}},
-        {{-0.5f,  0.5f, -0.5f}, { 0,  0, -1}, {1, 1}},
-        {{ 0.5f,  0.5f, -0.5f}, { 0,  0, -1}, {0, 1}},
+    EMesh mesh; 
+    VertexHandle v0 = mesh.addVertex({-0.5f, -0.5f,  0.5f});
+    VertexHandle v1 = mesh.addVertex({ 0.5f, -0.5f,  0.5f});
+    VertexHandle v2 = mesh.addVertex({ 0.5f,  0.5f,  0.5f});
+    VertexHandle v3 = mesh.addVertex({-0.5f,  0.5f,  0.5f});
 
-        // Left (-X)
-        {{-0.5f, -0.5f, -0.5f}, {-1,  0,  0}, {0, 0}},
-        {{-0.5f, -0.5f,  0.5f}, {-1,  0,  0}, {1, 0}},
-        {{-0.5f,  0.5f,  0.5f}, {-1,  0,  0}, {1, 1}},
-        {{-0.5f,  0.5f, -0.5f}, {-1,  0,  0}, {0, 1}},
+    VertexHandle v4 = mesh.addVertex({ 0.5f, -0.5f, -0.5f});
+    VertexHandle v5 = mesh.addVertex({-0.5f, -0.5f, -0.5f});
+    VertexHandle v6 = mesh.addVertex({-0.5f,  0.5f, -0.5f});
+    VertexHandle v7 = mesh.addVertex({ 0.5f,  0.5f, -0.5f});
 
-        // Right (+X)
-        {{ 0.5f, -0.5f,  0.5f}, { 1,  0,  0}, {0, 0}},
-        {{ 0.5f, -0.5f, -0.5f}, { 1,  0,  0}, {1, 0}},
-        {{ 0.5f,  0.5f, -0.5f}, { 1,  0,  0}, {1, 1}},
-        {{ 0.5f,  0.5f,  0.5f}, { 1,  0,  0}, {0, 1}},
+    mesh.addFace({v0,v1,v2,v3});
+    mesh.addFace({v4,v5,v6,v7});
 
-        // Top (+Y)
-        {{-0.5f,  0.5f,  0.5f}, { 0,  1,  0}, {0, 0}},
-        {{ 0.5f,  0.5f,  0.5f}, { 0,  1,  0}, {1, 0}},
-        {{ 0.5f,  0.5f, -0.5f}, { 0,  1,  0}, {1, 1}},
-        {{-0.5f,  0.5f, -0.5f}, { 0,  1,  0}, {0, 1}},
+    mesh.addFace({v5,v4,v1,v0});
+    mesh.addFace({v3,v2,v7,v6});
 
-        // Bottom (-Y)
-        {{-0.5f, -0.5f, -0.5f}, { 0, -1,  0}, {0, 0}},
-        {{ 0.5f, -0.5f, -0.5f}, { 0, -1,  0}, {1, 0}},
-        {{ 0.5f, -0.5f,  0.5f}, { 0, -1,  0}, {1, 1}},
-        {{-0.5f, -0.5f,  0.5f}, { 0, -1,  0}, {0, 1}},
-    };
+    mesh.addFace({v1,v4,v7,v2});
+    mesh.addFace({v0,v3,v6,v5});
 
-    std::vector<uint32_t> cubeIndices =
-    {
-        0, 1, 2,  0, 2, 3,        // Front
-        4, 5, 6,  4, 6, 7,        // Back
-        8, 9,10,  8,10,11,        // Left
-        12,13,14, 12,14,15,       // Right
-        16,17,18, 16,18,19,       // Top
-        20,21,22, 20,22,23        // Bottom
-    };
 
-    Mesh cubeMesh;
-    cubeMesh.init(cubeVertices, cubeIndices);
-    cubeMesh.upload2GPU();
-    return cubeMesh;
+
+    return mesh.construct();
+
+    // std::vector<Vertex> cubeVertices =
+    // {
+    //     // Front (+Z)
+    //     {{-0.5f, -0.5f,  0.5f}, { 0,  0,  1}, {0, 0}},
+    //     {{ 0.5f, -0.5f,  0.5f}, { 0,  0,  1}, {1, 0}},
+    //     {{ 0.5f,  0.5f,  0.5f}, { 0,  0,  1}, {1, 1}},
+    //     {{-0.5f,  0.5f,  0.5f}, { 0,  0,  1}, {0, 1}},
+
+    //     // Back (-Z)
+    //     {{ 0.5f, -0.5f, -0.5f}, { 0,  0, -1}, {0, 0}},
+    //     {{-0.5f, -0.5f, -0.5f}, { 0,  0, -1}, {1, 0}},
+    //     {{-0.5f,  0.5f, -0.5f}, { 0,  0, -1}, {1, 1}},
+    //     {{ 0.5f,  0.5f, -0.5f}, { 0,  0, -1}, {0, 1}},
+
+    //     // Left (-X)
+    //     {{-0.5f, -0.5f, -0.5f}, {-1,  0,  0}, {0, 0}},
+    //     {{-0.5f, -0.5f,  0.5f}, {-1,  0,  0}, {1, 0}},
+    //     {{-0.5f,  0.5f,  0.5f}, {-1,  0,  0}, {1, 1}},
+    //     {{-0.5f,  0.5f, -0.5f}, {-1,  0,  0}, {0, 1}},
+
+    //     // Right (+X)
+    //     {{ 0.5f, -0.5f,  0.5f}, { 1,  0,  0}, {0, 0}},
+    //     {{ 0.5f, -0.5f, -0.5f}, { 1,  0,  0}, {1, 0}},
+    //     {{ 0.5f,  0.5f, -0.5f}, { 1,  0,  0}, {1, 1}},
+    //     {{ 0.5f,  0.5f,  0.5f}, { 1,  0,  0}, {0, 1}},
+
+    //     // Top (+Y)
+    //     {{-0.5f,  0.5f,  0.5f}, { 0,  1,  0}, {0, 0}},
+    //     {{ 0.5f,  0.5f,  0.5f}, { 0,  1,  0}, {1, 0}},
+    //     {{ 0.5f,  0.5f, -0.5f}, { 0,  1,  0}, {1, 1}},
+    //     {{-0.5f,  0.5f, -0.5f}, { 0,  1,  0}, {0, 1}},
+
+    //     // Bottom (-Y)
+    //     {{-0.5f, -0.5f, -0.5f}, { 0, -1,  0}, {0, 0}},
+    //     {{ 0.5f, -0.5f, -0.5f}, { 0, -1,  0}, {1, 0}},
+    //     {{ 0.5f, -0.5f,  0.5f}, { 0, -1,  0}, {1, 1}},
+    //     {{-0.5f, -0.5f,  0.5f}, { 0, -1,  0}, {0, 1}},
+    // };
+
+    // std::vector<uint32_t> cubeIndices =
+    // {
+    //     0, 1, 2,  0, 2, 3,        // Front
+    //     4, 5, 6,  4, 6, 7,        // Back
+    //     8, 9,10,  8,10,11,        // Left
+    //     12,13,14, 12,14,15,       // Right
+    //     16,17,18, 16,18,19,       // Top
+    //     20,21,22, 20,22,23        // Bottom
+    // };
+
+    // Mesh cubeMesh;
+    // cubeMesh.init(cubeVertices, cubeIndices);
+    // cubeMesh.upload2GPU();
+    // return cubeMesh;
 
 
 }
@@ -243,16 +268,15 @@ OMesh MeshFactory::createCylinder()
 }
 Mesh MeshFactory::createPlane()
 {    
-    EMesh tris; 
-    VertexHandle v0 = tris.addVertex({-1.f, 0.f, 1.f});
-    VertexHandle v1 = tris.addVertex({ 1.f, 0.f, 1.f});
-    VertexHandle v2 = tris.addVertex({ 1.f, 0.f,-1.f});
-    VertexHandle v3 = tris.addVertex({-1.f, 0.f,-1.f});
+    EMesh mesh; 
+    VertexHandle v0 = mesh.addVertex({-1.f, 0.f, 1.f});
+    VertexHandle v1 = mesh.addVertex({ 1.f, 0.f, 1.f});
+    VertexHandle v2 = mesh.addVertex({ 1.f, 0.f,-1.f});
+    VertexHandle v3 = mesh.addVertex({-1.f, 0.f,-1.f});
     
-    tris.addFace({v0, v1, v2});
-    tris.addFace({v0, v2, v3});
+    mesh.addFace({v0, v1, v2, v3});
 
-    return tris.construct();
+    return mesh.construct();
 }
 OMesh MeshFactory::createTorus()
 {
