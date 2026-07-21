@@ -23,15 +23,19 @@ void main(){
     vec4 bloomColor = texture(frameTex1, fTexCoords);
     vec4 bgColor    = texture(frameTex2, fTexCoords);
 
-    hdrColor.rgb += bloomColor.rgb;
+    bool bloomEnable = false;
+    if(bloomEnable) 
+        hdrColor.rgb += bloomColor.rgb; // bloom disabled for now
 
 
     vec3 color = hdrColor.rgb;
 
     color = ACESFilm(color); // tonne mapping
     color = pow(color, vec3(1.0 / 2.2)); // gamma correction
-
-    float oran = max(hdrColor.a, bloomColor.a);
+    
+    float oran = hdrColor.a; 
+    if(bloomEnable)
+        oran = max(hdrColor.a, bloomColor.a);
     vec3 composite = mix(bgColor.rgb, color, oran);
 
     FragColor = vec4(composite, 1.0f);

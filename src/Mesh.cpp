@@ -3,6 +3,7 @@
 #include <iostream>
 #include "Builtin.h"
 #include "Logger.h"
+#include <EMesh.h>
 
 
 
@@ -242,24 +243,16 @@ OMesh MeshFactory::createCylinder()
 }
 Mesh MeshFactory::createPlane()
 {    
-    std::vector<Vertex> planeVertices =
-    {
-        // Top (+Y)
-        {{-1,  0,  1}, { 0,  1,  0}, {0, 0}},
-        {{ 1,  0,  1}, { 0,  1,  0}, {1, 0}},
-        {{ 1,  0, -1}, { 0,  1,  0}, {1, 1}},
-        {{-1,  0, -1}, { 0,  1,  0}, {0, 1}},
-    };
+    EMesh tris; 
+    VertexHandle v0 = tris.addVertex({-1.f, 0.f, 1.f});
+    VertexHandle v1 = tris.addVertex({ 1.f, 0.f, 1.f});
+    VertexHandle v2 = tris.addVertex({ 1.f, 0.f,-1.f});
+    VertexHandle v3 = tris.addVertex({-1.f, 0.f,-1.f});
+    
+    tris.addFace({v0, v1, v2});
+    tris.addFace({v0, v2, v3});
 
-    std::vector<uint32_t> planeIndices = 
-    {
-        0, 1, 2,  0, 2, 3,        // Top
-    };
-
-    Mesh planeMesh;
-    planeMesh.init(planeVertices, planeIndices);
-    planeMesh.upload2GPU();
-    return planeMesh;
+    return tris.construct();
 }
 OMesh MeshFactory::createTorus()
 {
