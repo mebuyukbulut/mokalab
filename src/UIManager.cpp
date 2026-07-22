@@ -258,7 +258,7 @@ void UIManager::mainMenu(){
                 if (ImGui::MenuItem("Add Cone")) {
                     Event e{ 
                         EventType::AddPrimitive,
-                        std::make_unique<EventData_Text>(Builtin::Model::Cube)
+                        std::make_unique<EventData_Text>(Builtin::Model::Cone)
                     };
                     dispatcher.dispatch(e);
                 }

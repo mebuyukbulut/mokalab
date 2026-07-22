@@ -5,11 +5,11 @@
 #include <string>
 #include "Shader.h"
 
-#ifndef _USE_MATH_DEFINES
-#define _USE_MATH_DEFINES
-#endif
-#include <OpenMesh/Core/Mesh/PolyMesh_ArrayKernelT.hh>
-typedef OpenMesh::PolyMesh_ArrayKernelT<>  OMesh;
+// #ifndef _USE_MATH_DEFINES
+// #define _USE_MATH_DEFINES
+// #endif
+// #include <OpenMesh/Core/Mesh/PolyMesh_ArrayKernelT.hh>
+// typedef OpenMesh::PolyMesh_ArrayKernelT<>  OMesh;
 
 
 struct Vertex
@@ -34,9 +34,9 @@ public:
 };
 
 class MeshFactory {
-	static OMesh createCone();
-	static OMesh createCylinder();
-	static OMesh createTorus();
+	static Mesh createCone();
+	static Mesh createCylinder();
+	static Mesh createTorus();
 
 	static Mesh createCube();
 	static Mesh createPlane();

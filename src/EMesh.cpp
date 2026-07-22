@@ -120,7 +120,7 @@ FaceHandle EMesh::addFace(const std::vector<VertexHandle> &verts)
             continue;
 
 
-        if(true){
+        if(false){
             LOG_TRACE("A: {} \t B: {}", a, b);
         }
 

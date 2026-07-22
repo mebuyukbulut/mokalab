@@ -159,10 +159,10 @@ Mesh MeshFactory::createCube()
 
 
 }
-OMesh MeshFactory::createCone()
+Mesh MeshFactory::createCone()
 {
-    OMesh mesh;
-    std::vector <OMesh::VertexHandle> vhandle;
+    EMesh mesh;
+    std::vector <VertexHandle> vhandle;
 
     // parametrelerimiz 
     int resolution = 32; // number of edges 
@@ -177,12 +177,12 @@ OMesh MeshFactory::createCone()
         float angle = ratio * (M_PI * 2.0);
         float x = std::cos(angle) * radius;
         float z = std::sin(angle) * radius;
-        vhandle.push_back(mesh.add_vertex(OMesh::Point(x, 0, z)));
+        vhandle.push_back(mesh.addVertex(glm::vec3(x, 0, z)));
     }
-    int centerIndex = vhandle.size();
-    vhandle.push_back(mesh.add_vertex(OMesh::Point(0, 0, 0))); // center of cone floor
-    int tipIndex = vhandle.size();
-    vhandle.push_back(mesh.add_vertex(OMesh::Point(0, height, 0))); // tip of cone 
+    VertexHandle centerIndex = mesh.addVertex(glm::vec3(0, 0, 0));
+    VertexHandle tipIndex = mesh.addVertex(glm::vec3(0, height, 0));
+    vhandle.push_back(centerIndex); // center of cone floor
+    vhandle.push_back(tipIndex); // tip of cone 
 
 
     // Yüzeylerin vertex indexlerini belirliyoruz:
@@ -198,19 +198,20 @@ OMesh MeshFactory::createCone()
 
 
     // Belirlediğimiz indexlerdeki vertexlerden face oluşturup mesh e ekliyoruz:
-    std::vector<OMesh::VertexHandle> face_vhandles;
+    std::vector<VertexHandle> face_vhandles;
     for (std::vector<int>& face : faces) {
         face_vhandles.clear();
         for (int& vertexIndex : face)
             face_vhandles.push_back(vhandle[vertexIndex]);
-        mesh.add_face(face_vhandles);
+        mesh.addFace(face_vhandles);
     }
-    return mesh;
+    return mesh.construct();
+
 }
-OMesh MeshFactory::createCylinder()
+Mesh MeshFactory::createCylinder()
 {
-    OMesh mesh;
-    std::vector <OMesh::VertexHandle> vhandle;
+    EMesh mesh;
+    std::vector <VertexHandle> vhandle;
 
     // parametrelerimiz 
     int resolution = 32; // number of edges 
@@ -224,14 +225,14 @@ OMesh MeshFactory::createCylinder()
         float angle = ratio * (M_PI * 2.0);
         float x = std::cos(angle) * radius;
         float z = std::sin(angle) * radius;
-        vhandle.push_back(mesh.add_vertex(OMesh::Point(x, height / 2, z))); // top 
-        vhandle.push_back(mesh.add_vertex(OMesh::Point(x, -height / 2, z))); // bottom
+        vhandle.push_back(mesh.addVertex({x,  height / 2, z})); // top 
+        vhandle.push_back(mesh.addVertex({x, -height / 2, z})); // bottom
     }
 
-    int centerIndexTop = vhandle.size();
-    vhandle.push_back(mesh.add_vertex(OMesh::Point(0, height / 2, 0))); // center of cylinder ceil/top
-    int centerIndexBottom = vhandle.size();
-    vhandle.push_back(mesh.add_vertex(OMesh::Point(0, -height / 2, 0))); // center of cylinder floor/bottom
+    VertexHandle centerIndexTop = mesh.addVertex({0, height / 2, 0});
+    VertexHandle centerIndexBottom = mesh.addVertex({0, -height / 2, 0});
+    vhandle.push_back(centerIndexTop); // center of cylinder ceil/top
+    vhandle.push_back(centerIndexBottom); // center of cylinder floor/bottom
 
 
 
@@ -257,14 +258,16 @@ OMesh MeshFactory::createCylinder()
 
 
     // Belirlediğimiz indexlerdeki vertexlerden face oluşturup mesh e ekliyoruz:
-    std::vector<OMesh::VertexHandle> face_vhandles;
+    std::vector<VertexHandle> face_vhandles;
     for (std::vector<int>& face : faces) {
         face_vhandles.clear();
         for (int& vertexIndex : face)
             face_vhandles.push_back(vhandle[vertexIndex]);
-        mesh.add_face(face_vhandles);
+        mesh.addFace(face_vhandles);
     }
-    return mesh;
+
+    return mesh.construct();
+
 }
 Mesh MeshFactory::createPlane()
 {    
@@ -278,10 +281,10 @@ Mesh MeshFactory::createPlane()
 
     return mesh.construct();
 }
-OMesh MeshFactory::createTorus()
+Mesh MeshFactory::createTorus()
 {
-    OMesh mesh;
-    std::vector <OMesh::VertexHandle> vhandle;
+    EMesh mesh;
+    std::vector <VertexHandle> vhandle;
 
     // parametrelerimiz 
     int radial_resolution = 16;  // küçük dairenin kenar sayısı
@@ -299,13 +302,12 @@ OMesh MeshFactory::createTorus()
             float z = (radius + thickness * std::cos(v)) * std::sin(u);
             float y = thickness * std::sin(v); 
             
-            vhandle.push_back(mesh.add_vertex(OMesh::Point(x, y, z)));
+            vhandle.push_back(mesh.addVertex({x, y, z}));
         }
     }
 
 
     // add quad faces
-    std::vector<OMesh::VertexHandle> face_vhandles;
     for (int i = 0; i < radial_resolution; i++) {
         int i_next = (i + 1) % radial_resolution;
         for (int j = 0; j < tubular_resolution; j++) {
@@ -314,17 +316,16 @@ OMesh MeshFactory::createTorus()
             int i1 = i * tubular_resolution + j_next;
             int i2 = i_next * tubular_resolution + j_next;
             int i3 = i_next * tubular_resolution + j;
-
-            face_vhandles.clear();
-            face_vhandles.push_back(vhandle[i0]);
-            face_vhandles.push_back(vhandle[i3]); 
-            face_vhandles.push_back(vhandle[i2]);
-            face_vhandles.push_back(vhandle[i1]);
-            mesh.add_face(face_vhandles);
+            
+            VertexHandle v0 = vhandle[i0];
+            VertexHandle v1 = vhandle[i3];
+            VertexHandle v2 = vhandle[i2];
+            VertexHandle v3 = vhandle[i1];
+            mesh.addFace({v0, v1, v2, v3});
         }
     }
 
-    return mesh;
+    return mesh.construct();
 }
 
 Mesh MeshFactory::createBgPlane()
@@ -340,6 +341,14 @@ Mesh MeshFactory::createBgPlane()
     _bgMesh.init(bgVertices, bgIndices);
     _bgMesh.upload2GPU();
     return _bgMesh;
+
+    // // UV olayını yaptıktan sonra buna devam edebiliriz. 
+    // EMesh bgMesh; 
+    // VertexHandle v0 = bgMesh.addVertex({{-1,-1, 0}, {0,0,0}, {0,0}});
+    // VertexHandle v1 = bgMesh.addVertex({{ 3,-1, 0}, {0,0,0}, {2,0}});
+    // VertexHandle v2 = bgMesh.addVertex({{-1, 3, 0}, {0,0,0}, {0,2}});
+    // bgMesh.addFace({v0, v1, v2});
+    // return bgMesh.construct();
 }
 
 Mesh MeshFactory::createGridPlane()
@@ -360,98 +369,28 @@ Mesh MeshFactory::createGridPlane()
 
 Mesh MeshFactory::create(std::string pathStr)
 {
-    if(pathStr == Builtin::Model::BgPlane)
-        return createBgPlane();
-    else if(pathStr == Builtin::Model::GridPlane)
-        return createGridPlane();
-    else if(pathStr == Builtin::Model::Cube)
-        return createCube();
-    else if(pathStr == Builtin::Model::Plane)
-        return createPlane();
-
-    //typedef OMesh(*BuiltinLoader)(void);
-    using BuiltinLoader = OMesh(*)(void);
-
+    if(true) 
+        LOG_TRACE("MeshFactory::create::pathSTR : {}", pathStr);
+    
+    using BuiltinLoader = Mesh(*)(void);
     static const std::unordered_map<std::string, BuiltinLoader> builtinLoaders = {
-        {Builtin::Model::Cone, &MeshFactory::createCone},
-        {Builtin::Model::Cylinder, &MeshFactory::createCylinder},
-        //{Builtin::Model::Sphere, &MeshFactory::createSphere},
-        {Builtin::Model::Torus, &MeshFactory::createTorus},
-    };
+        {Builtin::Model::BgPlane,   &MeshFactory::createBgPlane},
+        {Builtin::Model::GridPlane, &MeshFactory::createGridPlane},
+        {Builtin::Model::Cube,      &MeshFactory::createCube},
+        {Builtin::Model::Plane,     &MeshFactory::createPlane},
 
-    OMesh mesh;
+        {Builtin::Model::Cone,      &MeshFactory::createCone},
+        {Builtin::Model::Cylinder,  &MeshFactory::createCylinder},
+        {Builtin::Model::Torus,     &MeshFactory::createTorus},
+        //{Builtin::Model::Sphere, &MeshFactory::createSphere},
+    };
 
     auto it = builtinLoaders.find(pathStr);
     if (it != builtinLoaders.end()) 
-        mesh = it->second();
+        return it->second();
     else{
         LOG_ERROR("{} not found in MeshFactory create()!", pathStr);
-        mesh = createCone();
+        return Mesh();
     }
-    
-
-
-
-
-
-
-    // 🔹 Normalleri hesapla
-    mesh.request_face_normals();
-    mesh.update_face_normals();
-    //mesh.triangulate(); // OpenGL için üçgenlere ayır
-
-
-
-
-    std::vector<Vertex> vertices;
-    std::vector<unsigned int> indices;
-
-
-    // 🔹 Flat shading: her yüzey için ayrı vertex oluştur
-    for (auto f_it = mesh.faces_begin(); f_it != mesh.faces_end(); ++f_it)
-    {
-        OpenMesh::Vec3f faceNormal = mesh.normal(*f_it);
-        std::vector<unsigned int> local_indices;
-
-        for (auto fv_it = mesh.fv_iter(*f_it); fv_it.is_valid(); ++fv_it)
-        {
-            auto p = mesh.point(*fv_it);
-
-            unsigned int index = static_cast<unsigned int>(vertices.size());
-            vertices.push_back(Vertex{
-                glm::vec3(p[0], p[1], p[2]),
-                glm::vec3(faceNormal[0], faceNormal[1], faceNormal[2]),
-                glm::vec2(0.0f, 0.0f)
-                });
-
-            local_indices.push_back(index);
-        }
-
-        // CCW
-        //  3●-----●2
-        //  |    / |
-        //  |  /   |
-        //  0●-----●1
-
-        // yüz üçgen mi?
-        if (local_indices.size() == 3) {
-            indices.push_back(local_indices[0]);
-            indices.push_back(local_indices[1]);
-            indices.push_back(local_indices[2]);
-        }
-        // quad ise triangulate et
-        else if (local_indices.size() == 4) {
-            indices.push_back(local_indices[0]);
-            indices.push_back(local_indices[1]);
-            indices.push_back(local_indices[2]);
-            indices.push_back(local_indices[0]);
-            indices.push_back(local_indices[2]);
-            indices.push_back(local_indices[3]);
-        }
-    }
-
-    Mesh m; 
-    m.init(vertices, indices);
-    m.upload2GPU();
-    return m;
 }
+
