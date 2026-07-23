@@ -37,7 +37,7 @@ class MeshFactory {
 	static Mesh createCone();
 	static Mesh createCylinder();
 	static Mesh createTorus();
-
+	static Mesh createUVSphere();
 	static Mesh createCube();
 	static Mesh createPlane();
 	static Mesh createBgPlane();

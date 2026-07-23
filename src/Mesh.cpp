@@ -1,6 +1,7 @@
 ﻿#include "Mesh.h"
 #include <glad/gl.h>
 #include <iostream>
+#include <algorithm>
 #include "Builtin.h"
 #include "Logger.h"
 #include <EMesh.h>
@@ -327,6 +328,101 @@ Mesh MeshFactory::createTorus()
 
     return mesh.construct();
 }
+Mesh MeshFactory::createUVSphere(){
+    int segments = 32; // +Y etrafında kaç parçaya bölüneceği (silindir gibi)
+    int rings = 16; // ekvatorla paralel olacak şekilde kaç parçaya bölüneceği 
+    float radius = 0.5; // Yarıçap
+    
+    segments = std::max(3, segments);
+    rings = std::max(3, rings);
+    radius = std::max(0.0f, radius);
+
+    
+    // phi = 0 -> kuzey kutbu; 
+    // phi = PI/2 -> ekvator;
+    // phi = PI -> güney kutbu;
+    // theta = PI * 0/2 -> +x
+    // theta = PI * 1/2 -> +z
+    // theta = PI * 2/2 -> -x
+    // theta = PI * 3/2 -> -z
+    // theat = PI * 4/2 -> +x
+
+    float phi, theta;
+    float x, y, z;
+
+    std::vector<std::vector<VertexHandle>> vHandle;
+    VertexHandle north{InvalidHandle}, south{InvalidHandle}; 
+
+    EMesh mesh;
+    north = mesh.addVertex({0.0f,  radius, 0.0f});
+    south = mesh.addVertex({0.0f, -radius, 0.0f});
+    
+    constexpr float PI = 3.1415927f;
+
+    for(int i = 1; i < rings; i++){
+        // rings = 3 =>
+        // PI*0/3, PI*1/3, PI*2/3, PI*3/3
+        // we need just PI*1/3 and PI*2/3 so i=1
+        phi = PI * static_cast<float>(i) / rings;
+
+        std::vector<VertexHandle> vLocal{};
+        for(int j = 0; j < segments; j++){
+            theta = 2*PI * static_cast<float>(j) / segments;
+
+            x = sin(phi) * cos(theta) * radius;
+            y = cos(phi) * radius; // yükseklik 
+            z = sin(phi) * sin(theta) * radius;
+
+            VertexHandle vh = mesh.addVertex({x, y, z});
+            vLocal.push_back(vh);
+        }
+
+        vHandle.push_back(vLocal);
+    }
+
+
+    // Orta kısımdaki Quad şeritleri ekliyoruz
+    for(int i = 0; i < rings-2; i++){
+        std::vector<VertexHandle>& topRing = vHandle[i];
+        std::vector<VertexHandle>& bottomRing = vHandle[i+1];
+
+        VertexHandle topPrev = topRing.back();
+        VertexHandle bottomPrev = bottomRing.back();
+        
+        for(int j = 0; j < topRing.size(); j++){
+            VertexHandle topB = topRing[j];
+            VertexHandle bottomB = bottomRing[j];
+            VertexHandle topA = topPrev;
+            VertexHandle bottomA = bottomPrev;
+            topPrev = topB;
+            bottomPrev = bottomB; 
+
+            mesh.addFace({topA, topB, bottomB, bottomA});
+        } 
+    }
+
+    // Kutuplardaki tris leri ekliyoruz
+
+    std::vector<VertexHandle>& northRing = vHandle.front();
+    std::vector<VertexHandle>& southRing = vHandle.back();
+    VertexHandle northPrev = northRing.back();
+    VertexHandle southPrev = southRing.back();
+    
+    for(int j = 0; j < northRing.size(); j++){
+        VertexHandle northB = northRing[j];
+        VertexHandle northA = northPrev;
+        northPrev = northB;
+        VertexHandle southB = southRing[j];
+        VertexHandle southA = southPrev;
+        southPrev = southB; 
+
+        mesh.addFace({northB, northA, north});
+        mesh.addFace({southA, southB, south});
+    } 
+    
+
+    return mesh.construct();
+}
 
 Mesh MeshFactory::createBgPlane()
 {
@@ -382,7 +478,7 @@ Mesh MeshFactory::create(std::string pathStr)
         {Builtin::Model::Cone,      &MeshFactory::createCone},
         {Builtin::Model::Cylinder,  &MeshFactory::createCylinder},
         {Builtin::Model::Torus,     &MeshFactory::createTorus},
-        //{Builtin::Model::Sphere, &MeshFactory::createSphere},
+        {Builtin::Model::UVSphere,  &MeshFactory::createUVSphere},
     };
 
     auto it = builtinLoaders.find(pathStr);

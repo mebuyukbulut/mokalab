@@ -58,7 +58,7 @@ namespace Builtin
         inline constexpr const char* Cube        = "builtin::models::cube";
         inline constexpr const char* Cone        = "builtin::models::cone";
         inline constexpr const char* Cylinder    = "builtin::models::cylinder";
-        inline constexpr const char* Sphere      = "builtin::models::sphere";
+        inline constexpr const char* UVSphere    = "builtin::models::UVSphere";
         inline constexpr const char* Plane       = "builtin::models::plane";
         inline constexpr const char* Torus       = "builtin::models::torus";
 
@@ -73,7 +73,7 @@ namespace Builtin
             Cube,       
             Cone,       
             Cylinder,   
-            Sphere,
+            UVSphere,
             Plane,      
             Torus,      
             BgPlane,    

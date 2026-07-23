@@ -625,6 +625,12 @@ void SceneManager::onInspect()
                     std::make_unique<EventData_Text>(Builtin::Model::Cube)};
                 dispatcher.dispatch(e);
             }
+            if (ImGui::MenuItem("Add UV Sphere")) {
+                Event e{ 
+                    EventType::AddPrimitive,
+                    std::make_unique<EventData_Text>(Builtin::Model::UVSphere)};
+                dispatcher.dispatch(e);
+            }
             if (ImGui::MenuItem("Add Cone")) {
                 Event e{ 
                     EventType::AddPrimitive,
