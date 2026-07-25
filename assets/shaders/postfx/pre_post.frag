@@ -7,6 +7,9 @@ layout(binding = 0) uniform sampler2D frameTex0; // lit
 layout(binding = 1) uniform sampler2D frameTex1; // bloom
 layout(binding = 2) uniform sampler2D frameTex2; // bg
 
+uniform bool bloomEnable = false;
+uniform bool postProcEnable = true;
+
 vec3 ACESFilm(vec3 x)
 {
     float a = 2.51;
@@ -23,16 +26,17 @@ void main(){
     vec4 bloomColor = texture(frameTex1, fTexCoords);
     vec4 bgColor    = texture(frameTex2, fTexCoords);
 
-    bool bloomEnable = false;
+
     if(bloomEnable) 
         hdrColor.rgb += bloomColor.rgb; // bloom disabled for now
 
 
     vec3 color = hdrColor.rgb;
 
-    color = ACESFilm(color); // tonne mapping
-    color = pow(color, vec3(1.0 / 2.2)); // gamma correction
-    
+    if(postProcEnable){
+        color = ACESFilm(color); // tonne mapping
+        color = pow(color, vec3(1.0 / 2.2)); // gamma correction        
+    }
     float oran = hdrColor.a; 
     if(bloomEnable)
         oran = max(hdrColor.a, bloomColor.a);

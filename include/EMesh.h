@@ -45,6 +45,13 @@ class EMesh{
     inline HalfEdgeHandle twin(HalfEdgeHandle he){return _halfEdges[he].twin;}
     inline VertexHandle origin(HalfEdgeHandle he){return _halfEdges[he].origin;}
     inline FaceHandle face(HalfEdgeHandle he){return _halfEdges[he].face;}
+    inline VertexHandle destination(HalfEdgeHandle he){return origin(next(he));}
+
+    inline HalfEdgeHandle edgeofFace(FaceHandle f){return f == InvalidHandle ? InvalidHandle : _faces[f].edge;}
+    inline HalfEdgeHandle edgeofVertex(VertexHandle v){return v == InvalidHandle ? InvalidHandle : _vertices[v].edge;}
+
+    std::vector<HalfEdgeHandle> outgoingHalfEdges(VertexHandle v);
+    std::vector<VertexHandle> verticesOfFace(FaceHandle f);
 
 public:
     VertexHandle addVertex(const glm::vec3& pos);
@@ -53,5 +60,7 @@ public:
     void computeFaceNormal();
 
     Mesh construct();
+
+    void validate();
 
 };

@@ -408,6 +408,13 @@ void Renderer::renderScene(const SceneRenderData &renderData, bool isViewportSel
     prePostShader->set("frameTex0", 0); 
     prePostShader->set("frameTex1", 1); 
     prePostShader->set("frameTex2", 2); 
+
+    prePostShader->set(Builtin::Material::BloomFlag, false);
+    if(getViewMode() == ViewMode::Material)
+        prePostShader->set(Builtin::Material::PostProcFlag, true);
+    else
+        prePostShader->set(Builtin::Material::PostProcFlag, false);
+
     _rt.colorTexture().bind(0); // HDR 
     _postProcB.colorTexture().bind(1); // bloom
     _bgRT.colorTexture().bind(2); // background

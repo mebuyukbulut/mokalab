@@ -30,6 +30,11 @@ namespace Builtin
         inline constexpr const char* NormalTexture      = "normalMap";
         inline constexpr const char* EmissiveTexture    = "emissiveMap";
 
+        inline constexpr const char* BloomFlag    = "bloomEnable";
+        inline constexpr const char* PostProcFlag    = "postProcEnable";
+
+
+
     }
     namespace TextureSlot
     {

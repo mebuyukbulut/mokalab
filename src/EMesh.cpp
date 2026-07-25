@@ -5,6 +5,47 @@ inline uint64_t EMesh::makeEdgeKey(int32_t a, int32_t b){
     return (uint64_t(uint32_t(a)) << 32) | uint32_t(b); 
 }
 
+// Bir vertexden çıkan tüm halfedge'ler
+std::vector<HalfEdgeHandle> EMesh::outgoingHalfEdges(VertexHandle v)
+{
+    std::vector<HalfEdgeHandle> HEs{};
+    HalfEdgeHandle start = _vertices[v].edge;
+    HalfEdgeHandle he = start;
+    
+    do{
+        HEs.push_back(he);        
+        he = next(twin(he));
+
+        if (HEs.size() > _halfEdges.size()){
+            LOG_ERROR("[EMesh::outgoingHalfEdges()][{}] \n \
+            v.outgoingHalfEdges.size() > allHalfedges.size()  ",he);
+            break;
+        }
+        
+    }while(he!=start);
+
+    return HEs;
+}
+
+// Bir face'e ait tüm vertex'ler
+std::vector<VertexHandle> EMesh::verticesOfFace(FaceHandle f)
+{
+    HalfEdgeHandle start = edgeofFace(f);
+    if(start == InvalidHandle) return{};
+
+    HalfEdgeHandle he = start;
+    std::vector<VertexHandle> VHs{};
+
+    do
+    {   
+        VHs.push_back(origin(he));
+        he = next(he);
+    } while (he != start);
+    
+
+    return VHs;
+}
+
 VertexHandle EMesh::addVertex(const glm::vec3 &pos)
 {
     _vertices.push_back({pos});
@@ -45,8 +86,10 @@ FaceHandle EMesh::addFace(const std::vector<VertexHandle> &verts)
 
         if(_edgeMap.contains(makeEdgeKey(a, b))){ // varsa listeye ekle 
             HalfEdgeHandle he = _edgeMap[makeEdgeKey(a, b)];
-            if(_halfEdges[he].face != InvalidHandle)
+            if(_halfEdges[he].face != InvalidHandle){
                 LOG_ERROR("EMesh::addFace : Invalid geometry.");
+                assert(false);
+            }
             
             _halfEdges[he].face = fh;
             innerHEs.push_back(he);
@@ -151,84 +194,6 @@ FaceHandle EMesh::addFace(const std::vector<VertexHandle> &verts)
     // Face'in edge eşleşmesi
     _faces[fh].edge = innerHEs[0]; 
     
-
-
-    // // Face eşleşmesi 
-    // EHalfEdge h1, h2, h3; 
-    // h1.face = fh;
-    // h2.face = fh;
-    // h3.face = fh;
-    
-    // EHalfEdge ht1, ht2, ht3; 
-    // ht1.face = InvalidHandle;
-    // ht2.face = InvalidHandle;
-    // ht3.face = InvalidHandle;
-
-    // // Origin eşleşmesi
-    // h1.origin = verts[0];
-    // h2.origin = verts[1];
-    // h3.origin = verts[2];
-    
-    // ht1.origin = verts[1];
-    // ht2.origin = verts[2];
-    // ht3.origin = verts[0];
-
-    // // half edge handle'ların oluşturulması
-    // HalfEdgeHandle h_h1, h_h2, h_h3, h_ht1, h_ht2, h_ht3;
-
-    // _halfEdges.push_back(h1);
-    // h_h1 = _halfEdges.size();
-    // _halfEdges.push_back(h2);
-    // h_h2 = _halfEdges.size();
-    // _halfEdges.push_back(h3);
-    // h_h3 = _halfEdges.size();
-
-    // _halfEdges.push_back(ht1);
-    // h_ht1 = _halfEdges.size();
-    // _halfEdges.push_back(ht2);
-    // h_ht2 = _halfEdges.size();
-    // _halfEdges.push_back(ht3);
-    // h_ht3 = _halfEdges.size();
-
-    // // Twin eşleşmesi
-    // _halfEdges[h_h1].twin = h_ht1;
-    // _halfEdges[h_h2].twin = h_ht2;
-    // _halfEdges[h_h3].twin = h_ht3;
-
-    // _halfEdges[h_ht1].twin = h_h1;
-    // _halfEdges[h_ht2].twin = h_h2;
-    // _halfEdges[h_ht3].twin = h_h3;
-    
-    // // Next eşleşmesi
-    // _halfEdges[h_h1].next = h_h2;
-    // _halfEdges[h_h2].next = h_h3;
-    // _halfEdges[h_h3].next = h_h1;
-
-    // _halfEdges[h_ht1].next = h_ht2;
-    // _halfEdges[h_ht2].next = h_ht3;
-    // _halfEdges[h_ht3].next = h_ht1;
-
-    // // Prev eşleşmesi
-    // _halfEdges[h_h1].prev = h_h3;
-    // _halfEdges[h_h2].prev = h_h1;
-    // _halfEdges[h_h3].prev = h_h2;
-
-    // _halfEdges[h_ht1].prev = h_ht3;
-    // _halfEdges[h_ht2].prev = h_ht1;
-    // _halfEdges[h_ht3].prev = h_ht2;
-    
-    // // Vertex'leri edge eşleşmesi
-    // _vertices[verts[0]].edge = h_h1;
-    // _vertices[verts[1]].edge = h_h2;
-    // _vertices[verts[2]].edge = h_h3;
-    
-    // // Face'in edge eşleşmesi
-    // _faces[fh].edge = h_h1;
-
-
-    
-
-
     return fh;
 }
 
@@ -253,7 +218,7 @@ Mesh EMesh::construct()
         glm::vec3 AB = B-A;
         glm::vec3 AC = C-A;
 
-        glm::vec3 faceNormal = glm::cross(AB, AC);
+        glm::vec3 faceNormal = glm::normalize(glm::cross(AB, AC));
 
         //OpenMesh::Vec3f faceNormal = mesh.normal(*f_it);
         std::vector<unsigned int> local_indices;
@@ -318,4 +283,111 @@ Mesh EMesh::construct()
     m.init(vertices, indices);
     m.upload2GPU();
     return m;
+}
+
+
+// Validate whole mesh 
+void EMesh::validate(){
+    static const char* vPrefix = "[EMesh::validate]";
+    const int MAX_ITER = 100; 
+    // 1. Twin of the twin of a halfedge must be equal to the halfedge
+
+    for(HalfEdgeHandle i = 0; i < _halfEdges.size(); i++){
+        const HalfEdgeHandle he = i ;
+        HalfEdgeHandle h = InvalidHandle;
+        int counter = 0;
+
+        int allHalfedgesCount = _halfEdges.size();
+        int allVerticesCount = _vertices.size();
+        int allFaceCount = _faces.size();
+
+        HalfEdgeHandle he_twin = twin(he);
+        HalfEdgeHandle he_next = next(he);
+        HalfEdgeHandle he_prev = prev(he);
+        VertexHandle he_origin = origin(he);
+        FaceHandle he_face = face(he);  
+
+        if(he_twin != InvalidHandle && (he_twin<0 || he_twin>=allHalfedgesCount))
+            LOG_ERROR("{} [{}] he.twin is out of bounds", vPrefix, he_twin);
+        if(he_next != InvalidHandle && (he_next<0 || he_next>=allHalfedgesCount))
+            LOG_ERROR("{} [{}] he.next is out of bounds", vPrefix, he_next);
+        if(he_prev != InvalidHandle && (he_prev<0 || he_prev>=allHalfedgesCount))
+            LOG_ERROR("{} [{}] he.prev is out of bounds", vPrefix, he_prev);
+
+        if(he_origin != InvalidHandle && (he_origin<0 || he_origin>=allVerticesCount))
+            LOG_ERROR("{} [{}] he.origin is out of bounds", vPrefix, he_origin);
+
+        if(he_face != InvalidHandle && (he_face<0 || he_face>=allFaceCount))
+            LOG_ERROR("{} [{}] he.face is out of bounds", vPrefix, he_face);
+
+
+        if(twin(twin(he)) != he)
+            LOG_ERROR("{} [{}] Twin of the twin of a halfedge must be equal to the halfedge", vPrefix, he);
+
+        if(origin(he) != destination(twin(he)))
+            LOG_ERROR("{} [{}] he.orig != he.twin.destination", vPrefix, he);
+
+
+        if(prev(next(he)) != he)
+            LOG_ERROR("{} [{}] he.next.prev != he", vPrefix, he);
+
+        if(next(prev(he)) != he)
+            LOG_ERROR("{} [{}] he.prev.next != he", vPrefix, he);
+
+
+        // -----<O>---<X>---<O>---<X>---<O>---<X>---<O>---<X>---<O>---<X>---<O>-----
+        
+        h = he;
+        counter = 0; 
+        FaceHandle f1 = face(he);
+        do
+        {
+            if(counter++>MAX_ITER){
+                LOG_ERROR("{} [{}] edge loop does not close or too big!", vPrefix, he);
+                break;
+            }
+            if(f1 != face(h)){                
+                LOG_ERROR("{} [{}] face of inner loop edges does not equal!", vPrefix, he);
+                break;
+            }
+            h = next(h);
+        } while (h!=he);
+
+        // -----<O>---<X>---<O>---<X>---<O>---<X>---<O>---<X>---<O>---<X>---<O>-----
+
+        HalfEdgeHandle he_face_edge = edgeofFace(face(he));
+        if(he_face_edge != InvalidHandle){ // boundary he değilse
+            h = he;
+            counter = 0; 
+            do
+            {
+                if(counter++>MAX_ITER){
+                    LOG_ERROR("{} [{}] he.face.edge is not inside edge loop!", vPrefix, he);
+                    break;
+                }
+                h = next(h);
+            } while (h!=he_face_edge);
+        }
+        
+        // -----<O>---<X>---<O>---<X>---<O>---<X>---<O>---<X>---<O>---<X>---<O>-----
+
+        HalfEdgeHandle he_origin_edge = edgeofVertex(origin(he));
+        if(he_origin_edge != InvalidHandle){
+            h = he;
+            counter = 0; 
+            do
+            {
+                if(counter++>MAX_ITER){
+                    LOG_ERROR("{} [{}] he.origin.edge is not inside outgoing halfedges!", vPrefix, he);
+                    break;
+                }
+                h = next(twin(h));
+            } while (h!=he_origin_edge);
+        }
+        else{
+            LOG_ERROR("{} [{}] he.origin.edge is Invalid!", vPrefix, he);
+        }
+
+    }
+
 }
