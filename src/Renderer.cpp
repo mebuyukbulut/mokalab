@@ -255,7 +255,7 @@ void Renderer::postProcessPass(Texture& sourceTarget0, Texture& sourceTarget1, C
 
 void Renderer::init(std::shared_ptr<Camera> camera) {
     _frameUniforms.init(); 
-
+ 
     // Biz bu değişkenleri hardcoded yazıyoruz ama bunları dosyadan okumak yada klasör taraması yapmak daha mantıklı olabilir
     // Ayrıca CWD path olayını da daha net bir hale getirmemiz gerekecek
 

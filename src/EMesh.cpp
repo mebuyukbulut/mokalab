@@ -5,6 +5,40 @@ inline uint64_t EMesh::makeEdgeKey(int32_t a, int32_t b){
     return (uint64_t(uint32_t(a)) << 32) | uint32_t(b); 
 }
 
+void EMesh::edgeMapAdd(VertexHandle a, VertexHandle b, HalfEdgeHandle he){
+    uint64_t key = makeEdgeKey(static_cast<uint32_t>(a), static_cast<uint32_t>(b));
+    if(_edgeMap.contains(key))
+        LOG_WARNING("[EMesh::edgeMapAdd] The given key is already in _edgeMap V1:{},\tV2:{}",a,b);
+    else
+        _edgeMap[key] = he;
+}
+void EMesh::edgeMapDel(VertexHandle a, VertexHandle b){
+    uint64_t key = makeEdgeKey(static_cast<uint32_t>(a), static_cast<uint32_t>(b));
+    if(_edgeMap.contains(key))
+        _edgeMap.erase(key);
+    else
+        LOG_WARNING("[EMesh::edgeMapDel] The given key is not found in the _edgeMap V1:{},\tV2:{}",a,b);
+}
+
+// a ve b valid bir hanndle mı kontrol et 
+HalfEdgeHandle EMesh::addHalfEdge(VertexHandle a, VertexHandle b)
+{
+    _halfEdges.push_back(EHalfEdge());
+    HalfEdgeHandle he = _halfEdges.size()-1;
+    edgeMapAdd(a,b,he);
+    return he;
+}
+HalfEdgeHandle EMesh::addHalfEdge(VertexHandle a, VertexHandle b, const EHalfEdge& he)
+{
+    if(a != he.origin)
+        LOG_WARNING("[EMesh::addHalfEdge] a != he.origin a: {}, \the.origin: {}", a, he.origin);
+
+    _halfEdges.push_back(he);
+    HalfEdgeHandle he_handle = _halfEdges.size()-1;
+    _edgeMap[makeEdgeKey(a, b)] = he_handle; 
+    return he_handle;
+}
+
 // Bir vertexden çıkan tüm halfedge'ler
 std::vector<HalfEdgeHandle> EMesh::outgoingHalfEdges(VertexHandle v)
 {
@@ -186,8 +220,9 @@ FaceHandle EMesh::addFace(const std::vector<VertexHandle> &verts)
     // Vertexlerin outer'ları eşleştirme
     for(int i = 0; i<verts.size(); i++){
         VertexHandle vertex = verts[i];
-        HalfEdgeHandle he = innerHEs[i];
-
+        HalfEdgeHandle he = innerHEs[(i+1)%innerHEs.size()];
+        // half edgeleri eklerken döngüye i-1 den başlıyoruz: VertexHandle prevVertex = verts.back();
+        // bu sebeple (i+1) yapmamız lazım yoksa döngü bir kayıyor.
         _vertices[vertex].edge = he;
     }
 
@@ -195,6 +230,97 @@ FaceHandle EMesh::addFace(const std::vector<VertexHandle> &verts)
     _faces[fh].edge = innerHEs[0]; 
     
     return fh;
+}
+
+// Verilen Edge in tam ortasına bir Vertex daha ekler. 
+//
+// Not 0: h1 ve h4 halfedgeleri bu işlem esnasında silinebilirdi ve devamında 4 tane halfedge oluşturabilirdi.
+// Fakat _halfEdges vektöründe 2 adet delik oluşturacaktık. Bunu temizleyen bir mekanizma elimizde şuanda yok. 
+// Olsa bile ekstra cost'a girmenin bir anlamı yok. 
+// 
+// Not 1: Edge case'ler handle edilmedi. Örneğin: V1--V2 doğru parçası uzayda tek başına duruyorsa.
+// Yani herhangi bir geometriye bağlı değilse ne yapılacağı şuanda belirsiz. 
+VertexHandle EMesh::splitEdge(const HalfEdgeHandle& h1)
+{   
+    // Outer half edges and all connections
+    //        * V0    
+    //    h7 / \ h8       h7.twin = h0; h0.next = h1; h1.next = h2;   
+    //      /   \         h1.twin = h4; h4.next = h5; h5.next = h6;
+    //  V1 *-----* V2
+    //      \   /
+    //    h9 \ / h10
+    //        * V3
+
+    // Operation area (before ==> after)
+    //     ---h1-->                ---h1-->    ---hn1-->
+    //  V1 -------- V2   ==>    V1 -------- V4 --------- V2
+    //     <--h4---                <--h4---    <--hn2---
+
+    // Internal halfedges (before)
+    //        * V0
+    //    h0 / \ h2
+    //      /   \ 
+    //  V1 *---->* V2
+    //        h1
+    //
+    //        h4
+    //  V1 *<----* V2
+    //      \   /
+    //    h5 \ / h6
+    //        * V3
+
+    // Gerekli Handle'ları oluşturuyoruz
+    HalfEdgeHandle h2, h4, h6, hn1, hn2;
+    VertexHandle v1, v2, v4;
+
+    // Vertex ve HalfEdge'leri eklemeden önce gerekli bağlantıları kaydediyoruz. 
+    h2 = next(h1);
+    h4 = twin(h1);
+    h6 = prev(h4); 
+
+    v1 = origin(h1);
+    v2 = destination(h1);
+
+    // Vertex'imi ekliyoruz
+    glm::vec3 v1_pos = _vertices[v1].point;
+    glm::vec3 v2_pos = _vertices[v2].point;
+    v4 = addVertex((v1_pos+v2_pos)/2.f);
+
+    // Yeni HalfEdge'leri ekliyoruz. 
+    hn1 = addHalfEdge(v4, v2);
+    hn2 = addHalfEdge(v2, v4);
+    EHalfEdge& hn1e = _halfEdges[hn1];
+    EHalfEdge& hn2e = _halfEdges[hn2];
+    
+    hn1e.face = face(h1);
+    hn1e.origin = v4;
+    hn1e.next = h2;
+    hn1e.prev = h1;
+    hn1e.twin = hn2;
+
+    hn2e.face = face(h4);
+    hn2e.origin = v2;
+    hn2e.next = h4;
+    hn2e.prev = h6;
+    hn2e.twin = hn1;
+
+    // Eski bağlantıları yeni düzene göre güncelliyoruz. 
+    _vertices[v4].edge = hn1;
+    _vertices[v2].edge = hn2;
+
+    _halfEdges[h1].next = hn1;
+    _halfEdges[h2].prev = hn1;
+    _halfEdges[h4].origin = v4;
+    _halfEdges[h4].prev = hn2;    
+    _halfEdges[h6].next = hn2; 
+
+    // Eski h1 ve h4 ü _edgeMap'te güncelliyoruz. 
+    edgeMapDel(v1,v2);
+    edgeMapDel(v2,v1);
+    edgeMapAdd(v1,v4,h1);
+    edgeMapAdd(v4,v1,h4);
+    
+    return v4;
 }
 
 Mesh EMesh::construct()
@@ -377,6 +503,7 @@ void EMesh::validate(){
             counter = 0; 
             do
             {
+                //LOG_WARNING("counter: {}, h: {}, he: {}, he.orig.edge: {} ", counter, h, he, he_origin_edge);
                 if(counter++>MAX_ITER){
                     LOG_ERROR("{} [{}] he.origin.edge is not inside outgoing halfedges!", vPrefix, he);
                     break;

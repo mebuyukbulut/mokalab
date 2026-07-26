@@ -39,6 +39,11 @@ class EMesh{
     std::unordered_map<uint64_t, HalfEdgeHandle> _edgeMap;
 
     inline uint64_t makeEdgeKey(int32_t a, int32_t b);
+    void edgeMapAdd(VertexHandle a, VertexHandle b, HalfEdgeHandle he);
+    void edgeMapDel(VertexHandle a, VertexHandle b);
+
+    HalfEdgeHandle addHalfEdge(VertexHandle a, VertexHandle b);
+    HalfEdgeHandle addHalfEdge(VertexHandle a, VertexHandle b, const EHalfEdge& he);
 
     inline HalfEdgeHandle prev(HalfEdgeHandle he){return _halfEdges[he].prev;}
     inline HalfEdgeHandle next(HalfEdgeHandle he){return _halfEdges[he].next;}
@@ -53,9 +58,12 @@ class EMesh{
     std::vector<HalfEdgeHandle> outgoingHalfEdges(VertexHandle v);
     std::vector<VertexHandle> verticesOfFace(FaceHandle f);
 
+
 public:
     VertexHandle addVertex(const glm::vec3& pos);
     FaceHandle addFace(const std::vector<VertexHandle>& verts);
+
+    VertexHandle splitEdge(const HalfEdgeHandle& h1);
 
     void computeFaceNormal();
 

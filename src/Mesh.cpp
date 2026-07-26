@@ -280,6 +280,7 @@ Mesh MeshFactory::createPlane()
     
     mesh.addFace({v0, v1, v2, v3});
 
+    mesh.validate();
     return mesh.construct();
 }
 Mesh MeshFactory::createTorus()
@@ -420,6 +421,7 @@ Mesh MeshFactory::createUVSphere(){
         mesh.addFace({southA, southB, south});
     } 
     
+    mesh.validate();
 
     return mesh.construct();
 }
