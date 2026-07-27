@@ -39,6 +39,24 @@ HalfEdgeHandle EMesh::addHalfEdge(VertexHandle a, VertexHandle b, const EHalfEdg
     return he_handle;
 }
 
+int EMesh::countFaceEdges(HalfEdgeHandle he)
+{
+    constexpr int MAX_ITER = 100; 
+    int counter = 0; 
+    HalfEdgeHandle start = he;
+
+    do
+    {
+        he = next(he);
+        if(++counter >MAX_ITER) {
+            LOG_WARNING("[EMesh::countFaceEdges] Inner loop count is more than MAX_ITER. Count operation aborted.");
+            return -1;
+        }        
+    } while (start != he);
+    
+    return counter;
+}
+
 // Bir vertexden çıkan tüm halfedge'ler
 std::vector<HalfEdgeHandle> EMesh::outgoingHalfEdges(VertexHandle v)
 {
@@ -321,6 +339,129 @@ VertexHandle EMesh::splitEdge(const HalfEdgeHandle& h1)
     edgeMapAdd(v4,v1,h4);
     
     return v4;
+}
+
+
+// Verilen edge'i uygunsa saat yönünde 1 vertex döndürür. 
+void EMesh::flipEdge(const HalfEdgeHandle &h1)
+{
+
+    // Outer half edges and all connections
+    //        * V0    
+    //    h7 / \ h8       h7.twin = h0; h0.next = h1; h1.next = h2;   
+    //      /   \         h1.twin = h4; h4.next = h5; h5.next = h6;
+    //  V1 *-----* V2
+    //      \   /
+    //    h9 \ / h10
+    //        * V3
+
+    // Operation area (before ==> after)
+    //
+    //     ---h1-->                   V0
+    //  V1 -------- V2   ==>        A | |
+    //     <--h4---                 | | |h1       
+    //                            h4| | |
+    //                              | | v
+    //                                V3     
+
+    // Internal halfedges (before)
+    //        * V0
+    //    h0 / \ h2
+    //      /   \ 
+    //  V1 *---->* V2
+    //        h1
+    //
+    //        h4
+    //  V1 *<----* V2
+    //      \   /
+    //    h5 \ / h6
+    //        * V3
+
+    // Uygunluk kontrolü 
+    if(isInvalid(h1) || isInvalid(twin(h1))){
+        LOG_ERROR("[EMesh::flipEdge][{}] The halfedge or its twin is invalid. Operation aborted.", h1);
+        return;
+    }
+    if(isInvalid(face(h1)) || isInvalid(face(twin(h1)))){
+        LOG_ERROR("[EMesh::flipEdge][{}] Cannot flip a boundary edge. Operation aborted.", h1);
+        return;
+    }
+
+    int h1LoopEdgeCount = countFaceEdges(h1);
+    int h4LoopEdgeCount = countFaceEdges(twin(h1));
+    if(h1LoopEdgeCount != 3 || h4LoopEdgeCount != 3){
+        LOG_ERROR("[EMesh::flipEdge][{}] The edge is not shared by two triangular faces. Operation aborted.\
+            \n h1LoopEdgeCount:{}\t h4LoopEdgeCount:{}", h1, h1LoopEdgeCount, h4LoopEdgeCount);
+        return;
+    }
+    VertexHandle flipV0 = origin(prev(h1)); // V0
+    VertexHandle flipV1 = origin(prev(twin(h1))); // V3
+    if(hasEdge(flipV0, flipV1)){
+        LOG_ERROR("[EMesh::flipEdge][{}] Edge flip would create a duplicate edge. Operation aborted", h1);
+        return;
+    }
+
+    // Gerekli handle'ların oluşturulması ve curent state'in kaydedilmesi
+    HalfEdgeHandle h0, h2, h4, h5, h6;
+    FaceHandle f0, f1;
+    VertexHandle v0, v1, v2, v3;
+    
+    h0 = prev(h1);
+    h2 = next(h1);
+    h4 = twin(h1);
+
+    h5 = next(h4);
+    h6 = prev(h4);
+
+    f0 = face(h1);
+    f1 = face(h4);
+
+    v0 = origin(h0);
+    v1 = origin(h1);
+    v2 = origin(h2);
+    v3 = origin(h6);
+
+    // halfedge bağlantılarının yapılması
+    EHalfEdge &he0 = _halfEdges[h0], &he1 = _halfEdges[h1], &he2 = _halfEdges[h2];
+    EHalfEdge &he4 = _halfEdges[h4], &he5 = _halfEdges[h5], &he6 = _halfEdges[h6];
+
+    he1.next = h6;
+    he1.prev = h2;
+    he1.origin = v0;
+
+    he4.next = h0;
+    he4.prev = h5;
+    he4.origin = v3;
+
+    he0.next = h5;
+    he0.prev = h4;
+    he0.face = f1;
+
+    he2.next = h1;
+    he2.prev = h6;
+    he2.face = f0;
+
+    he5.next = h4;
+    he5.prev = h0;
+    he5.face = f1;
+
+    he6.next = h2;
+    he6.prev = h1;
+    he6.face = f0;
+
+    // operasyon sonrası vertex ve face edge'leri değişmiş olabilir 
+    // o sebeple bağlantılarını tazeliyoruz. 
+    _vertices[v1].edge = h5; 
+    _vertices[v2].edge = h2; 
+
+    _faces[f0].edge = h1;
+    _faces[f1].edge = h4;
+
+    // edgeMap in güncellenmesi
+    edgeMapDel(v1,v2);
+    edgeMapDel(v2,v1);
+    edgeMapAdd(v0,v3,h1);
+    edgeMapAdd(v3,v0,h4);
 }
 
 Mesh EMesh::construct()

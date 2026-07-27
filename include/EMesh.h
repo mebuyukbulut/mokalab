@@ -41,9 +41,14 @@ class EMesh{
     inline uint64_t makeEdgeKey(int32_t a, int32_t b);
     void edgeMapAdd(VertexHandle a, VertexHandle b, HalfEdgeHandle he);
     void edgeMapDel(VertexHandle a, VertexHandle b);
+    inline bool hasEdge(VertexHandle a, VertexHandle b){
+        return _edgeMap.contains(makeEdgeKey(static_cast<uint32_t>(a),static_cast<uint32_t>(b)));}
 
     HalfEdgeHandle addHalfEdge(VertexHandle a, VertexHandle b);
     HalfEdgeHandle addHalfEdge(VertexHandle a, VertexHandle b, const EHalfEdge& he);
+
+
+    int countFaceEdges(HalfEdgeHandle he);
 
     inline HalfEdgeHandle prev(HalfEdgeHandle he){return _halfEdges[he].prev;}
     inline HalfEdgeHandle next(HalfEdgeHandle he){return _halfEdges[he].next;}
@@ -55,6 +60,10 @@ class EMesh{
     inline HalfEdgeHandle edgeofFace(FaceHandle f){return f == InvalidHandle ? InvalidHandle : _faces[f].edge;}
     inline HalfEdgeHandle edgeofVertex(VertexHandle v){return v == InvalidHandle ? InvalidHandle : _vertices[v].edge;}
 
+    inline bool isInvalid(const uint32_t handle){return handle == InvalidHandle;}
+    // isValid fonksiyonu için handle'ın tipi önemli çünkü boundary check de yapılması lazım.
+
+
     std::vector<HalfEdgeHandle> outgoingHalfEdges(VertexHandle v);
     std::vector<VertexHandle> verticesOfFace(FaceHandle f);
 
@@ -64,6 +73,7 @@ public:
     FaceHandle addFace(const std::vector<VertexHandle>& verts);
 
     VertexHandle splitEdge(const HalfEdgeHandle& h1);
+    void flipEdge(const HalfEdgeHandle& h1);
 
     void computeFaceNormal();
 
