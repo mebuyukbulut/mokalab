@@ -1,8 +1,119 @@
 #include "EMesh.h"
+#include <algorithm> 
+
+// ==========================
+// Allocation
+// ==========================
+VertexHandle EMesh::allocVertex()
+{
+    VertexHandle idx = InvalidHandle; 
+    
+    if(!_freeVertices.empty()){
+        idx = _freeVertices.back();
+        _freeVertices.pop_back();
+        _vertices[idx].edge = InvalidHandle;
+    }
+    else{
+        idx = _vertices.size();
+        _vertices.push_back(EVertex());
+    }
+
+    return idx; 
+}
+
+HalfEdgeHandle EMesh::allocHalfEdge()
+{
+    HalfEdgeHandle idx = InvalidHandle;
+
+    if(!_freeHalfEdges.empty()){
+        idx = _freeHalfEdges.back();
+        _freeHalfEdges.pop_back();
+        _halfEdges[idx].origin = InvalidHandle;
+    }
+    else{
+        idx = _halfEdges.size();
+        _halfEdges.push_back(EHalfEdge());
+    }
+
+    return idx;
+}
+
+FaceHandle EMesh::allocFace()
+{
+    FaceHandle idx = InvalidHandle;
+    
+    if(!_freeFaces.empty()){
+        idx = _freeFaces.back();
+        _freeFaces.pop_back();
+        _faces[idx].edge = InvalidHandle;
+    }
+    else{
+        idx = _faces.size();
+        _faces.push_back(EFace());
+    }
+
+    return idx;
+}
+
+void EMesh::freeVertex(VertexHandle v)
+{   // Boundary check
+    if(!isValidVertex(v)){
+        LOG_ERROR("[EMesh::freeVertex][{}] VertexHandle is invalid: out of bounds or deleted. \
+            Operation aborted!",v);
+        return;
+    }
+
+    // Datayı overwrite et
+    _vertices[v].point = glm::vec3(0.f, 0.f, 0.f);
+    _vertices[v].edge = TombstoneHandle;
+
+    // freelist'e ekle
+    _freeVertices.push_back(v);
+}
+
+void EMesh::freeHalfEdge(HalfEdgeHandle h)
+{   // Boundary check
+    if(!isValidHalfEdge(h)){
+        LOG_ERROR("[EMesh::freeHalfEdge][{}] HalfEdgeHandle is invalid: out of bounds or deleted. \
+            Operation aborted!",h);
+        return;
+    }
+
+    // Datayı overwrite et
+    _halfEdges[h].face = InvalidHandle;
+    _halfEdges[h].next = InvalidHandle;
+    _halfEdges[h].prev = InvalidHandle;
+    _halfEdges[h].twin = InvalidHandle;
+    
+    _halfEdges[h].origin = TombstoneHandle;
+    
+    // freelist'e ekle
+    _freeHalfEdges.push_back(h);
+}
+
+void EMesh::freeFace(FaceHandle f)
+{   // Boundary check
+    if(!isValidFace(f)){
+        LOG_ERROR("[EMesh::freeFace][{}] FaceHandle is invalid: out of bounds or deleted. \
+            Operation aborted!",f);
+        return;
+    }
+
+    // Datayı overwrite et
+    _faces[f].edge = TombstoneHandle;
+
+    // freelist'e ekle
+    _freeFaces.push_back(f);
+}
 
 
-inline uint64_t EMesh::makeEdgeKey(int32_t a, int32_t b){
-    return (uint64_t(uint32_t(a)) << 32) | uint32_t(b); 
+
+// ==========================
+// Edge Map
+// ==========================
+inline uint64_t EMesh::makeEdgeKey(int32_t a, int32_t b)
+{
+    return (uint64_t(uint32_t(a)) << 32) | uint32_t(b);
 }
 
 void EMesh::edgeMapAdd(VertexHandle a, VertexHandle b, HalfEdgeHandle he){
@@ -20,11 +131,13 @@ void EMesh::edgeMapDel(VertexHandle a, VertexHandle b){
         LOG_WARNING("[EMesh::edgeMapDel] The given key is not found in the _edgeMap V1:{},\tV2:{}",a,b);
 }
 
-// a ve b valid bir hanndle mı kontrol et 
+inline bool EMesh::hasEdge(VertexHandle a, VertexHandle b){
+        return _edgeMap.contains(makeEdgeKey(static_cast<uint32_t>(a),static_cast<uint32_t>(b)));}
+
+// a ve b valid bir handle mı kontrol et 
 HalfEdgeHandle EMesh::addHalfEdge(VertexHandle a, VertexHandle b)
-{
-    _halfEdges.push_back(EHalfEdge());
-    HalfEdgeHandle he = _halfEdges.size()-1;
+{    
+    HalfEdgeHandle he = allocHalfEdge();
     edgeMapAdd(a,b,he);
     return he;
 }
@@ -33,6 +146,7 @@ HalfEdgeHandle EMesh::addHalfEdge(VertexHandle a, VertexHandle b, const EHalfEdg
     if(a != he.origin)
         LOG_WARNING("[EMesh::addHalfEdge] a != he.origin a: {}, \the.origin: {}", a, he.origin);
 
+    //HalfEdgeHandle he_handle = allocHalfEdge();
     _halfEdges.push_back(he);
     HalfEdgeHandle he_handle = _halfEdges.size()-1;
     _edgeMap[makeEdgeKey(a, b)] = he_handle; 
@@ -57,6 +171,57 @@ int EMesh::countFaceEdges(HalfEdgeHandle he)
     return counter;
 }
 
+
+std::vector<VertexHandle> EMesh::intersectHandles(std::vector<int32_t> a, std::vector<int32_t> b)
+{
+    std::vector<VertexHandle> common;
+
+    std::sort(a.begin(), a.end());
+    std::sort(b.begin(), b.end());
+
+    std::set_intersection(
+        a.begin(), a.end(),
+        b.begin(), b.end(),
+        std::back_inserter(common)
+    );
+
+    return common;
+}
+
+std::vector<VertexHandle> EMesh::differenceHandles(std::vector<int32_t> a, std::vector<int32_t> b)
+{
+    std::vector<VertexHandle> diff;
+
+    std::sort(a.begin(), a.end());
+    std::sort(b.begin(), b.end());
+
+    std::set_difference(
+        a.begin(), a.end(),
+        b.begin(), b.end(),
+        std::back_inserter(diff)
+    );
+
+    return diff;
+}
+
+// ==========================
+// Validation
+// ==========================
+inline bool EMesh::isInvalid(const uint32_t handle)
+{
+    return handle == InvalidHandle;
+}
+inline bool EMesh::isValidVertex(const VertexHandle v){
+    return !(v<0 || v>=_vertices.size() || _vertices[v].edge == TombstoneHandle);
+}
+inline bool EMesh::isValidHalfEdge(const HalfEdgeHandle h){
+    return !(h<0 || h>=_halfEdges.size() || _halfEdges[h].origin == TombstoneHandle);
+}
+inline bool EMesh::isValidFace(const FaceHandle f){
+    return !(f<0 || f>=_faces.size() || _faces[f].edge == TombstoneHandle);
+}
+
+
 // Bir vertexden çıkan tüm halfedge'ler
 std::vector<HalfEdgeHandle> EMesh::outgoingHalfEdges(VertexHandle v)
 {
@@ -77,6 +242,16 @@ std::vector<HalfEdgeHandle> EMesh::outgoingHalfEdges(VertexHandle v)
     }while(he!=start);
 
     return HEs;
+}
+
+std::vector<VertexHandle> EMesh::adjacentVertices(VertexHandle v)
+{
+    std::vector<VertexHandle> adjVerts{};
+
+    for(HalfEdgeHandle h : outgoingHalfEdges(v))
+        adjVerts.push_back(destination(h));
+    
+    return adjVerts;
 }
 
 // Bir face'e ait tüm vertex'ler
@@ -100,15 +275,15 @@ std::vector<VertexHandle> EMesh::verticesOfFace(FaceHandle f)
 
 VertexHandle EMesh::addVertex(const glm::vec3 &pos)
 {
-    _vertices.push_back({pos});
-    return static_cast<int32_t>(_vertices.size()-1);
+    VertexHandle v = allocVertex();
+    _vertices[v].point = pos;
+    return v;
 }
 
 
 // Default orientation is CCW
 FaceHandle EMesh::addFace(const std::vector<VertexHandle> &verts)
 {
-
     for(int32_t i : verts)
         if(i<0 || i >= _vertices.size()){
             LOG_ERROR("EMesh::addFace : One of the given vertex indexes is out of bounds.");
@@ -124,9 +299,7 @@ FaceHandle EMesh::addFace(const std::vector<VertexHandle> &verts)
         return InvalidHandle;
     }
 
-    _faces.push_back(EFace());
-    FaceHandle fh = _faces.size()-1;
-
+    FaceHandle fh = allocFace();
 
     std::vector<HalfEdgeHandle> innerHEs;
     std::vector<HalfEdgeHandle> outerHEs;
@@ -148,8 +321,7 @@ FaceHandle EMesh::addFace(const std::vector<VertexHandle> &verts)
 
         }
         else{ // yoksa oluşturup listeye ekle 
-            _halfEdges.push_back(EHalfEdge());
-            HalfEdgeHandle he = _halfEdges.size()-1;
+            HalfEdgeHandle he = allocHalfEdge();
             _edgeMap[makeEdgeKey(a, b)] = he; 
             
             _halfEdges[he].face = fh;
@@ -162,9 +334,8 @@ FaceHandle EMesh::addFace(const std::vector<VertexHandle> &verts)
             HalfEdgeHandle he = _edgeMap[makeEdgeKey(b, a)];            
             outerHEs.push_back(he);
         }
-        else{ // yoksa oluşturup listeye ekle 
-            _halfEdges.push_back(EHalfEdge());
-            HalfEdgeHandle he = _halfEdges.size()-1;            
+        else{ // yoksa oluşturup listeye ekle      
+            HalfEdgeHandle he = allocHalfEdge(); 
             _edgeMap[makeEdgeKey(b, a)] = he; 
 
             _halfEdges[he].face = InvalidHandle;
@@ -464,6 +635,104 @@ void EMesh::flipEdge(const HalfEdgeHandle &h1)
     edgeMapAdd(v3,v0,h4);
 }
 
+void EMesh::collapseEdge(const HalfEdgeHandle &h1)
+{
+    // Uygunluk kontrolü 
+    std::vector<VertexHandle> v1Adj = adjacentVertices(origin(h1));
+    std::vector<VertexHandle> v2Adj = adjacentVertices(destination(h1));
+
+    int commonVertices = intersectHandles(v1Adj, v2Adj).size();
+
+    if(commonVertices > 2 ){
+        LOG_ERROR("[EMesh::collapseEdge][{}] Adjacent vertices cannot be greater than 2. Operation aborted!", h1);
+        return;
+    }
+
+    if(commonVertices != 2){
+        LOG_WARNING("[EMesh::collapseEdge][{}] Not implemented for 0 or 1 adjacent vertices. Operation aborted!", h1);
+        return;
+    }
+
+    int f0EdgeCount = verticesOfFace(face(h1)).size();
+    int f1EdgeCount = verticesOfFace(face(twin(h1))).size();
+    if(f0EdgeCount != 3 || f1EdgeCount != 3){
+        LOG_WARNING("[EMesh::collapseEdge][{}] Not implemented for non-tris faces. Operation aborted!", h1);
+        return;
+    }
+
+    // Gerekli handle'ların oluşturulması ve curent state'in kaydedilmesi
+    HalfEdgeHandle h0, h2, h4, h5, h6, h7, h8, h9, h10;
+    VertexHandle v0, v1, v2, v3;
+    FaceHandle f0, f1;
+    std::vector<HalfEdgeHandle> v1Outs, hOuts;
+
+    h0 = prev(h1);
+    h2 = next(h1);
+
+    h4 = twin(h1);
+    h5 = next(h4);
+    h6 = prev(h4);
+
+    h7 = twin(h0);
+    h8 = twin(h2);
+
+    h9 = twin(h5);
+    h10 = twin(h6);
+
+    v0 = origin(h0);
+    v1 = origin(h1);
+    v2 = origin(h2);
+    v3 = origin(h6);
+
+    f0 = face(h1);
+    f1 = face(h4);
+
+    v1Outs  = outgoingHalfEdges(v1);
+    hOuts = differenceHandles(v1Outs, {h1}); // h1 hariç v1 outgoing half edges
+
+
+    // Yeni bağlantıların yapılması
+
+    _halfEdges[h7].twin = h8;
+    _halfEdges[h8].twin = h7;
+    _halfEdges[h9].twin = h10;
+    _halfEdges[h10].twin = h9;
+
+    for(HalfEdgeHandle h : hOuts)
+        _halfEdges[h].origin = v2;
+
+    _vertices[v0].edge = h8;
+    _vertices[v2].edge = h10;
+    _vertices[v3].edge = h9;
+
+    // Çöp dataların silinmesi
+
+    for(auto h : {h0, h1, h2, h4, h5, h6})
+        freeHalfEdge(h);
+
+    freeVertex(v1);
+
+    freeFace(f0);
+    freeFace(f1);
+
+
+    // edgeMap güncellemesi 
+
+    for(HalfEdgeHandle hOut : hOuts){
+        VertexHandle vDest = destination(hOut);
+
+        edgeMapDel(v1, vDest);
+        edgeMapDel(vDest, v1);
+
+        edgeMapAdd(v2, vDest, hOut);
+        edgeMapAdd(vDest, v2, twin(hOut));
+    }
+
+    edgeMapDel(v1,v2);
+    edgeMapDel(v2,v1);
+
+}
+
 Mesh EMesh::construct()
 {
     std::vector<Vertex> vertices;
@@ -640,10 +909,10 @@ void EMesh::validate(){
 
         HalfEdgeHandle he_origin_edge = edgeofVertex(origin(he));
         if(he_origin_edge != InvalidHandle){
-            h = he;
+            h = he; 
             counter = 0; 
-            do
-            {
+            do 
+            { 
                 //LOG_WARNING("counter: {}, h: {}, he: {}, he.orig.edge: {} ", counter, h, he, he_origin_edge);
                 if(counter++>MAX_ITER){
                     LOG_ERROR("{} [{}] he.origin.edge is not inside outgoing halfedges!", vPrefix, he);
