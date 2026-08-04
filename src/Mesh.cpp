@@ -275,10 +275,17 @@ Mesh MeshFactory::createPlane()
     EMesh mesh; 
     VertexHandle v0 = mesh.addVertex({-1.f, 0.f, 1.f});
     VertexHandle v1 = mesh.addVertex({ 1.f, 0.f, 1.f});
-    VertexHandle v2 = mesh.addVertex({ 1.f, 0.f,-1.f});
+    VertexHandle v2 = mesh.addVertex({ 1.f, 1.f,-1.f});
     VertexHandle v3 = mesh.addVertex({-1.f, 0.f,-1.f});
     
-    mesh.addFace({v0, v1, v2, v3});
+    //mesh.addFace({v0, v1, v2, v3});
+    mesh.addFace({v0, v1, v2});
+    mesh.addFace({v0, v2, v3});
+    mesh.flipEdge(1);
+    VertexHandle v4 = mesh.splitEdge(1);
+    mesh.setVertexPos(v4, {0.f, 1.f, 0.f});
+    mesh.setVertexPos(v2, {1.f, 0.f,-1.f});
+    
 
     mesh.validate();
     return mesh.construct();

@@ -81,15 +81,15 @@ class EMesh{
     // Utility
     // ==========================
 
-    inline HalfEdgeHandle prev(HalfEdgeHandle he){return _halfEdges[he].prev;}
-    inline HalfEdgeHandle next(HalfEdgeHandle he){return _halfEdges[he].next;}
-    inline HalfEdgeHandle twin(HalfEdgeHandle he){return _halfEdges[he].twin;}
-    inline VertexHandle origin(HalfEdgeHandle he){return _halfEdges[he].origin;}
-    inline FaceHandle face(HalfEdgeHandle he){return _halfEdges[he].face;}
-    inline VertexHandle destination(HalfEdgeHandle he){return origin(next(he));}
+    HalfEdgeHandle prev(HalfEdgeHandle he){return _halfEdges[he].prev;}
+    HalfEdgeHandle next(HalfEdgeHandle he){return _halfEdges[he].next;}
+    HalfEdgeHandle twin(HalfEdgeHandle he){return _halfEdges[he].twin;}
+    VertexHandle origin(HalfEdgeHandle he){return _halfEdges[he].origin;}
+    FaceHandle face(HalfEdgeHandle he){return _halfEdges[he].face;}
+    VertexHandle destination(HalfEdgeHandle he){return origin(next(he));}
 
-    inline HalfEdgeHandle edgeofFace(FaceHandle f){return f == InvalidHandle ? InvalidHandle : _faces[f].edge;}
-    inline HalfEdgeHandle edgeofVertex(VertexHandle v){return v == InvalidHandle ? InvalidHandle : _vertices[v].edge;}
+    HalfEdgeHandle edgeofFace(FaceHandle f){return f == InvalidHandle ? InvalidHandle : _faces[f].edge;}
+    HalfEdgeHandle edgeofVertex(VertexHandle v){return v == InvalidHandle ? InvalidHandle : _vertices[v].edge;}
 
 
     std::vector<VertexHandle> intersectHandles(std::vector<int32_t> a, std::vector<int32_t> b);
@@ -99,15 +99,24 @@ class EMesh{
     // ==========================
     // Validation
     // ==========================
-    inline bool isInvalid(const uint32_t handle);
-    inline bool isValidVertex(const VertexHandle v);
-    inline bool isValidFace(const FaceHandle f);
-    inline bool isValidHalfEdge(const HalfEdgeHandle h);
+    bool isInvalid(const uint32_t& handle);
+    bool isValidVertex(const VertexHandle& v);
+    bool isValidFace(const FaceHandle& f);
+    bool isValidFace(const EFace& f);
+    bool isValidHalfEdge(const HalfEdgeHandle& h);
 
 
     std::vector<HalfEdgeHandle> outgoingHalfEdges(VertexHandle v);
     std::vector<VertexHandle> adjacentVertices(VertexHandle v);
     std::vector<VertexHandle> verticesOfFace(FaceHandle f);
+
+
+    // ==========================
+    // Construction
+    // ==========================
+    glm::vec3 trisNormal(const glm::vec3& A, const glm::vec3& B, const glm::vec3& C);
+    float trisMinAngle(const glm::vec3& A, const glm::vec3& B, const glm::vec3& C);
+    bool useDiagonalAC(const glm::vec3& A, const glm::vec3& B, const glm::vec3& C, const glm::vec3& D);
 
 
 public:
@@ -120,6 +129,9 @@ public:
 
     void computeFaceNormal();
 
+    void setVertexPos(VertexHandle v, glm::vec3 newPos){ 
+        if(isValidVertex(v)) _vertices[v].point = newPos;
+    }
     Mesh construct();
 
     void validate();
