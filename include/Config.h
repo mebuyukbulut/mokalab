@@ -27,5 +27,3 @@ public:
     void load(std::string path = "../assets/config/config.yaml");
     void save(std::string path = "../assets/config/config.yaml");
 };
-
-inline Config config{}; // declared and defined in one place

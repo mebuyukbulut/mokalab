@@ -86,6 +86,3 @@ public:
 private:
     std::unordered_map<EventType, std::vector<Callback>> _listeners;
 };
-
-
-inline EventDispatcher dispatcher{}; // declared and defined in one place

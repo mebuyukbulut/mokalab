@@ -6,15 +6,19 @@
 
 class Texture;
 class Shader;
+struct EngineContext;
 
 class Material : public Asset
 {
-	struct DefaultTextures{
-		std::shared_ptr<Texture> white;
-		std::shared_ptr<Texture> black;
-		std::shared_ptr<Texture> normal;
-		DefaultTextures();
-	} defTex;
+	// EngineContext* ece{};
+	// struct DefaultTextures{
+	// 	std::shared_ptr<Texture> white;
+	// 	std::shared_ptr<Texture> black;
+	// 	std::shared_ptr<Texture> normal;
+	// 	DefaultTextures();
+	// } defTex;
+	std::shared_ptr<Texture> defaultWhite{};
+	std::shared_ptr<Texture> defaultNormal{};
 public:
 	glm::vec4 baseColor;
 	glm::vec4 emissive;
@@ -23,7 +27,6 @@ public:
 	float reflectance;
 	float ao;
 
-	std::shared_ptr<Texture> defaultWhiteTexture{};
 	std::shared_ptr<Texture> baseColorTexture{};
 	std::shared_ptr<Texture> armTexture{}; // AO, Roughness, Metallic
 	std::shared_ptr<Texture> normalTexture{};
@@ -38,7 +41,7 @@ public:
 		ao{ 1.f }
 	{}
 
-	void use(Shader* shader);
+	void use(Shader* shader, EngineContext* ece);
 
 	void loadDefault(std::string path);
 
@@ -60,6 +63,6 @@ public:
 
 namespace EditorUI{
 	// void MaterialEditor(std::shared_ptr<Material> mat);
-	std::string materialSelector();
+	std::string materialSelector(EngineContext* ece);
 	//std::vector<std::string> getMaterialList()
 }

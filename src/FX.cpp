@@ -2,6 +2,7 @@
 #include "Shader.h"
 #include "AssetManager.h"
 #include "Logger.h"
+#include "EngineContext.h"
 #include <imgui.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -50,9 +51,12 @@ void FXParam::onInspect()
 }
 
 
-
-FXInstance::FXInstance(const FXInstanceDefinition& definition)
+FXInstance::FXInstance(EngineContext* ece){
+    this->ece = ece;
+}
+FXInstance::FXInstance(const FXInstanceDefinition& definition, EngineContext* ece)
 {
+    this->ece = ece; 
     builtinID = definition.builtinID;
     label = definition.label;
     for(const FXParamDefinition* pDef : definition.parameters){
@@ -63,13 +67,13 @@ FXInstance::FXInstance(const FXInstanceDefinition& definition)
 }
 
 Shader* FXInstance::getShader() const {
-    return g_Assets.get<Shader>(builtinID).get();
+    return ece->assets.get<Shader>(builtinID).get();
 }
 void FXInstance::update()
 {
-    g_Assets.get<Shader>(builtinID).get()->use();
+    ece->assets.get<Shader>(builtinID).get()->use();
     for(FXParam& param : parameters)
-        param.update(g_Assets.get<Shader>(builtinID).get());
+        param.update(ece->assets.get<Shader>(builtinID).get());
 }
 
 void FXInstance::onInspect()
@@ -96,12 +100,12 @@ void FXInstance::onInspect()
 
 // Add a new FXInstance to FXStack /// AddFX could be more meaningful name
 void FXRegistry::addInstance(int definitionIndex){
-    FXStack.push_back(FXInstance{FXInstanceDefinitionStack[definitionIndex]});
+    FXStack.push_back(FXInstance{FXInstanceDefinitionStack[definitionIndex], ece});
 }
 void FXRegistry::addInstance(std::string builtinID){
     for(const FXInstanceDefinition& def : FXInstanceDefinitionStack){
         if(def.builtinID == builtinID){
-            FXStack.push_back(FXInstance{def});
+            FXStack.push_back(FXInstance{def, ece});
             return;
         }
     }
@@ -117,13 +121,15 @@ std::vector<std::string> FXRegistry::getDefinitionList(){
 }
 
 
-void FXRegistry::init()
+void FXRegistry::init(EngineContext& ece)
 {
+    this->ece = &ece; 
+
     // load all shaders from files
     std::string path{"../assets/shaders/postfx/"};
     for(auto& def : FXInstanceDefinitionStack){
         ShaderSettings ss{def.builtinID, path + def.vertexPath, path + def.fragmentPath};
-        g_Assets.get<Shader>(ss.name, &ss);
+        this->ece->assets.get<Shader>(ss.name, &ss);
     }
 
 

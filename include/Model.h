@@ -16,9 +16,10 @@
 #include <memory>
 
 class Texture;
+struct EngineContext;
 
 class Model : public Asset{
-
+    EngineContext* ece{};
     //MaterialManager* _materialManager{};
     //TextureManager* _textureManager{};
     
@@ -35,7 +36,7 @@ class Model : public Asset{
     std::shared_ptr<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type);
 
 public:
-    Model() { _type = AssetType::Model; }
+    Model(EngineContext* ece) { _type = AssetType::Model; this->ece = ece; }
 
     void draw(Shader* shader, bool bindMaterial = true);
 

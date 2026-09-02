@@ -31,10 +31,10 @@ void Engine::initWindow()
     // glfw window creation
     // --------------------
     _window = glfwCreateWindow(
-        config.window.width, 
-        config.window.height, 
-        config.window.title.c_str(),
-        config.window.fullscreen ? glfwGetPrimaryMonitor() : NULL,
+        _ece.config.window.width, 
+        _ece.config.window.height, 
+        _ece.config.window.title.c_str(),
+        _ece.config.window.fullscreen ? glfwGetPrimaryMonitor() : NULL,
         NULL);
     if (_window == NULL)
     {
@@ -49,24 +49,34 @@ void Engine::initWindow()
         for (int i = 0; i < count; ++i) {
             Event e{ EventType::ModelOpened, {} };
             e.data = std::make_unique<EventData_Text>(std::string(paths[i]));
-            dispatcher.dispatch(e);
+
+            Engine* app = static_cast<Engine*>(glfwGetWindowUserPointer(window));
+            if (app) {
+                //LOG_TRACE("Window resized to: {} x {}",width,height);
+                //app->_renderer.resizeViewport(width, height);
+                app->_ece.dispatcher.dispatch(e); 
+            }
+            else{
+                LOG_ERROR("glfwSetDropCallback");
+            }
+            
         }
         });
 
-    _mouse.init(_window, &_UI);
-    dispatcher.subscribe(EventType::onMove, [&](std::unique_ptr<EventData> e) {
+    _mouse.init(_window, &_UI, _ece);
+    _ece.dispatcher.subscribe(EventType::onMove, [&](std::unique_ptr<EventData> e) {
         std::unique_ptr<EventData_Point> p(static_cast<EventData_Point*>(e.release()));
         _camera->move(p->vec);
         });
-    dispatcher.subscribe(EventType::onRotate, [&](std::unique_ptr<EventData> e) {
+    _ece.dispatcher.subscribe(EventType::onRotate, [&](std::unique_ptr<EventData> e) {
         std::unique_ptr<EventData_Point> p(static_cast<EventData_Point*>(e.release()));
         _camera->rotate(p->vec);
         });
-    dispatcher.subscribe(EventType::onZoom, [&](std::unique_ptr<EventData> e) {
+    _ece.dispatcher.subscribe(EventType::onZoom, [&](std::unique_ptr<EventData> e) {
         std::unique_ptr<EventData_Point> p(static_cast<EventData_Point*>(e.release()));
         _camera->zoom(p->vec.y);
         });
-    dispatcher.subscribe(EventType::SetMainWindowTitle, [&](std::unique_ptr<EventData> e) {
+    _ece.dispatcher.subscribe(EventType::SetMainWindowTitle, [&](std::unique_ptr<EventData> e) {
         std::unique_ptr<EventData_Text> t(static_cast<EventData_Text*>(e.release()));
         glfwSetWindowTitle(_window, t->text.c_str());
 		});
@@ -94,13 +104,13 @@ void Engine::initOpenGL()
 
 void Engine::initUI()
 {
-    _UI.init(_window, _camera);
+    _UI.init(_window, _camera, _ece);
 	//_UI.setWindowSize(SCR_WIDTH, SCR_HEIGHT);
     
-    dispatcher.subscribe(EventType::ShaderSelected, [&](std::unique_ptr<EventData> e) {
+    _ece.dispatcher.subscribe(EventType::ShaderSelected, [&](std::unique_ptr<EventData> e) {
         //_renderer.setShader(e.data.text,Renderer::ShaderType::Main);
         });
-    dispatcher.subscribe(EventType::EngineExit, [&](std::unique_ptr<EventData> e) {
+    _ece.dispatcher.subscribe(EventType::EngineExit, [&](std::unique_ptr<EventData> e) {
         SM.saveScene("");
         glfwSetWindowShouldClose(_window, true);
         });
@@ -111,17 +121,18 @@ void Engine::initUI()
 
 
 void Engine::init(){
-    config.load();
+    _IM.init(_ece);
+    _ece.config.load();
 
     initWindow();
 	initOpenGL();    
     
-	_camera->init(glm::vec2(config.window.width, config.window.height));
-	_camera->setWindowSize(config.window.width, config.window.height);
+	_camera->init(glm::vec2(_ece.config.window.width, _ece.config.window.height));
+	_camera->setWindowSize(_ece.config.window.width, _ece.config.window.height);
 
-    _renderer.init(_camera);
+    _renderer.init(_camera, _ece);
 
-    SM.init(&_renderer, _camera.get(), &_UI);
+    SM.init(&_renderer, _camera.get(), &_UI, _ece);
 
 	initUI();
 
@@ -149,7 +160,7 @@ void Engine::mainLoop()
         //ps.draw();
         
         SM.draw();
-        g_Assets.update(); 
+        _ece.assets.update(); 
         
         
 		_UI.draw(&SM);

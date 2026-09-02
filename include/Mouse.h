@@ -3,12 +3,14 @@
 #include <glm/glm.hpp>
 
 struct GLFWwindow;
+struct EngineContext;
 class UIManager;
 
 class Mouse
 {
 	static Mouse* _this;
 	static UIManager* _UI;
+	EngineContext* ece;
 
 	float _mouseLastX = 0;
 	float _mouseLastY = 0;
@@ -29,7 +31,7 @@ class Mouse
 	float _moveSens = 0.01f; // move sensitivity
 
 public:
-	void init(GLFWwindow* window, UIManager* UI);
+	void init(GLFWwindow* window, UIManager* UI, EngineContext& ece);
 	void update(float deltaTime);
 
 	static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);

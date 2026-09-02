@@ -4,11 +4,12 @@
 #include <memory>
 #include "Model.h"
 
+struct EngineContext; 
 
 class RenderComponent : public Component
 {
     static const bool registered;
-
+    EngineContext* ece{};
 public:
     std::shared_ptr<Model> _model; 
 

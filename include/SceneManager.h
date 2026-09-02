@@ -9,14 +9,15 @@
 #include "Transform.h"
 #include "Material.h"
 #include "RenderItem.h"
-
+#include "EngineContext.h"
 class Renderer;
 
 
 class SceneManager : public Object
 {
     Scene scene;
-	std::string MWD; // Main Working Directory
+	//std::string MWD; // Main Working Directory
+    EngineContext* ece; 
 
 	std::vector<std::unique_ptr<Entity>> _entities{};
     std::vector <Entity*> _selectedEntities{};
@@ -48,7 +49,7 @@ public:
     void initCommands();
     void initDefaults();
 
-    void init(Renderer* renderer, Camera* camera, UIManager* UI);
+    void init(Renderer* renderer, Camera* camera, UIManager* UI, EngineContext& ece);
     void draw();
     void updateMatrixRecursive(Entity* entity);
 

@@ -14,13 +14,32 @@
 #include "Time.h"
 #include "Mouse.h"
 #include "InputManager.h"
-#include "Config.h"
 #include "ParticleSystem.h"
 
+#include "Config.h"
+#include "PathResolver.h"
 #include "SceneManager.h"
 
+#include "EventDispatcher.h"
+#include "AssetManager.h"
+#include "EngineContext.h"
+
 class Engine
-{
+{	
+    // ==========================
+    // Engine Context
+    // ==========================
+	PathResolver    _paths{};
+    Config          _config{};
+    AssetManager    _assets{};
+    EventDispatcher _dispatcher{};
+
+
+    // ==========================
+    // 
+    // ==========================
+
+	// burası çok dağınık düzenlenmeli sahipleri belirlenmeli. 
 	GLFWwindow* _window{};
 	Renderer _renderer{};
 	SceneManager SM{};
@@ -29,8 +48,9 @@ class Engine
 	Mouse _mouse{};
 	InputManager _IM{}; // Input Manager
 	Time time{};
-	//Config config;
 	ParticleSystem ps{};
+
+
 
 	void initWindow();
 	void initOpenGL();
@@ -43,8 +63,11 @@ class Engine
 
 	static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
-public:
-	Engine() = default;
+public:    
+
+	EngineContext _ece;
+
+	Engine():_ece {_paths, _config, _assets, _dispatcher } { _assets.setContext(&_ece); };
 	void run();
 };
 

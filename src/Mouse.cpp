@@ -1,18 +1,21 @@
 #include "Mouse.h"
 #include "UIManager.h"
-#include <GLFW/glfw3.h>
 #include <imgui.h>
 #include <ImGuizmo.h>
 #include "EventDispatcher.h"
-
+#include "EngineContext.h"
+#include "AssetManager.h"
+#include "Engine.h"
+#include <GLFW/glfw3.h>
 
 Mouse* Mouse::_this = nullptr; 
 UIManager* Mouse::_UI = nullptr;
     
-void Mouse::init(GLFWwindow* window, UIManager* UI)
+void Mouse::init(GLFWwindow* window, UIManager* UI, EngineContext& ece)
 {
     _this = this;
     _UI = UI; 
+    this->ece = &ece;
 
     glfwSetMouseButtonCallback(window, Mouse::mouse_button_callback);
     glfwSetCursorPosCallback(window, Mouse::mouse_cursor_callback);
@@ -45,7 +48,7 @@ void Mouse::update(float deltaTime)
             Event e{ 
                 EventType::MouseDrag,
                 std::make_unique<EventData_DoublePoint>(vecA, vecB) };                
-            dispatcher.dispatch(e);
+            ece->dispatcher.dispatch(e);
         }
         
     }
@@ -55,7 +58,7 @@ void Mouse::update(float deltaTime)
             Event e{ 
                 EventType::Select,
                 std::make_unique<EventData_Point>(mousePos.x, mousePos.y, 0) };                
-            dispatcher.dispatch(e);
+            ece->dispatcher.dispatch(e);
             
         }
         _dragPosBegin = glm::vec2(0, 0);
@@ -126,6 +129,8 @@ void Mouse::mouse_cursor_callback(GLFWwindow* window, double xposIn, double ypos
     _this->_mouseLastX = xposIn;
     _this->_mouseLastY = yposIn;
 
+    Engine* app = static_cast<Engine*>(glfwGetWindowUserPointer(window));
+    if (!app) LOG_ERROR("mouse_cursor_callback app is null!");
 
     // gerekli komutları çalıştır 
     // box select 
@@ -143,22 +148,25 @@ void Mouse::mouse_cursor_callback(GLFWwindow* window, double xposIn, double ypos
         Event e{ 
             EventType::onRotate, 
             std::make_unique<EventData_Point>(glm::vec3(xoffset,yoffset,0))};
-        dispatcher.dispatch(e);
+        app->_ece.dispatcher.dispatch(e);
     }
     else if(_this->_mouseRightPress){ 
         glm::vec3 vec(xoffset * _this->_moveSens, yoffset * _this->_moveSens, 0);
         Event e{ 
             EventType::onMove, 
             std::make_unique<EventData_Point>(vec) };
-        dispatcher.dispatch(e);
+        app->_ece.dispatcher.dispatch(e);
     }
 }
 void Mouse::scroll_callback(GLFWwindow* window, double xoffset, double yoffset){
+
     if (!_UI->isHoverOnUI()) {
+        Engine* app = static_cast<Engine*>(glfwGetWindowUserPointer(window));
+        if (!app) LOG_ERROR("scroll_callback app is null!");
         glm::vec3 vec(0, yoffset, 0);
         Event e{ 
             EventType::onZoom, 
             std::make_unique<EventData_Point>(vec) };
-        dispatcher.dispatch(e);
+        app->_ece.dispatcher.dispatch(e);
     }
 }

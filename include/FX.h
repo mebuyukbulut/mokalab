@@ -8,6 +8,7 @@
 #include "IInspectable.h"
 
 class Shader;
+struct EngineContext; 
 
 using FXValue = std::variant<
     float,
@@ -101,10 +102,10 @@ class FXInstance : public IInspectable{
     std::string builtinID{};
     std::string label{}; 
     std::vector<FXParam> parameters{}; 
-
+    EngineContext* ece{};
 public:
-    FXInstance() = default;
-    FXInstance(const FXInstanceDefinition& definition);
+    FXInstance(EngineContext* ece);
+    FXInstance(const FXInstanceDefinition& definition, EngineContext* ece);
 
     Shader* getShader() const;
     std::vector<FXParam>& getParameters(){ return parameters; }
@@ -118,13 +119,14 @@ public:
 class FXRegistry : public IInspectable{
     static std::vector<FXInstanceDefinition> FXInstanceDefinitionStack;
     std::vector<FXInstance> FXStack{};
+    EngineContext* ece{}; 
 
     void addInstance(int definitionIndex);
     void addInstance(std::string builtinID);
 
     std::vector<std::string> getDefinitionList();
 public:
-    void init(); // init all shaders 
+    void init(EngineContext& ece); // init all shaders 
     void onInspect() override;
 
     const std::vector<FXInstance> getActiveFXStack();

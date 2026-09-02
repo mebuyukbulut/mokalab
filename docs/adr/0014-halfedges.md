@@ -34,7 +34,7 @@ Alternatifleri yeterince araştırmadım.
 
 # Pozitif Çıktılar
 - Elimizde mesh editlemek için güzel bir yapımız oldu. 
-- Mokalab, bir viewer'dan çıkıp editöre dönüşmeye başladı. 
+- Mo kalab, bir viewer'dan çıkıp editöre dönüşmeye başladı. 
 
 # Negatif Çıktılar
 Mimarimizi tasarlarken böyle bir yapı ekleyeceğimizi bilmiyorduk. O sebeple var olan yapımızda bazı köklü değişiklikler olabilir. Burası zaman gösterecek

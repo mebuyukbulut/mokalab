@@ -193,6 +193,9 @@ private:
 	//std::vector<Texture*> loadedMatcapTextures; 
 	std::shared_ptr<Texture> matcapTexture;
 	std::vector<std::string> matcapTexturePaths;
+
+	struct EngineContext* ece;
+
 	void initMatcap();
 	//void initSkybox();
 
@@ -214,7 +217,7 @@ private:
 public:
 	class FXRegistry* fxReg{};
 	
-	void init(std::shared_ptr<Camera> camera);
+	void init(std::shared_ptr<Camera> camera, EngineContext& ece);
 	void terminate();
 
 	void renderScene(const SceneRenderData &renderData, bool isViewportSelect);

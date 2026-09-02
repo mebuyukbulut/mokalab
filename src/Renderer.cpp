@@ -15,6 +15,7 @@
 #include "Builtin.h"
 #include "FX.h"
 #include <execution>
+#include "EngineContext.h"
 
 void Renderer::initMatcap() {
     //matcapTexture = TextureFactory::load("data/matcaps/basic_1.png", false);
@@ -28,7 +29,8 @@ void Renderer::initMatcap() {
 		LOG_TRACE("Found matcap texture: {}", p);
 
     //matcapTexture = TextureFactory::load(matcapTexturePaths.front(), false);
-    matcapTexture = g_Assets.get<Texture>( matcapTexturePaths.front());
+    matcapTexture = ece->assets.get<Texture>( matcapTexturePaths.front());
+    
 }
 
 
@@ -253,9 +255,10 @@ void Renderer::postProcessPass(Texture& sourceTarget0, Texture& sourceTarget1, C
     destinationTarget.unbind();
 }
 
-void Renderer::init(std::shared_ptr<Camera> camera) {
+void Renderer::init(std::shared_ptr<Camera> camera, EngineContext& ece) {
     _frameUniforms.init(); 
- 
+    this->ece = &ece;
+
     // Biz bu değişkenleri hardcoded yazıyoruz ama bunları dosyadan okumak yada klasör taraması yapmak daha mantıklı olabilir
     // Ayrıca CWD path olayını da daha net bir hale getirmemiz gerekecek
 
@@ -279,18 +282,18 @@ void Renderer::init(std::shared_ptr<Camera> camera) {
  	//shaders.push_back({"hdr2cubemap",   "../assets/shaders/hdr2cubemap.vert", 		"../assets/shaders/hdr2cubemap.frag"});
  	
     for(auto& ss : shaders)
-        g_Assets.get<Shader>(ss.name, &ss);
+        this->ece->assets.get<Shader>(ss.name, &ss);
     
     
 	// Setup rendering passes
-    _shadowShader       = g_Assets.get<Shader>(Builtin::Shader::Shadow).get();
-    _materialShader     = g_Assets.get<Shader>(Builtin::Shader::PBR).get();
-	_matcapShader       = g_Assets.get<Shader>(Builtin::Shader::Matcap).get();
-    _wireframeShader    = g_Assets.get<Shader>(Builtin::Shader::Wireframe).get();
-	_backgroundShader   = g_Assets.get<Shader>(Builtin::Shader::Background).get();
-	_gridShader         = g_Assets.get<Shader>(Builtin::Shader::Grid).get();
-    _lightShader        = g_Assets.get<Shader>(Builtin::Shader::Light).get();
-	_selectionShader    = g_Assets.get<Shader>(Builtin::Shader::Selection).get();
+    _shadowShader       = this->ece->assets.get<Shader>(Builtin::Shader::Shadow).get();
+    _materialShader     = this->ece->assets.get<Shader>(Builtin::Shader::PBR).get();
+	_matcapShader       = this->ece->assets.get<Shader>(Builtin::Shader::Matcap).get();
+    _wireframeShader    = this->ece->assets.get<Shader>(Builtin::Shader::Wireframe).get();
+	_backgroundShader   = this->ece->assets.get<Shader>(Builtin::Shader::Background).get();
+	_gridShader         = this->ece->assets.get<Shader>(Builtin::Shader::Grid).get();
+    _lightShader        = this->ece->assets.get<Shader>(Builtin::Shader::Light).get();
+	_selectionShader    = this->ece->assets.get<Shader>(Builtin::Shader::Selection).get();
     
 
 
@@ -319,12 +322,12 @@ void Renderer::init(std::shared_ptr<Camera> camera) {
     
 
 
-    _bgModel    = g_Assets.get<Model>(Builtin::Model::BgPlane).get();
-    _gridModel  = g_Assets.get<Model>(Builtin::Model::GridPlane).get();
+    _bgModel    = this->ece->assets.get<Model>(Builtin::Model::BgPlane).get();
+    _gridModel  = this->ece->assets.get<Model>(Builtin::Model::GridPlane).get();
 
-	_directionLightGizmo    = g_Assets.get<Model>(Builtin::Model::Cone).get();
-	_pointLightGizmo        = g_Assets.get<Model>(Builtin::Model::Cube).get();
-	_spotLightGizmo         = g_Assets.get<Model>(Builtin::Model::Cone).get();
+	_directionLightGizmo    = this->ece->assets.get<Model>(Builtin::Model::Cone).get();
+	_pointLightGizmo        = this->ece->assets.get<Model>(Builtin::Model::Cube).get();
+	_spotLightGizmo         = this->ece->assets.get<Model>(Builtin::Model::Cone).get();
 
 
     //glDisable(GL_FRAMEBUFFER_SRGB);
@@ -398,12 +401,12 @@ void Renderer::renderScene(const SceneRenderData &renderData, bool isViewportSel
     glDisable(GL_DEPTH_TEST);
 
 
-    postProcessPass(_rt.bloomTexture(), _postProcA, g_Assets.get<Shader>(Builtin::FX::BlurHorizontal).get());
-    postProcessPass(_postProcA, _postProcB, g_Assets.get<Shader>(Builtin::FX::BlurVertical).get());
+    postProcessPass(_rt.bloomTexture(), _postProcA, ece->assets.get<Shader>(Builtin::FX::BlurHorizontal).get());
+    postProcessPass(_postProcA, _postProcB, ece->assets.get<Shader>(Builtin::FX::BlurVertical).get());
 
     _postProcA.bind();
     clearBuffer();
-    Shader* prePostShader = g_Assets.get<Shader>(Builtin::FX::PrePost).get();
+    Shader* prePostShader = ece->assets.get<Shader>(Builtin::FX::PrePost).get();
     prePostShader->use();
     prePostShader->set("frameTex0", 0); 
     prePostShader->set("frameTex1", 1); 

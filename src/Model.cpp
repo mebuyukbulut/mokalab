@@ -8,6 +8,7 @@
 #include "Builtin.h"
 
 #include <imgui.h>
+#include "EngineContext.h"
 
 
 
@@ -125,7 +126,7 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
     // specular: texture_specularN
     // normal: texture_normalN
 
-    std::shared_ptr<Material> mat = g_Assets.get<Material>("internal::materials::redscarf");     
+    std::shared_ptr<Material> mat = ece->assets.get<Material>("internal::materials::redscarf");     
 
     if (auto tex = loadMaterialTextures(material, aiTextureType_DIFFUSE))
         mat->baseColorTexture = tex;
@@ -160,7 +161,7 @@ std::shared_ptr<Texture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureT
         std::string filename = directory + textureStr.C_Str();
 
         // texture asekron yüklenmek zorunda. Yoksa modelle beraber non-main thread de opengl çağrısına giriyor. 
-        if (std::shared_ptr<Texture> tex = g_Assets.get<Texture>(filename, nullptr, true)) {
+        if (std::shared_ptr<Texture> tex = ece->assets.get<Texture>(filename, nullptr, true)) {
             return tex; // ilk bulduğun texture ile devam et sonra birden fazla texture için destek koyarız
         }
     }
@@ -176,9 +177,9 @@ void Model::draw(Shader* shader, bool bindMaterial) {
     //if (shader->_type == Shader::Type::Foreground)
     if(bindMaterial)
         if (_materials.size())
-            _materials[0]->use(shader);
+            _materials[0]->use(shader, ece);
         else
-            g_Assets.get<Material>(Builtin::Material::DefaultMaterial)->use(shader);  // her seferinde bunu sormasına gerek yok. initialization kısmında bunu default olarak alması lazım. 
+            ece->assets.get<Material>(Builtin::Material::DefaultMaterial)->use(shader,ece);  // her seferinde bunu sormasına gerek yok. initialization kısmında bunu default olarak alması lazım. 
 
             
     for (unsigned int i = 0; i < meshes.size(); i++)
@@ -197,7 +198,7 @@ void Model::loadDefault(std::string pathStr)
     Mesh mesh = MeshFactory::create(pathStr);
     meshes.push_back(mesh);
 
-    _materials.push_back(g_Assets.get<Material>(Builtin::Material::DefaultMaterial));
+    _materials.push_back(ece->assets.get<Material>(Builtin::Material::DefaultMaterial));
 
 	_loadStatus = AssetLoadStatus::Complete;
 }
@@ -240,9 +241,9 @@ void Model::onInspect(){
     
     // auto mats = g_Assets.getAll<Material>();
     // std::cout << mats.size() << std::endl;
-    if(std::string path = EditorUI::materialSelector(); path != ""){
+    if(std::string path = EditorUI::materialSelector(ece); path != ""){
         _materials.clear();
-        _materials.push_back(g_Assets.get<Material>(path));
+        _materials.push_back(ece->assets.get<Material>(path));
     }
 
     Material* mat = _materials.front().get();

@@ -9,6 +9,7 @@
 #include <algorithm>
 #include "Asset.h"
 #include "Logger.h"
+#include "EngineContext.h"
 
 class AssetManager : public Object
 {
@@ -36,7 +37,7 @@ class AssetManager : public Object
 
 	std::map<std::type_index, std::vector<std::shared_ptr<Asset>>> _typeLists ; 
 
-
+	EngineContext* ece{};
 	//void load(std::filesystem::path path, const IAssetSettings* settings = nullptr);
 	//void loadAsync(std::filesystem::path path, const IAssetSettings* settings = nullptr);
 public:
@@ -52,7 +53,10 @@ public:
 
 
 	void update();
-
+	
+    void setContext(EngineContext* context) { 
+        ece = context; 
+    }
 	// apply serialize and deserialize
 };
 
@@ -80,8 +84,18 @@ inline std::shared_ptr<T> AssetManager::get(std::filesystem::path path, IAssetSe
 		return get<T>(assetID);
 
 	// Yoksa yükle
+	std::shared_ptr<Asset> asset;
 
-	std::shared_ptr<Asset> asset = std::make_shared<T>();
+	// C++17 Metaprogramming:
+	// Eğer T sınıfı "T(EngineContext*)" constructor'ına sahipse ona m_context verilir.
+	if constexpr (std::is_constructible_v<T, EngineContext*>) {
+		asset = std::make_shared<T>(ece);
+	} 
+	// Eğer varsayılan "T()" constructor'ına sahipse parametresiz çağrılır.
+	else if constexpr (std::is_constructible_v<T>) {
+		asset = std::make_shared<T>();
+	}
+	//std::shared_ptr<Asset> asset = std::make_shared<T>();
 	_assets[asset->UUID] = asset; 
 	_typeLists[std::type_index(typeid(T))].push_back(asset);
 
@@ -133,5 +147,3 @@ inline std::vector<std::shared_ptr<T>> AssetManager::getAll()
 
     return result;
 }
-
-inline AssetManager g_Assets{};

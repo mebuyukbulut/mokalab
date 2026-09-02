@@ -14,10 +14,10 @@
 #include "Builtin.h"
 
 #include "AssetManager.h"
+#include "EngineContext.h"
 
 
-
-void Material::use(Shader* shader) {
+void Material::use(Shader* shader, EngineContext* ece) {
 	// Set Texture location uniforms 
 	// We should do this for once. Because we always bind the same slot.  
 	shader->set(Builtin::Material::BaseColorTexture, Builtin::TextureSlot::BaseColor); 
@@ -25,11 +25,14 @@ void Material::use(Shader* shader) {
 	shader->set(Builtin::Material::NormalTexture,	 Builtin::TextureSlot::Normal); 
 	shader->set(Builtin::Material::EmissiveTexture,  Builtin::TextureSlot::Emissive); 
 
+	if(!defaultWhite) defaultWhite = ece->assets.get<Texture>(Builtin::Texture::SolidWhite);
+	if(!defaultNormal) defaultNormal = ece->assets.get<Texture>(Builtin::Texture::FlatNormal);
+
 	// Bind Textures
-	(baseColorTexture ? baseColorTexture : defTex.white )->bind(Builtin::TextureSlot::BaseColor);
-	(armTexture 	  ? armTexture : 	   defTex.white )->bind(Builtin::TextureSlot::ARM);
-	(normalTexture	  ? normalTexture :    defTex.normal)->bind(Builtin::TextureSlot::Normal);
-	(emissiveTexture  ? emissiveTexture :  defTex.white )->bind(Builtin::TextureSlot::Emissive);
+	(baseColorTexture ? baseColorTexture : defaultWhite )->bind(Builtin::TextureSlot::BaseColor);
+	(armTexture 	  ? armTexture : 	   defaultWhite )->bind(Builtin::TextureSlot::ARM);
+	(normalTexture	  ? normalTexture :    defaultNormal)->bind(Builtin::TextureSlot::Normal);
+	(emissiveTexture  ? emissiveTexture :  defaultWhite )->bind(Builtin::TextureSlot::Emissive);
 
 
 
@@ -63,7 +66,7 @@ void Material::loadDefault(std::string path)
 	}
 	else if(path == Builtin::Material::BoxCrate){
 		name = "Wood Crate";
-		baseColorTexture = g_Assets.get<Texture>("../assets/textures/box_crate.jpg");
+		//baseColorTexture = ece->assets.get<Texture>("../assets/textures/box_crate.jpg");
 		roughness = 0.75;
 	}
 	else{
@@ -155,17 +158,17 @@ void Material::setEmissiveTexture(std::shared_ptr<Texture> texture){
 //}
 
 
-Material::DefaultTextures::DefaultTextures()
-{
-	white  = g_Assets.get<Texture>(Builtin::Texture::SolidWhite);
-	black  = g_Assets.get<Texture>(Builtin::Texture::SolidBlack);
-	normal = g_Assets.get<Texture>(Builtin::Texture::FlatNormal);
-}
+// Material::DefaultTextures::DefaultTextures()
+// {
+// 	white  = ece->assets.get<Texture>(Builtin::Texture::SolidWhite);
+// 	black  = ece->assets.get<Texture>(Builtin::Texture::SolidBlack);
+// 	normal = ece->assets.get<Texture>(Builtin::Texture::FlatNormal);
+// }
 
-std::string EditorUI::materialSelector()
+std::string EditorUI::materialSelector(EngineContext* ece)
 {
     static int selectedMat = -1;
-	auto mats = g_Assets.getAll<Material>();
+	auto mats = ece->assets.getAll<Material>();
 
 
     std::vector<std::string> matNames;

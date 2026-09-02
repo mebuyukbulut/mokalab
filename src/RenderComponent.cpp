@@ -1,6 +1,7 @@
 ﻿#include "RenderComponent.h"
 #include "yaml-cpp/yaml.h"
 #include "AssetManager.h"
+#include "EngineContext.h"
 #include "Builtin.h"
 
 // TO DO Material Manager sıkıntısın hallet
@@ -41,6 +42,6 @@ void RenderComponent::deserialize(const YAML::Node& node)
         // std::cout << " default loading..." << std::endl;
     }
     else
-        _model = g_Assets.get<Model>(path);
+        _model = ece->assets.get<Model>(path);
 
 }
