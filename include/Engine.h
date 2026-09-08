@@ -68,6 +68,11 @@ public:
 	EngineContext _ece;
 
 	Engine():_ece {_paths, _config, _assets, _dispatcher } { _assets.setContext(&_ece); };
+	Engine(std::filesystem::path projectPath):_ece {_paths, _config, _assets, _dispatcher } 
+	{ 
+		_assets.setContext(&_ece); 
+		_paths.setProjectRoot(projectPath); 
+	};
 	void run();
 };
 

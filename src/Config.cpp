@@ -36,6 +36,7 @@ void Config::save(std::string path)
 
 	std::ofstream fout(path);
 	fout << config;
+    fout.close();
 }
 
 // https://youtu.be/WbrDsnnC8dY?feature=shared

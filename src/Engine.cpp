@@ -20,20 +20,13 @@
 
 
 void Engine::initWindow()
-{   // glfw: initialize and configure
-    // ------------------------------
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-
+{
     // glfw window creation
     // --------------------
     _window = glfwCreateWindow(
         _ece.config.window.width, 
         _ece.config.window.height, 
-        _ece.config.window.title.c_str(),
+        "MOKALAB - TO DO APP CONFIG & PROJECT CONFIG" ,
         _ece.config.window.fullscreen ? glfwGetPrimaryMonitor() : NULL,
         NULL);
     if (_window == NULL)
@@ -173,7 +166,6 @@ void Engine::mainLoop()
 void Engine::terminate() {
     _renderer.terminate();
     _UI.terminate();
-    glfwTerminate();
 }
 
 void Engine::run()
