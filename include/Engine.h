@@ -30,7 +30,8 @@ class Engine
     // Engine Context
     // ==========================
 	PathResolver    _paths{};
-    Config          _config{};
+    AppConfig		_appConfig{};
+    ProjectConfig	_projectConfig{};
     AssetManager    _assets{};
     EventDispatcher _dispatcher{};
 
@@ -67,8 +68,8 @@ public:
 
 	EngineContext _ece;
 
-	Engine():_ece {_paths, _config, _assets, _dispatcher } { _assets.setContext(&_ece); };
-	Engine(std::filesystem::path projectPath):_ece {_paths, _config, _assets, _dispatcher } 
+	Engine():_ece {_paths, _appConfig, _projectConfig, _assets, _dispatcher } { _assets.setContext(&_ece); };
+	Engine(std::filesystem::path projectPath):_ece {_paths, _appConfig, _projectConfig, _assets, _dispatcher } 
 	{ 
 		_assets.setContext(&_ece); 
 		_paths.setProjectRoot(projectPath); 

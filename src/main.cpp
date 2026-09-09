@@ -42,7 +42,7 @@ int main()
 	}
 
 	// ENGINE
-	Engine engine;
+	Engine engine(path);
 	engine.run();
 
 	terminate();

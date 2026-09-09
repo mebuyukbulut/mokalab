@@ -24,10 +24,10 @@ void Engine::initWindow()
     // glfw window creation
     // --------------------
     _window = glfwCreateWindow(
-        _ece.config.window.width, 
-        _ece.config.window.height, 
+        _ece.appConfig.window.width, 
+        _ece.appConfig.window.height, 
         "MOKALAB - TO DO APP CONFIG & PROJECT CONFIG" ,
-        _ece.config.window.fullscreen ? glfwGetPrimaryMonitor() : NULL,
+        _ece.appConfig.window.fullscreen ? glfwGetPrimaryMonitor() : NULL,
         NULL);
     if (_window == NULL)
     {
@@ -115,13 +115,15 @@ void Engine::initUI()
 
 void Engine::init(){
     _IM.init(_ece);
-    _ece.config.load();
+    _ece.appConfig.load();
+    LOG_CRITICAL("{}", _ece.paths.projectConfig.c_str());
+    _ece.projectConfig.load(_ece.paths.projectConfig.c_str());
 
     initWindow();
 	initOpenGL();    
     
-	_camera->init(glm::vec2(_ece.config.window.width, _ece.config.window.height));
-	_camera->setWindowSize(_ece.config.window.width, _ece.config.window.height);
+	_camera->init(glm::vec2(_ece.appConfig.window.width, _ece.appConfig.window.height));
+	_camera->setWindowSize(_ece.appConfig.window.width, _ece.appConfig.window.height);
 
     _renderer.init(_camera, _ece);
 

@@ -2,13 +2,15 @@
 #pragma once
 
 class PathResolver;
-class Config;
+class AppConfig;
+class ProjectConfig;
 class AssetManager;
 class EventDispatcher;
 
 struct EngineContext {
     PathResolver&    paths;
-    Config&          config;
+    AppConfig&       appConfig;
+    ProjectConfig&   projectConfig;
     AssetManager&    assets;
     EventDispatcher& dispatcher;
 };

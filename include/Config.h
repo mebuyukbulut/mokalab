@@ -3,7 +3,7 @@
 
 
 
-class Config
+class AppConfig
 {
     struct Window {
         int width;
@@ -14,6 +14,14 @@ class Config
 
     struct Graphics {    
     };
+public:
+    Window window;
+    void load(std::string path = "../assets/config/config.yaml");
+    void save(std::string path = "../assets/config/config.yaml");
+};
+
+class ProjectConfig{
+
 
     struct UI {
         bool isCreditsPanelOpen;
@@ -22,8 +30,7 @@ class Config
         bool isShaderPanelOpen;
     };
 public:
-    Window window;
     UI ui;
-    void load(std::string path = "../assets/config/config.yaml");
-    void save(std::string path = "../assets/config/config.yaml");
+    void load(std::string path);
+    void save(std::string path);
 };

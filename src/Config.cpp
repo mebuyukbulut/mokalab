@@ -3,7 +3,7 @@
 #include <iostream>
 #include <fstream>
 
-void Config::load(std::string path)
+void AppConfig::load(std::string path)
 {
 	YAML::Node config = YAML::LoadFile(path);
 
@@ -11,7 +11,25 @@ void Config::load(std::string path)
 	window.height = config["Window.height"].as<int>();
 	window.title = config["Window.title"].as<std::string>();
 	window.fullscreen = config["Window.fullscreen"].as<bool>();
+}
 
+void AppConfig::save(std::string path)
+{	
+	YAML::Node config;
+
+	config["Window.width"] = window.width;
+	config["Window.height"] = window.height;
+	config["Window.title"] = window.title;
+	config["Window.fullscreen"] = window.fullscreen;
+
+	std::ofstream fout(path);
+	fout << config;
+    fout.close();
+}
+
+void ProjectConfig::load(std::string path)
+{
+	YAML::Node config = YAML::LoadFile(path);
 
 	ui.isCreditsPanelOpen  = config["UI.isCreditsPanelOpen"].as<bool>();
 	ui.isLightPanelOpen    = config["UI.isLightPanelOpen"].as<bool>();
@@ -20,14 +38,9 @@ void Config::load(std::string path)
 
 }
 
-void Config::save(std::string path)
+void ProjectConfig::save(std::string path)
 {	
 	YAML::Node config;
-
-	config["Window.width"] = window.width;
-	config["Window.height"] = window.height;
-	config["Window.title"] = window.title;
-	config["Window.fullscreen"] = window.fullscreen;
 
 	config["UI.isCreditsPanelOpen"] = ui.isCreditsPanelOpen;
 	config["UI.isLightPanelOpen"] = ui.isLightPanelOpen;

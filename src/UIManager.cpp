@@ -12,6 +12,7 @@
 
 #include "EventDispatcher.h"
 #include "Config.h"
+#include "PathResolver.h"
 #include "EngineContext.h"
 
 #include "ParticleSystem.h"
@@ -55,9 +56,9 @@ void UIManager::init(GLFWwindow* window, std::shared_ptr<Camera> camera, EngineC
         
 
     // load config 
-    isCreditsPanelOpen = this->ece->config.ui.isCreditsPanelOpen;
-    isLightPanelOpen   = this->ece->config.ui.isLightPanelOpen;
-    isShaderPanelOpen  = this->ece->config.ui.isShaderPanelOpen;
+    isCreditsPanelOpen = this->ece->projectConfig.ui.isCreditsPanelOpen;
+    isLightPanelOpen   = this->ece->projectConfig.ui.isLightPanelOpen;
+    isShaderPanelOpen  = this->ece->projectConfig.ui.isShaderPanelOpen;
 
 }
 
@@ -207,16 +208,16 @@ void UIManager::mainMenu(){
         }
         if (ImGui::BeginMenu("View")) {
             if (ImGui::MenuItem("Shader Panel", nullptr, &isShaderPanelOpen)) {
-                ece->config.ui.isShaderPanelOpen = isShaderPanelOpen;
-                ece->config.save();
+                ece->projectConfig.ui.isShaderPanelOpen = isShaderPanelOpen;
+                ece->projectConfig.save(ece->paths.projectConfig);
             }
             if(ImGui::MenuItem("Credits Panel", nullptr, &isCreditsPanelOpen)) {
-                ece->config.ui.isCreditsPanelOpen = isCreditsPanelOpen;
-                ece->config.save();
+                ece->projectConfig.ui.isCreditsPanelOpen = isCreditsPanelOpen;
+                ece->projectConfig.save(ece->paths.projectConfig);
             }
             if(ImGui::MenuItem("Light Panel", nullptr, &isLightPanelOpen)) {
-                ece->config.ui.isLightPanelOpen = isLightPanelOpen;
-                ece->config.save();
+                ece->projectConfig.ui.isLightPanelOpen = isLightPanelOpen;
+                ece->projectConfig.save(ece->paths.projectConfig);
             }
             ImGui::EndMenu();
         }

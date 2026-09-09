@@ -5,6 +5,8 @@
 class PathResolver{
 public:
     std::filesystem::path projectRoot{};
+    std::filesystem::path mokaFile{};
+    std::filesystem::path projectConfig{};
 
     std::filesystem::path applicationRoot{}; 
     std::filesystem::path lastProjectsPath{}; 
@@ -21,5 +23,9 @@ public:
         lastProjectsPath = applicationRoot / "last-projects-list.txt"; 
     }
 
-    void setProjectRoot(std::filesystem::path newProjectRoot){ projectRoot = newProjectRoot; }
+    void setProjectRoot(std::filesystem::path newProjectRoot){ 
+        projectRoot = newProjectRoot; 
+        mokaFile = newProjectRoot / "project.moka";
+        projectConfig = newProjectRoot / "config.yaml"; 
+    }
 };
