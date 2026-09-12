@@ -33,7 +33,8 @@ public:
 	void createShadowDepthTexture(uint32_t width, uint32_t height);
 	void createSolidColorTextureRGBA8(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 
-
+	int getWidth(){return _width;}
+	int getHeight(){return _height;}
 	void destroy(); 
 };
 

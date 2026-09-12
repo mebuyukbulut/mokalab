@@ -28,6 +28,9 @@ enum class EventType {
 
     ScenePopup,
     FocusToSelectedObject,
+
+    OpenImageViewer,
+    OpenTextViewer,
 };
 
 struct EventData {

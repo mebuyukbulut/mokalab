@@ -20,10 +20,19 @@
 #include "SceneManager.h"
 #include "Builtin.h"
 
+#include "ContentBrowser.h"
+#include "AssetManager.h"
+#include "Texture.h"
+
+UIManager::UIManager() = default;
+UIManager::~UIManager() = default;
+
 void UIManager::init(GLFWwindow* window, std::shared_ptr<Camera> camera, EngineContext& ece) {
 	_window = window;
     _camera = camera;
     this->ece = &ece;
+    _CB = std::make_unique<ContentBrowser>();
+    _CB->init(&ece);
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -60,6 +69,19 @@ void UIManager::init(GLFWwindow* window, std::shared_ptr<Camera> camera, EngineC
     isLightPanelOpen   = this->ece->projectConfig.ui.isLightPanelOpen;
     isShaderPanelOpen  = this->ece->projectConfig.ui.isShaderPanelOpen;
 
+
+    // Events 
+    this->ece->dispatcher.subscribe(EventType::OpenImageViewer, [&](std::unique_ptr<EventData> e) {
+        std::unique_ptr<EventData_Text> t(static_cast<EventData_Text*>(e.release()));
+        imageViewerPath = t->text;
+        isImageViewerOpen = true;
+    });
+    this->ece->dispatcher.subscribe(EventType::OpenTextViewer, [&](std::unique_ptr<EventData> e) {
+        std::unique_ptr<EventData_Text> t(static_cast<EventData_Text*>(e.release()));
+        textViewerPath = t->text;
+        isTextViewerOpen = true;
+    });
+    
 }
 
 void UIManager::terminate() {
@@ -76,6 +98,10 @@ void UIManager::draw(SceneManager* sm ) {
     ps->onInspect();
 	if(isShaderPanelOpen) shaderPanel();
 	if(isCreditsPanelOpen) creditsPanel();
+	if(isImageViewerOpen) imageViewer();
+	if(isTextViewerOpen) textViewer();
+
+    _CB->draw();
 
     //viewport_window();
     if (sm) {
@@ -331,7 +357,50 @@ void UIManager::creditsPanel(){
 		ImGui::Text("Mokalab by Muhammet Esat BUYUKBULUT");
 		ImGui::Text("@2025");
 
-        //openmesh ekle 
     }
+    ImGui::End();
+}
+
+void UIManager::imageViewer()
+{
+    if(imageViewerPath == "") return; 
+
+    static std::string currentPath = "";
+    static std::shared_ptr<Texture> myTexture;
+    static ImVec2 sizeofTexture;
+    if(imageViewerPath != currentPath){
+        currentPath = imageViewerPath;
+        myTexture = ece->assets.get<Texture>(imageViewerPath);
+        float width = myTexture->getWidth();
+        float height = myTexture->getHeight();
+        if(std::max(width,height) > 900){
+            float m = std::max(width,height);
+            LOG_TRACE("{}", m);
+            width =  width / m * 900.0f;
+            height = width / m * 900.0f;
+            
+        }
+        sizeofTexture   = ImVec2(width,height);
+    }
+
+    ImGui::Begin("Image Viewer", &isImageViewerOpen);
+
+    // Display image at 256x256 pixels
+    ImGui::Image((ImTextureID)(intptr_t)myTexture->getId(), sizeofTexture);
+
+    ImGui::End();
+}
+
+void UIManager::textViewer(){
+    
+    static std::string currentPath = "";
+    static std::string fileText = "";
+
+    if(textViewerPath != currentPath){
+        currentPath = textViewerPath;
+        fileText = FileUtils::readFile(currentPath);
+    }
+    ImGui::Begin("Text Viewer", &isTextViewerOpen);
+    ImGui::TextUnformatted(fileText.c_str());
     ImGui::End();
 }

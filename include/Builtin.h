@@ -164,6 +164,17 @@ namespace Builtin
             inline constexpr const char* Matcap     = "builtin::viewMode::Matcap";
             inline constexpr const char* Wireframe  = "builtin::viewMode::Wireframe";
         }
+        namespace ContentBrowser
+        {
+            inline constexpr const char* Unknown      = "builtin::contentBrowser::unknown";
+            inline constexpr const char* Folder       = "builtin::contentBrowser::folder";
+            inline constexpr const char* EmptyFolder  = "builtin::contentBrowser::emptyFolder";
+            inline constexpr const char* Texture      = "builtin::contentBrowser::texture";
+            inline constexpr const char* StaticMesh   = "builtin::contentBrowser::staticMesh";
+            inline constexpr const char* Scene        = "builtin::contentBrowser::scene";
+            inline constexpr const char* Material     = "builtin::contentBrowser::material";
+
+        }
 
         inline constexpr const char* All[] = {
             EditorTool::Select,
@@ -171,9 +182,18 @@ namespace Builtin
             EditorTool::Translate,
             EditorTool::Rotate,
             EditorTool::Scale,
+
             ViewMode::Lit,
             ViewMode::Matcap,
             ViewMode::Wireframe,
+
+            ContentBrowser::Unknown,
+            ContentBrowser::Folder,
+            ContentBrowser::EmptyFolder,
+            ContentBrowser::Texture,   
+            ContentBrowser::StaticMesh, 
+            ContentBrowser::Scene,
+            ContentBrowser::Material   
         };
     }
 }

@@ -292,13 +292,12 @@ void SplashScreen::createProject(ProjectInfo pInfo)
 
     std::string mokaContext = pInfo.name + "\n" + "version 1.0";
     FileUtils::writeFile(dirPath / "project.moka", mokaContext);
+    
+    std::string pConfig = 
+    "UI.isCreditsPanelOpen: false\nUI.isLightPanelOpen: false\nUI.isMaterialPanelOpen: true\nUI.isShaderPanelOpen: false";
+    FileUtils::writeFile(dirPath / "config.yaml", pConfig);
 
-    FileUtils::createDirectory(dirPath / "scenes");
-    FileUtils::createDirectory(dirPath / "assets");
-    FileUtils::createDirectory(dirPath / "assets" / "models");
-    FileUtils::createDirectory(dirPath / "assets" / "textures");
-    FileUtils::createDirectory(dirPath / "assets" / "materials");
-    FileUtils::createDirectory(dirPath / "scripts");
+    FileUtils::createDirectory(dirPath / "content");
 
     _allProjects.insert(_allProjects.begin(), pInfo);
     setProjects(_allProjects);
