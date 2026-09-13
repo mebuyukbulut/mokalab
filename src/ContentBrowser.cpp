@@ -180,6 +180,9 @@ void ContentBrowser::dirTreeRecursive(std::shared_ptr<ContentItem> parent)
         item->type = determineFileType(dir_entry);
         item->parent = parent; 
 
+        if(item->path == selectedDirPath)
+            selectedDir = item;
+
         if(item->isDir)
             dirTreeRecursive(item);
 
@@ -189,9 +192,14 @@ void ContentBrowser::dirTreeRecursive(std::shared_ptr<ContentItem> parent)
 
 void ContentBrowser::scan()
 {
+    selectedDirPath = selectedDir->path;
+    selectedDir.reset();
     root->children.clear(); // clear all entities
-
+    
     dirTreeRecursive(root);
+    if(!selectedDir)
+        selectedDir = root; 
+
     printTreeRecursive(root);
     // for (auto const& dir_entry : std::filesystem::directory_iterator{root->path}) 
     //     std::cout << dir_entry.path() << (dir_entry.is_directory() ? "#" : " " ) << '\n';
@@ -208,12 +216,16 @@ void ContentBrowser::breadcrumb(){
     
     std::vector<std::shared_ptr<ContentItem>> dirs; 
     dirs.push_back(selectedDir);
-    while(dirs.back() != root)
+    constexpr int MAX_DEPTH = 7;
+    int depth = 0; 
+    while(dirs.back() != root && !dirs.back()->parent.expired() && depth++ < MAX_DEPTH)
         dirs.push_back(dirs.back()->parent.lock());
 
     ImGui::Text(">>");ImGui::SameLine();
     for(int i = dirs.size()-1; i>=0; i--){
-        if(ImGui::Button(dirs[i]->name.c_str())){
+        std::string bId = dirs[i]->name + "##" + std::to_string(i);
+        if(ImGui::Button(bId.c_str())){
+            //std::cout << "abc" << selectedDir->path << "\t" << dirs[i]->path << std::endl;
             selectedDir = dirs[i]; 
         }ImGui::SameLine();
 

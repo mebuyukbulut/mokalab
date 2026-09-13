@@ -32,6 +32,7 @@ class ContentBrowser{
     EngineContext* ece;
     std::shared_ptr<ContentItem> root{};
     std::shared_ptr<ContentItem> selectedDir{};
+    std::filesystem::path selectedDirPath{};
 
     int _thumbnailSize = 64; 
 
