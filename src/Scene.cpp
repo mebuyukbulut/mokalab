@@ -5,29 +5,24 @@
 #include "Entity.h"
 #include "Transform.h"
 
+std::string Scene::getName(){ return _name; }
+std::string Scene::getPath(){ return _path; }
 
-void Scene::load(std::string path) {
+void Scene::load(std::string path)
+{
     LOG_TRACE("Loading scene...");
     if(path.empty()){
         LOG_ERROR("The path is empty!");
         return;
     }
-
-    if(path.empty()){
-        LOG_ERROR("The path is empty!");
-        return;
-    }
-
+    
     clear();
-	//clearScene(); // delete all entities first
+
+    _path = path; 
     YAML::Node root = YAML::LoadFile(path);
     deserialize(root);
 
     LOG_TRACE("Scene was loaded.");
-
-
-
-
 }
 void Scene::save(std::string path) {
     LOG_TRACE("Scene is saving");
@@ -35,6 +30,32 @@ void Scene::save(std::string path) {
         LOG_ERROR("The path is empty!");
         return;
     }
+    std::filesystem::path filePath(path); 
+
+    // abc     -> extension != .scn => Add .scn
+    // abc.a1  -> extension != .scn => Add .scn
+    // .a1     -> extension != .scn => Add .scn 
+    // abc.scn -> extension == .scn & stem != extension   -> OK
+    // .scn    -> extension == .scn & stem == extension => LOG_ERROR & return
+
+    bool isExtensionValid = filePath.extension() == ".scn";
+    bool isEmptyStem = filePath.extension() == filePath.stem();
+    if(isExtensionValid) {
+        if(!isEmptyStem){
+            _name = filePath.stem();
+        }
+        else{
+            LOG_ERROR("The name is empty!"); 
+            return;
+        }
+    }
+    else{
+        _name = filePath.filename();
+        filePath += ".scn";
+        path = filePath.string();
+    }
+
+    _path = path;
 
     YAML::Emitter out;
     serialize(out);
@@ -64,6 +85,8 @@ void Scene::removeEntity(Entity* entity)
 void Scene::clear()
 {
     _entities.clear();
+    _name = "";
+    _path = "";
 }
 
 std::string Scene::getUniqueName(std::string name)
@@ -89,7 +112,7 @@ void Scene::serialize(YAML::Emitter& out)
     out << YAML::BeginDoc;
 	out << YAML::BeginMap;
 
-    out << YAML::Key << "Scene" << YAML::Value << "istanbul";
+    out << YAML::Key << "Scene" << YAML::Value << getName();
     out << YAML::Key << "Version" << YAML::Value << "1.0";
     out << YAML::Key << "Entities" << YAML::Value;
 
@@ -106,13 +129,9 @@ void Scene::serialize(YAML::Emitter& out)
 void Scene::deserialize(const YAML::Node& node)
 {
     auto sceneNameNode = node["Scene"];
-    std::string scene_name = sceneNameNode.as<std::string>();
+    _name = sceneNameNode.as<std::string>();
+     
 
-    // Event windowTitleTextEvent{
-    //     EventType::SetMainWindowTitle, 
-    //     std::make_unique<EventData_Text>("Model Viewer - " + scene_name)
-    // };
-    // ece->dispatcher.dispatch(windowTitleTextEvent);
 
     auto versionNode = node["Version"]; // dosya versiyonu
 

@@ -206,7 +206,7 @@ void UIManager::mainMenu(){
                 Event e{ EventType::EngineExit, {} };
                 ece->dispatcher.dispatch(e);
             }
-            if (ImGui::MenuItem("Open", "Ctrl+O")) {
+            if (ImGui::MenuItem("Open Model", "Ctrl+O")) {
                 std::string filePath = FileUtils::openFileDialog();
                 Event e{
                     EventType::ModelOpened,
@@ -214,11 +214,10 @@ void UIManager::mainMenu(){
                 };
                 ece->dispatcher.dispatch(e);
             }
-            if (ImGui::MenuItem("Save", "Ctrl+S")) {               
-                std::string filePath = FileUtils::openFileDialog(L"",true);
+            if (ImGui::MenuItem("Save", "Ctrl+S")) {
                 Event e{
                     EventType::SaveScene,
-                    std::make_unique<EventData_Text>(filePath)
+                    {} //std::make_unique<EventData_Text>(filePath)
                 };
                 ece->dispatcher.dispatch(e);
             }

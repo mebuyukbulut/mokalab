@@ -5,12 +5,14 @@
 
 class Scene : public Object{
 
-    std::string name;
+    std::string _name{};
+    std::string _path{};
 	std::vector<std::unique_ptr<Entity>> _entities{};
 
 public:
     std::string getName();
-    void setName(std::string newName);
+    std::string getPath();
+    //void setName(std::string newName);
 
     inline const std::vector<std::unique_ptr<Entity>>& entities(){return _entities;};
 

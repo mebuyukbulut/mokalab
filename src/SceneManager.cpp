@@ -27,6 +27,7 @@
 #include "FX.h"
 
 #include "PathResolver.h"
+#include "FileUtils.h"
 
 FXRegistry fxReg{};
 
@@ -125,9 +126,12 @@ void SceneManager::initCommands()
         isScenePopupOpen = true;
     });
     ece->dispatcher.subscribe(EventType::SaveScene, [&](std::unique_ptr<EventData> e) {
-        std::unique_ptr<EventData_Text> t(static_cast<EventData_Text*>(e.release()));
-        std::string thePath = t->text;
-        _activeScene->save(thePath);
+        //std::unique_ptr<EventData_Text> t(static_cast<EventData_Text*>(e.release()));
+        //std::string thePath = t->text;
+        std::string filePath = _activeScene->getPath();
+        if(filePath == "")
+            filePath = FileUtils::openFileDialog(L"",true);
+        _activeScene->save(filePath);
     });
     ece->dispatcher.subscribe(EventType::LoadScene, [&](std::unique_ptr<EventData> e) {
         std::unique_ptr<EventData_Text> t(static_cast<EventData_Text*>(e.release()));
@@ -135,11 +139,20 @@ void SceneManager::initCommands()
 
         clearScene();
         _activeScene->load(thePath);
+
+        Event windowTitleTextEvent{
+            EventType::SetMainWindowTitle, 
+            std::make_unique<EventData_Text>("Mokalab - Scene: " + _activeScene->getName())
+        };
+        ece->dispatcher.dispatch(windowTitleTextEvent);
+
         // resolve scene
         for(const auto& entity : _activeScene->entities()){
             for(auto& c : entity->components)
                 c->resolveAssets(ece->assets);
         }
+
+
         
     });
     ece->dispatcher.subscribe(EventType::ModelOpened, [&](std::unique_ptr<EventData> e) {
@@ -152,7 +165,6 @@ void SceneManager::initCommands()
         if(Entity* selectedEntity = getSelectedEntity())
             _camera->resetFrame(selectedEntity->transform.get());
     });
-
 
 }
 void SceneManager::initDefaults()
