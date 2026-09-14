@@ -202,26 +202,16 @@ void UIManager::mainMenu(){
     // Main menu bar
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
-            if (ImGui::MenuItem("Exit")) { 
-                Event e{ EventType::EngineExit, {} };
+            if (ImGui::MenuItem("New Scene")) {
+                Event e{ EventType::NewScene, {} };
                 ece->dispatcher.dispatch(e);
             }
-            if (ImGui::MenuItem("Open Model", "Ctrl+O")) {
-                std::string filePath = FileUtils::openFileDialog();
-                Event e{
-                    EventType::ModelOpened,
-                    std::make_unique<EventData_Text>(filePath)
-                };
+
+            if (ImGui::MenuItem("Save Scene", "Ctrl+S")) {
+                Event e{ EventType::SaveScene, {} };
                 ece->dispatcher.dispatch(e);
             }
-            if (ImGui::MenuItem("Save", "Ctrl+S")) {
-                Event e{
-                    EventType::SaveScene,
-                    {} //std::make_unique<EventData_Text>(filePath)
-                };
-                ece->dispatcher.dispatch(e);
-            }
-            if (ImGui::MenuItem("Load")) {                
+            if (ImGui::MenuItem("Open Scene")) {                
                 std::string filePath = FileUtils::openFileDialog();
                 Event e{
                     EventType::LoadScene,
@@ -229,6 +219,19 @@ void UIManager::mainMenu(){
                 };
                 ece->dispatcher.dispatch(e);
             }
+            if (ImGui::MenuItem("Import Model", "Ctrl+O")) {
+                std::string filePath = FileUtils::openFileDialog();
+                Event e{
+                    EventType::ModelOpened,
+                    std::make_unique<EventData_Text>(filePath)
+                };
+                ece->dispatcher.dispatch(e);
+            }
+            if (ImGui::MenuItem("Exit")) { 
+                Event e{ EventType::EngineExit, {} };
+                ece->dispatcher.dispatch(e);
+            }
+
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("View")) {

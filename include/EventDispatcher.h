@@ -21,6 +21,7 @@ enum class EventType {
     Select, 
     MouseDrag,
 
+    NewScene,
     SaveScene,
     LoadScene,
 

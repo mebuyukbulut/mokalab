@@ -87,7 +87,7 @@ public:
     // std::string getUniqueName(std::string name);
     // bool isUniqueName(std::string name);
 
-
+    void refreshSceneTitle(std::string title);
 
 };
 

@@ -10,12 +10,16 @@ std::string Scene::getPath(){ return _path; }
 
 void Scene::load(std::string path)
 {
+    if(path == _path){
+        LOG_INFO("Scene already loaded. Operation aborted!");
+        return;
+    }
     LOG_TRACE("Loading scene...");
     if(path.empty()){
         LOG_ERROR("The path is empty!");
         return;
     }
-    
+
     clear();
 
     _path = path; 
@@ -64,6 +68,11 @@ void Scene::save(std::string path) {
     // fout << out.c_str();
     FileUtils::writeFile(path, out.c_str());
     LOG_INFO("Scene saved");
+}
+
+
+void Scene::setName(std::string newName){
+    _name = newName; 
 }
 
 Entity *Scene::addEntity(std::unique_ptr<Entity> entity)

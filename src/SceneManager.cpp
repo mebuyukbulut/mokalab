@@ -125,13 +125,18 @@ void SceneManager::initCommands()
     ece->dispatcher.subscribe(EventType::ScenePopup, [&](std::unique_ptr<EventData> e) {
         isScenePopupOpen = true;
     });
+    ece->dispatcher.subscribe(EventType::NewScene, [&](std::unique_ptr<EventData> e) {
+        clearScene();
+        _activeScene->clear();
+        _activeScene->setName("Untitled Scene");
+        refreshSceneTitle("Mokalab - Scene: " + _activeScene->getName());
+    });
     ece->dispatcher.subscribe(EventType::SaveScene, [&](std::unique_ptr<EventData> e) {
-        //std::unique_ptr<EventData_Text> t(static_cast<EventData_Text*>(e.release()));
-        //std::string thePath = t->text;
         std::string filePath = _activeScene->getPath();
         if(filePath == "")
             filePath = FileUtils::openFileDialog(L"",true);
         _activeScene->save(filePath);
+        refreshSceneTitle("Mokalab - Scene: " + _activeScene->getName());
     });
     ece->dispatcher.subscribe(EventType::LoadScene, [&](std::unique_ptr<EventData> e) {
         std::unique_ptr<EventData_Text> t(static_cast<EventData_Text*>(e.release()));
@@ -139,12 +144,7 @@ void SceneManager::initCommands()
 
         clearScene();
         _activeScene->load(thePath);
-
-        Event windowTitleTextEvent{
-            EventType::SetMainWindowTitle, 
-            std::make_unique<EventData_Text>("Mokalab - Scene: " + _activeScene->getName())
-        };
-        ece->dispatcher.dispatch(windowTitleTextEvent);
+        refreshSceneTitle("Mokalab - Scene: " + _activeScene->getName());
 
         // resolve scene
         for(const auto& entity : _activeScene->entities()){
@@ -1014,4 +1014,11 @@ void SceneManager::clearScene()
     _selectedEntities.clear();
 }
 
-
+void SceneManager::refreshSceneTitle(std::string title)
+{
+    Event windowTitleTextEvent{
+        EventType::SetMainWindowTitle, 
+        std::make_unique<EventData_Text>(title)
+    };
+    ece->dispatcher.dispatch(windowTitleTextEvent);
+}

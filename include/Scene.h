@@ -12,13 +12,10 @@ class Scene : public Object{
 public:
     std::string getName();
     std::string getPath();
-    //void setName(std::string newName);
+
+    void setName(std::string newName);
 
     inline const std::vector<std::unique_ptr<Entity>>& entities(){return _entities;};
-
-
-
-
     // Sahnenin sahip olduğu kaynaklar
     //std::vector<MaterialHandle> materials;
     //std::vector<Light> lights;
