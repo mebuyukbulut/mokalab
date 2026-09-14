@@ -18,6 +18,20 @@ void RenderComponent::onInspect()
     _model->onInspect();
 }
 
+void RenderComponent::resolveAssets(AssetManager & assets)
+{
+    std::cout << "My way : " << _path << std::endl;
+    if (_path == "") {
+        //g_Assets.get<Model>(Builtin::Model::Default);
+        // _shape = static_cast<DefaultShapes>(node["shape"].as<int>());
+        // loadDefault(_shape);
+        // std::cout << " default loading..." << std::endl;
+    }
+    else
+        _model = assets.get<Model>(_path);
+        //_model = ece->assets.get<Model>(_path);
+}
+
 void RenderComponent::serialize(YAML::Emitter& out)
 {
 
@@ -31,17 +45,6 @@ void RenderComponent::serialize(YAML::Emitter& out)
 void RenderComponent::deserialize(const YAML::Node& node)
 {
     Component::deserialize(node);
-    std::string path = node["path"].as<std::string>();
-    node["path"].IsNull() ? path = "" : path = node["path"].as<std::string>();
-
-    std::cout << "My way : " << path << std::endl;
-    if (path == "") {
-        //g_Assets.get<Model>(Builtin::Model::Default);
-        // _shape = static_cast<DefaultShapes>(node["shape"].as<int>());
-        // loadDefault(_shape);
-        // std::cout << " default loading..." << std::endl;
-    }
-    else
-        _model = ece->assets.get<Model>(path);
-
+    _path = node["path"].as<std::string>(); // bu gereksiz olabilir
+    node["path"].IsNull() ? _path = "" : _path = node["path"].as<std::string>();
 }

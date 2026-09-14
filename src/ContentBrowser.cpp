@@ -384,6 +384,14 @@ void ContentBrowser::drawFolderContent()
                         };
                         ece->dispatcher.dispatch(e);
                     }
+                    else if(item->type == ContentType::Scene)
+                    {
+                        Event e{
+                            EventType::LoadScene, 
+                            std::make_unique<EventData_Text>(item->path.string())
+                        };
+                        ece->dispatcher.dispatch(e);
+                    }
                 }
             }
 

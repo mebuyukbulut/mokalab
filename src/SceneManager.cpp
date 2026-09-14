@@ -43,9 +43,9 @@ void SceneManager::collectRenderData(SceneRenderData &renderData)
             
 
     // collect render items respect to their index 
-    for (uint32_t pickID = 0; pickID < _entities.size(); pickID++) 
+    for (uint32_t pickID = 0; pickID < _activeScene->entities().size(); pickID++) 
     {
-		Entity* entity = _entities[pickID].get();
+		Entity* entity = _activeScene->entities()[pickID].get();
 
         if (!entity->isActive()) continue;
 
@@ -127,12 +127,20 @@ void SceneManager::initCommands()
     ece->dispatcher.subscribe(EventType::SaveScene, [&](std::unique_ptr<EventData> e) {
         std::unique_ptr<EventData_Text> t(static_cast<EventData_Text*>(e.release()));
         std::string thePath = t->text;
-        saveScene(thePath);
+        _activeScene->save(thePath);
     });
     ece->dispatcher.subscribe(EventType::LoadScene, [&](std::unique_ptr<EventData> e) {
         std::unique_ptr<EventData_Text> t(static_cast<EventData_Text*>(e.release()));
         std::string thePath = t->text;
-        loadScene(thePath);
+
+        clearScene();
+        _activeScene->load(thePath);
+        // resolve scene
+        for(const auto& entity : _activeScene->entities()){
+            for(auto& c : entity->components)
+                c->resolveAssets(ece->assets);
+        }
+        
     });
     ece->dispatcher.subscribe(EventType::ModelOpened, [&](std::unique_ptr<EventData> e) {
         std::unique_ptr<EventData_Text> t(static_cast<EventData_Text*>(e.release()));
@@ -195,7 +203,7 @@ void SceneManager::draw() {
 	ViewMode viewMode = _renderer->getViewMode();
 
 	// update all global matrices
-    for (const auto& entity : _entities) 
+    for (const auto& entity : _activeScene->entities()) 
         if (entity->transform->isRoot()) // && entity->getComponent<Model>()
             updateMatrixRecursive(entity.get());
         
@@ -241,7 +249,7 @@ void SceneManager::draw() {
 
             for(uint32_t selectedID : selectedIDs){
                 selectedID--; // because we added +1 when drawing
-                select(_entities[selectedID].get());
+                select(_activeScene->entities()[selectedID].get());
             }
 		}
         else
@@ -304,42 +312,7 @@ void SceneManager::deselectAll(){
 
 
 
-void SceneManager::loadScene(std::string path) {
-    LOG_TRACE("Loading scene...");
-    if(path.empty()){
-        LOG_ERROR("The path is empty!");
-        return;
-    }
 
-    if(path.empty()){
-        LOG_ERROR("The path is empty!");
-        return;
-    }
-
-	clearScene(); // delete all entities first
-    YAML::Node root = YAML::LoadFile(path);
-    deserialize(root);
-
-    LOG_TRACE("Scene was loaded.");
-
-
-
-
-}
-void SceneManager::saveScene(std::string path) {
-    LOG_TRACE("Scene is saving");
-    if(path.empty()){
-        LOG_ERROR("The path is empty!");
-        return;
-    }
-
-    YAML::Emitter out;
-    serialize(out);
-
-    std::ofstream fout(path);
-    fout << out.c_str();
-    LOG_INFO("Scene saved");
-}
 
 /// Call recursively to populate each level of children
 void SceneManager::drawHierarchyTreeRecursive(Entity* entity) {
@@ -424,7 +397,7 @@ void SceneManager::onInspect()
         
         ImGui::PushStyleColor(ImGuiCol_Header, IM_COL32(55, 55, 55, 255)); // gray background
         
-        for (const auto& i : _entities) 
+        for (const auto& i : _activeScene->entities()) 
             if(i->transform->isRoot())
                 drawHierarchyTreeRecursive(i.get()); // Call recursively to populate each level of children
 
@@ -970,7 +943,8 @@ void SceneManager::addLight(LightType lightType)
 	auto entity = std::make_unique<Entity>();
 	entity->name = light->name;
     entity->addComponent(std::move(light));
-	_entities.push_back(std::move(entity));
+	//_entities.push_back(std::move(entity));
+    _activeScene->addEntity(std::move(entity));
 }
 
 void SceneManager::sceneQuery()//(Shader& shader)
@@ -983,13 +957,13 @@ void SceneManager::addModel(std::string path, std::string entityName, bool loadA
     auto entity = std::make_unique<Entity>();
 
     if (!entityName.empty())
-        entity->name = getUniqueName(entityName);
+        entity->name = _activeScene->getUniqueName(entityName);
     else {
         unsigned int slashIndex = path.find_last_of('/');
         unsigned int pointIndex = path.find_last_of('.');
         std::string directory = path.substr(0, slashIndex);
         std::string modelName = path.substr(slashIndex+1, pointIndex-slashIndex -1);
-		entity->name = getUniqueName(modelName);
+		entity->name = _activeScene->getUniqueName(modelName);
     }
 
 
@@ -997,7 +971,8 @@ void SceneManager::addModel(std::string path, std::string entityName, bool loadA
     renderComponent->_model = ece->assets.get<Model>(path, nullptr, loadAsync);
     entity->addComponent(std::move(renderComponent));
 
-    _entities.push_back(std::move(entity));
+    //_entities.push_back(std::move(entity));
+    _activeScene->addEntity(std::move(entity));
 }
 
 
@@ -1007,14 +982,9 @@ void SceneManager::deleteSelected()
 {
     if (!_selectedEntity) return;
 
-    _entities.erase(std::remove_if(_entities.begin(), _entities.end(),
-        [this](const std::unique_ptr<Entity>& t) {
-            return t.get() == _selectedEntity;
-		}), 
-        _entities.end());
+    _activeScene->removeEntity(_selectedEntity);
 
-	_selectedEntities.erase(std::find(_selectedEntities.begin(), _selectedEntities.end(), _selectedEntity));
-
+    _selectedEntities.erase(std::find(_selectedEntities.begin(), _selectedEntities.end(), _selectedEntity));
     _selectedEntity = nullptr;
 
     //_entities.remove_if([this](const std::unique_ptr<Entity>& t) {
@@ -1030,100 +1000,6 @@ void SceneManager::clearScene()
 {
     _selectedEntity = nullptr;
     _selectedEntities.clear();
-    _entities.clear();
 }
 
-
-
-std::string SceneManager::getUniqueName(std::string name)
-{
-    int i{};
-    std::string uniq_name = name; 
-    while (!isUniqueName(uniq_name))    
-        uniq_name = name + std::to_string(i++);
-    
-    return uniq_name;
-}
-
-bool SceneManager::isUniqueName(std::string name)
-{
-    for (const auto& entity : _entities)
-        if (entity->name == name) return false;
-
-    return true;
-}
-
-void SceneManager::serialize(YAML::Emitter& out)
-{
-    out << YAML::BeginDoc;
-	out << YAML::BeginMap;
-
-    out << YAML::Key << "Scene" << YAML::Value << "istanbul";
-    out << YAML::Key << "Version" << YAML::Value << "1.0";
-    out << YAML::Key << "Entities" << YAML::Value;
-
-    out << YAML::BeginSeq;
-    for (const auto& entity : _entities) {
-        entity->serialize(out);
-    }
-    out << YAML::EndSeq;
-
-	out << YAML::EndMap;
-    out << YAML::EndDoc;
-}
-
-void SceneManager::deserialize(const YAML::Node& node)
-{
-    auto sceneNameNode = node["Scene"];
-    std::string scene_name = sceneNameNode.as<std::string>();
-
-    Event windowTitleTextEvent{
-        EventType::SetMainWindowTitle, 
-        std::make_unique<EventData_Text>("Model Viewer - " + scene_name)
-    };
-    ece->dispatcher.dispatch(windowTitleTextEvent);
-
-    auto versionNode = node["Version"]; // dosya versiyonu
-
-
-    // UUID -> Entity* eşleşmesi için geçici bir "adres defteri"
-    std::unordered_map<uint64_t, Transform*> entityMap;
-    auto entitiesNode = node["Entities"];
-
-    for (const auto& entityNode : entitiesNode) {
-        auto entity = std::make_unique<Entity>();
-        entity->deserialize(entityNode);
-        LOG_TRACE("Load entity: {}", entity->name);
-
-        // parent child relationship için transformun uuid sini mapliyoruz.
-        uint64_t id = entity->transform->UUID;
-        entityMap[id] = entity->transform.get();
-
-        _entities.emplace_back(std::move(entity));
-    }
-
-
-
-
-    // --- PASS 2: Aile Bağlarını (Parent-Child) Kur ---
-    for (const auto& entityNode : entitiesNode) {
-        auto transformNode = entityNode["transform"];
-        if (transformNode["parentUUID"]) { // YAML'da bu anahtarı kaydettiğini varsayıyoruz
-            uint64_t childID = transformNode["UUID"].as<uint64_t>();
-            uint64_t parentID = transformNode["parentUUID"].as<uint64_t>();
-
-            if (parentID != 0) { // 0 genelde "root" (ebeveynsiz) demektir
-                Transform* child = entityMap[childID];
-                Transform* parent = entityMap[parentID];
-
-                if (child && parent) {
-                    child->setParent(parent);
-                    LOG_TRACE("Pass 2: Linked {} -> Parent: {}", child->owner->name, parent->owner->name);
-                }
-            }
-        }
-    }
-
-
-}
 

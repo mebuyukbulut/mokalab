@@ -15,11 +15,11 @@ class Renderer;
 
 class SceneManager : public Object
 {
-    Scene scene;
+    std::unique_ptr<Scene> _activeScene = std::make_unique<Scene>();
+    
 	//std::string MWD; // Main Working Directory
     EngineContext* ece; 
 
-	std::vector<std::unique_ptr<Entity>> _entities{};
     std::vector <Entity*> _selectedEntities{};
     Entity* _selectedEntity{};
     
@@ -67,8 +67,8 @@ public:
     void deselectAll();
 
 
-    void loadScene(std::string path);
-    void saveScene(std::string path);
+    // void loadScene(std::string path);
+    // void saveScene(std::string path);
 
     void drawHierarchyTreeRecursive(Entity* entity);
 	void onInspect() override;
@@ -84,13 +84,10 @@ public:
     void deleteSelected();
 	void clearScene();
 
-    std::string getUniqueName(std::string name);
-    bool isUniqueName(std::string name);
+    // std::string getUniqueName(std::string name);
+    // bool isUniqueName(std::string name);
 
 
-    // Inherited via Object
-    void serialize(YAML::Emitter& out) override;
-    void deserialize(const YAML::Node& node) override;
 
 };
 

@@ -60,6 +60,7 @@ public:
 	ComponentType type{ ComponentType::None };
 
     virtual void onUpdate(float dt) {}
+    virtual void resolveAssets(class AssetManager&) {} 
 
     // Inherited via Object
     virtual void serialize(YAML::Emitter& out) override;
