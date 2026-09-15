@@ -1,5 +1,8 @@
 ﻿#include "SceneManager.h"
 
+#include "Commands/CommandHistory.h"
+#include "Commands/TransformCommand.h"
+
 #include <iostream>
 #include <fstream>
 #include <filesystem>
@@ -8,6 +11,8 @@
 #include <ImGuizmo.h>
 #include <imgui_internal.h>
 #include <glm/gtc/type_ptr.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/matrix_decompose.hpp>
 #include <yaml-cpp/yaml.h>
 
 #include "Camera.h"
@@ -917,6 +922,7 @@ void SceneManager::drawGizmo()
 
 
     glm::mat4 modelMatrix = _selectedEntity->transform->getGlobalMatrix();
+    glm::mat4 preModelMatrix = modelMatrix; 
     glm::vec3 selectedPos = _selectedEntity->transform->getPosition();
 
     bool gizmoUsed = ImGuizmo::Manipulate(
@@ -926,6 +932,45 @@ void SceneManager::drawGizmo()
         ImGuizmo::WORLD,
         glm::value_ptr(modelMatrix)
     );
+
+
+    static glm::mat4 oldModelMatrix{};
+    static glm::mat4 newModelMatrix{};
+    static bool isUsed = false;
+    bool used = ImGuizmo::IsUsing();
+    
+    if(isUsed == true && used == false){
+        newModelMatrix = modelMatrix;
+
+        glm::vec3 scale;
+        glm::quat rotation;
+        glm::vec3 translation;
+        glm::vec3 skew;
+        glm::vec4 perspective;
+
+        glm::decompose(oldModelMatrix, scale, rotation, translation, skew, perspective);
+
+        TransformState tsOld{}, tsNew{};
+        tsOld.position = translation;
+        tsOld.rotation = glm::degrees(glm::eulerAngles(rotation));
+        tsOld.scale = scale;
+        
+        glm::decompose(newModelMatrix, scale, rotation, translation, skew, perspective);
+
+        tsNew.position = translation;
+        tsNew.rotation = glm::degrees(glm::eulerAngles(rotation));
+        tsNew.scale = scale;
+
+        auto command = std::make_unique<TransformCommand>(_selectedEntity, tsOld, tsNew);
+        CommandHistory::pushExecutedCommand(std::move(command));
+        LOG_DEBUG("PUSHED COMMAND");
+    }
+    else if(isUsed == false && used == true){
+        oldModelMatrix = preModelMatrix;
+        LOG_DEBUG("BEGIN COMMAND");
+    }
+
+    isUsed = used;
 
     if (gizmoUsed){
         _selectedEntity->transform->setLocalMatrix(modelMatrix);

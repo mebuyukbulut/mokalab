@@ -1,5 +1,7 @@
 ﻿#include "UIManager.h"
 
+#include "Commands/CommandHistory.h"
+
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
@@ -232,6 +234,15 @@ void UIManager::mainMenu(){
                 ece->dispatcher.dispatch(e);
             }
 
+            ImGui::EndMenu();
+        }
+        if (ImGui::BeginMenu("Edit")) {
+            if (ImGui::MenuItem("Undo")) {
+                CommandHistory::undo();
+            }
+            if(ImGui::MenuItem("Redo")) {
+                CommandHistory::redo();
+            }
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("View")) {
