@@ -2,6 +2,8 @@
 
 #include "Commands/CommandHistory.h"
 #include "Commands/TransformCommand.h"
+#include "Commands/DeleteEntityCommand.h"
+#include "Commands/CreateEntityCommand.h"
 
 #include <iostream>
 #include <fstream>
@@ -54,6 +56,7 @@ void SceneManager::collectRenderData(SceneRenderData &renderData)
 		Entity* entity = _activeScene->entities()[pickID].get();
 
         if (!entity->isActive()) continue;
+        if (entity->tombstone) continue;
 
         if(RenderComponent* renderComponent = entity->getComponent<RenderComponent>()){
             if (Model* model = renderComponent->_model.get()) {
@@ -938,7 +941,7 @@ void SceneManager::drawGizmo()
     static glm::mat4 newModelMatrix{};
     static bool isUsed = false;
     bool used = ImGuizmo::IsUsing();
-    
+
     if(isUsed == true && used == false){
         newModelMatrix = modelMatrix;
 
@@ -1000,8 +1003,12 @@ void SceneManager::addLight(LightType lightType)
 	auto entity = std::make_unique<Entity>();
 	entity->name = light->name;
     entity->addComponent(std::move(light));
-	//_entities.push_back(std::move(entity));
+    
+    Entity* createdEntity = entity.get();
     _activeScene->addEntity(std::move(entity));
+    CommandHistory::pushExecutedCommand(
+        std::make_unique<CreateEntityCommand>(createdEntity)
+    );
 }
 
 void SceneManager::sceneQuery()//(Shader& shader)
@@ -1028,8 +1035,11 @@ void SceneManager::addModel(std::string path, std::string entityName, bool loadA
     renderComponent->_model = ece->assets.get<Model>(path, nullptr, loadAsync);
     entity->addComponent(std::move(renderComponent));
 
-    //_entities.push_back(std::move(entity));
+    Entity* createdEntity = entity.get();
     _activeScene->addEntity(std::move(entity));
+    CommandHistory::pushExecutedCommand(
+        std::make_unique<CreateEntityCommand>(createdEntity)
+    );
 }
 
 
@@ -1039,7 +1049,9 @@ void SceneManager::deleteSelected()
 {
     if (!_selectedEntity) return;
 
-    _activeScene->removeEntity(_selectedEntity);
+    CommandHistory::executeCommand(
+        std::make_unique<DeleteEntityCommand>(_selectedEntity));
+    //_activeScene->removeEntity(_selectedEntity);
 
     _selectedEntities.erase(std::find(_selectedEntities.begin(), _selectedEntities.end(), _selectedEntity));
     _selectedEntity = nullptr;
@@ -1057,6 +1069,7 @@ void SceneManager::clearScene()
 {
     _selectedEntity = nullptr;
     _selectedEntities.clear();
+    CommandHistory::clear();
 }
 
 void SceneManager::refreshSceneTitle(std::string title)

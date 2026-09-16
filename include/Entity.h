@@ -12,6 +12,8 @@ class Entity : public Object
 	bool active{ true };
 	bool selected { false };
 public:
+	bool tombstone { false };
+	bool reap { false }; 
 
 	std::unique_ptr <class Transform> transform{};
 	std::vector<std::unique_ptr<Component>> components{};

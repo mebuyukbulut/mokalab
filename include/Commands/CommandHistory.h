@@ -34,6 +34,11 @@ public:
         _undoStack.push_back(std::move(cmd));
     }
 
+    static void clear(){
+        _undoStack.clear();
+        _redoStack.clear();
+    }
+
 private:
     inline static std::vector<std::unique_ptr<ICommand>> _undoStack;
     inline static std::vector<std::unique_ptr<ICommand>> _redoStack;
