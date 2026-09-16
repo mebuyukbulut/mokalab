@@ -12,6 +12,7 @@ class Entity : public Object
 	bool active{ true };
 	bool selected { false };
 public:
+	int32_t commandRefCount {};
 	bool tombstone { false };
 	bool reap { false }; 
 

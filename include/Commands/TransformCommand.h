@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ICommand.h"
+#include "EntityCommand.h"
 #include "Entity.h"
 #include "Transform.h"
 #include <glm/glm.hpp>
@@ -12,15 +12,14 @@ struct TransformState{
     glm::vec3 scale{ 1.0f };
 };
 
-class TransformCommand : public ICommand{
+class TransformCommand : public EntityCommand{
 
-    Entity* _entity{};
     TransformState _oldState;
     TransformState _newState;
 
 public:
     TransformCommand(Entity* entity, const TransformState& oldState, const TransformState& newState)
-        : _entity(entity), _oldState(oldState), _newState(newState) {}
+        : EntityCommand(entity), _oldState(oldState), _newState(newState) {}
 
     void execute() override {
         _entity->transform->setPosition(_newState.position);

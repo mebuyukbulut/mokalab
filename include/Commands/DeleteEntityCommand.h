@@ -1,15 +1,10 @@
 #pragma once 
+#include "EntityCommand.h"
 
-#include "ICommand.h"
-#include "Entity.h"
-
-class DeleteEntityCommand : public ICommand{
-
-    Entity* _entity{};
+class DeleteEntityCommand : public EntityCommand{
 
 public:
-    DeleteEntityCommand(Entity* entity) : _entity{entity} {}
-    ~DeleteEntityCommand(){ if(_entity->tombstone) _entity->reap = true; }
+    DeleteEntityCommand(Entity* entity) : EntityCommand(entity) {}
 
     void execute() override{
         _entity->tombstone = true;
