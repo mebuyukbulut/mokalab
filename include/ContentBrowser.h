@@ -43,6 +43,7 @@ class ContentBrowser{
     void dirTreeRecursive(std::shared_ptr<ContentItem> parent);
     void scan();
 
+    void newButton();
     void breadcrumb();
     void drawTree();
     void drawFolderContent();

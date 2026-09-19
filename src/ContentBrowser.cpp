@@ -13,6 +13,7 @@
 #include "Builtin.h"
 
 #include <iostream>
+#include <algorithm>
 
 std::string ContentBrowser::fileTypeString(const ContentType &type)
 {
@@ -188,6 +189,27 @@ void ContentBrowser::dirTreeRecursive(std::shared_ptr<ContentItem> parent)
 
         parent->children.push_back(item);
     } 
+
+
+    
+    auto caseInsensitiveCompare = [](const std::string& str1, const std::string& str2) {
+        return std::lexicographical_compare(
+            str1.begin(), str1.end(),
+            str2.begin(), str2.end(),
+            [](unsigned char c1, unsigned char c2) {
+                return std::tolower(c1) < std::tolower(c2);
+            }
+        );
+    };
+    // Sorting folder content
+    std::sort(parent->children.begin(), parent->children.end(), 
+        [&](const auto& a, const auto& b) {
+            if (a->isDir != b->isDir) 
+                return a->isDir > b->isDir;            
+
+            return caseInsensitiveCompare(a->name, b->name);
+        }
+    );
 }
 
 void ContentBrowser::scan()
@@ -206,8 +228,100 @@ void ContentBrowser::scan()
 
 }
 
+void ContentBrowser::newButton()
+{
+    static double newButton_PopupOpenTime = 0.0;
+    const double newButton_AutoCloseDelay = 7.0;
 
-void ContentBrowser::breadcrumb(){
+    if (ImGui::Button("+ New")) {
+        ImGui::OpenPopup("NewItemMenu");
+        newButton_PopupOpenTime = ImGui::GetTime();
+    }
+
+    // State takibi için flag'ler ve isim değişkenleri
+    static bool open_new_folder_modal = false;
+    static bool open_new_scene_modal = false;
+
+    // "+ New" Butonuna tıklandığında açılacak popup menü
+    if (ImGui::BeginPopup("NewItemMenu")) {
+        
+
+        if (ImGui::MenuItem("Klasör")) {
+            open_new_folder_modal = true;
+        }
+        if (ImGui::MenuItem("Sahne (.scene)")) {
+            open_new_scene_modal = true;
+        }
+        
+        double elapsedTime = ImGui::GetTime() - newButton_PopupOpenTime;
+        if(elapsedTime >= newButton_AutoCloseDelay)
+            ImGui::CloseCurrentPopup();
+
+        ImGui::EndPopup();
+    }
+        
+    // ------------------------------------------------------------------------
+    // MODAL PENCERELER (İsim Alma İşlemleri)
+    // ------------------------------------------------------------------------
+
+    // Klasör Oluşturma Modal'ı
+    if (open_new_folder_modal) {
+        ImGui::OpenPopup("Create New Folder");
+        open_new_folder_modal = false; // Pop-up'ın her frame tekrar tetiklenmesini önlemek için resetliyoruz
+    }
+
+    if (ImGui::BeginPopupModal("Create New Folder", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        static char folder_name[128] = "Yeni Klasör";
+        ImGui::Text("Folder name:"); ImGui::SameLine();
+        ImGui::InputText("##Folder name", folder_name, IM_ARRAYSIZE(folder_name));
+
+        if (ImGui::Button("Create", ImVec2(120, 0))) {
+            std::filesystem::create_directory(selectedDir->path / folder_name);
+            scan();
+            
+            folder_name[0] = '\0'; // Input sıfırlama
+            ImGui::CloseCurrentPopup();
+        }
+        
+        ImGui::SameLine();
+        
+        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+            ImGui::CloseCurrentPopup();
+        }
+        
+        ImGui::EndPopup();
+    }
+
+    // Sahne Oluşturma Modal'ı
+    if (open_new_scene_modal) {
+        ImGui::OpenPopup("Create New Scene");
+        open_new_scene_modal = false;
+    }
+
+    if (ImGui::BeginPopupModal("Create New Scene", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        static char scene_name[128] = "NewScene";
+        ImGui::InputText("Sahne Adı", scene_name, IM_ARRAYSIZE(scene_name));
+
+        if (ImGui::Button("Create", ImVec2(120, 0))) {
+            // CreateNewScene(scene_name);
+            // RefreshDirectory();
+            
+            scene_name[0] = '\0';
+            ImGui::CloseCurrentPopup();
+        }
+        
+        ImGui::SameLine();
+        
+        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+            ImGui::CloseCurrentPopup();
+        }
+        
+        ImGui::EndPopup();
+    }
+}
+
+void ContentBrowser::breadcrumb()
+{
     // auto relative = std::filesystem::relative(selectedDir->path, root->path);
     // std::string str = ">";
     // str += relative.string();
@@ -346,6 +460,98 @@ void ContentBrowser::drawFolderContent()
 
             // --- İŞLEMLER (Interaction) ---
 
+            // State takibi için flag'ler ve isim değişkenleri
+            static bool open_delete_modal = false;
+            static bool open_rename_modal = false;
+            // sağ click menü 
+            if (ImGui::BeginPopupContextItem("ItemContextMenu")) 
+            {
+                auto selectedFile = item->path; // Sağ tıklanan öğeyi seçili yap
+
+                if (ImGui::MenuItem("Sil (Delete)")) {
+                    // item_to_delete = entry.path();
+                    open_delete_modal = true; 
+                }
+
+                if (ImGui::MenuItem("Yeniden Adlandır")) {
+                    open_rename_modal = true;
+                    // Rename işlemleri...
+                }
+
+                ImGui::EndPopup();
+            }
+            if (open_delete_modal) {
+                ImGui::OpenPopup("Delete Item");
+                open_delete_modal = false; // Pop-up'ın her frame tekrar tetiklenmesini önlemek için resetliyoruz
+            }
+
+            if (ImGui::BeginPopupModal("Delete Item", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+                ImGui::Text("Are you sure to delete selected items recursively?"); ImGui::SameLine();
+                
+                if (ImGui::Button("Delete", ImVec2(120, 0))) {
+                    auto selectedFile = item->path;
+                    std::filesystem::remove_all(selectedFile);
+                    scan();
+
+                    ImGui::CloseCurrentPopup();
+                }
+                
+                ImGui::SameLine();
+                
+                if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+                    ImGui::CloseCurrentPopup();
+                }
+                
+                ImGui::EndPopup();
+            }
+
+            if (open_rename_modal) {
+                ImGui::OpenPopup("Rename Item");
+                open_rename_modal = false; // Pop-up'ın her frame tekrar tetiklenmesini önlemek için resetliyoruz
+            }
+
+            if (ImGui::BeginPopupModal("Rename Item", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+                ImGui::Text("New name?"); ImGui::SameLine();
+
+                static char renameBuffer[128] = "";
+                ImGui::InputText("##new name", renameBuffer, IM_ARRAYSIZE(renameBuffer));
+
+                if (ImGui::Button("Rename", ImVec2(120, 0))) 
+                {
+                    std::string newNameStr(renameBuffer);
+                    
+                    if (!newNameStr.empty()) 
+                    {
+                        // Eski yolun dizinini koruyarak yeni dosya yolunu oluşturuyoruz
+                        std::filesystem::path newPath = item->parent.lock()->path / newNameStr;
+
+                        if (newPath !=  item->parent.lock()->path) 
+                        {
+                            std::error_code ec;
+                            std::filesystem::rename(item->path, newPath, ec);
+
+                            if (!ec) {
+                                scan(); 
+                            } else {
+                                LOG_ERROR("Renaming operation failed: {}", ec.message());
+                            }
+                        }
+                    }
+                    ImGui::CloseCurrentPopup();
+                }
+                
+                ImGui::SameLine();
+                
+                if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+                    ImGui::CloseCurrentPopup();
+                }
+                
+                ImGui::EndPopup();
+            }
+
+
+
+
             // Hover Edilince Tooltip Göster
             if (ImGui::IsItemHovered()) {
                 ImGui::BeginTooltip();
@@ -354,6 +560,8 @@ void ContentBrowser::drawFolderContent()
                 ImGui::Text("Tip: %s", fileTypeString(item->type).c_str());
                 ImGui::EndTooltip();
             }
+
+
 
             // Çift Tıklama Kontrolü (Klasörün İçine Girme)
             if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
@@ -406,6 +614,7 @@ void ContentBrowser::draw(){
     if (ImGui::Begin("CONTENT BROWSER")) {
         // menu bar
         if(ImGui::Button("Refresh")) scan(); ImGui::SameLine();
+        newButton(); ImGui::SameLine();
         ImGui::Dummy({60,0}); ImGui::SameLine();
         breadcrumb();
             
