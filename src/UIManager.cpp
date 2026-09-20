@@ -26,6 +26,8 @@
 #include "AssetManager.h"
 #include "Texture.h"
 
+#include "ConfigManager.h"
+
 UIManager::UIManager() = default;
 UIManager::~UIManager() = default;
 
@@ -67,18 +69,18 @@ void UIManager::init(GLFWwindow* window, std::shared_ptr<Camera> camera, EngineC
         
 
     // load config 
-    isCreditsPanelOpen = this->ece->projectConfig.ui.isCreditsPanelOpen;
-    isLightPanelOpen   = this->ece->projectConfig.ui.isLightPanelOpen;
-    isShaderPanelOpen  = this->ece->projectConfig.ui.isShaderPanelOpen;
+    isCreditsPanelOpen = this->ece->projectConfig->ui.isCreditsPanelOpen;
+    isLightPanelOpen   = this->ece->projectConfig->ui.isLightPanelOpen;
+    isShaderPanelOpen  = this->ece->projectConfig->ui.isShaderPanelOpen;
 
 
     // Events 
-    this->ece->dispatcher.subscribe(EventType::OpenImageViewer, [&](std::unique_ptr<EventData> e) {
+    this->ece->dispatcher->subscribe(EventType::OpenImageViewer, [&](std::unique_ptr<EventData> e) {
         std::unique_ptr<EventData_Text> t(static_cast<EventData_Text*>(e.release()));
         imageViewerPath = t->text;
         isImageViewerOpen = true;
     });
-    this->ece->dispatcher.subscribe(EventType::OpenTextViewer, [&](std::unique_ptr<EventData> e) {
+    this->ece->dispatcher->subscribe(EventType::OpenTextViewer, [&](std::unique_ptr<EventData> e) {
         std::unique_ptr<EventData_Text> t(static_cast<EventData_Text*>(e.release()));
         textViewerPath = t->text;
         isTextViewerOpen = true;
@@ -206,12 +208,12 @@ void UIManager::mainMenu(){
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("New Scene")) {
                 Event e{ EventType::NewScene, {} };
-                ece->dispatcher.dispatch(e);
+                ece->dispatcher->dispatch(e);
             }
 
             if (ImGui::MenuItem("Save Scene", "Ctrl+S")) {
                 Event e{ EventType::SaveScene, {} };
-                ece->dispatcher.dispatch(e);
+                ece->dispatcher->dispatch(e);
             }
             if (ImGui::MenuItem("Open Scene")) {                
                 std::string filePath = FileUtils::openFileDialog();
@@ -219,7 +221,7 @@ void UIManager::mainMenu(){
                     EventType::LoadScene,
                     std::make_unique<EventData_Text>(filePath)
                 };
-                ece->dispatcher.dispatch(e);
+                ece->dispatcher->dispatch(e);
             }
             if (ImGui::MenuItem("Import Model", "Ctrl+O")) {
                 std::string filePath = FileUtils::openFileDialog();
@@ -227,11 +229,11 @@ void UIManager::mainMenu(){
                     EventType::ModelOpened,
                     std::make_unique<EventData_Text>(filePath)
                 };
-                ece->dispatcher.dispatch(e);
+                ece->dispatcher->dispatch(e);
             }
             if (ImGui::MenuItem("Exit")) { 
                 Event e{ EventType::EngineExit, {} };
-                ece->dispatcher.dispatch(e);
+                ece->dispatcher->dispatch(e);
             }
 
             ImGui::EndMenu();
@@ -246,17 +248,22 @@ void UIManager::mainMenu(){
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("View")) {
+            bool willSaved = false; 
             if (ImGui::MenuItem("Shader Panel", nullptr, &isShaderPanelOpen)) {
-                ece->projectConfig.ui.isShaderPanelOpen = isShaderPanelOpen;
-                ece->projectConfig.save(ece->paths.projectConfig);
+                ece->projectConfig->ui.isShaderPanelOpen = isShaderPanelOpen;
+                willSaved = true;
             }
             if(ImGui::MenuItem("Credits Panel", nullptr, &isCreditsPanelOpen)) {
-                ece->projectConfig.ui.isCreditsPanelOpen = isCreditsPanelOpen;
-                ece->projectConfig.save(ece->paths.projectConfig);
+                ece->projectConfig->ui.isCreditsPanelOpen = isCreditsPanelOpen;
+                willSaved = true;
             }
             if(ImGui::MenuItem("Light Panel", nullptr, &isLightPanelOpen)) {
-                ece->projectConfig.ui.isLightPanelOpen = isLightPanelOpen;
-                ece->projectConfig.save(ece->paths.projectConfig);
+                ece->projectConfig->ui.isLightPanelOpen = isLightPanelOpen;
+                willSaved = true;
+            }
+            if(willSaved){
+                ProjectConfig& pc = *ece->projectConfig;
+                ConfigManager::save(ece->paths->projectConfig, pc);
             }
             ImGui::EndMenu();
         }
@@ -269,21 +276,21 @@ void UIManager::mainMenu(){
                         EventType::AddLight,
                         std::make_unique<EventData_Text>(Builtin::LightType::Point)
                     };
-                    ece->dispatcher.dispatch(e);
+                    ece->dispatcher->dispatch(e);
                 }
                 if (ImGui::MenuItem("Add Spot Light")) {
                     Event e{ 
                         EventType::AddLight,
                         std::make_unique<EventData_Text>(Builtin::LightType::Spot)
                     };
-                    ece->dispatcher.dispatch(e);
+                    ece->dispatcher->dispatch(e);
                 }
                 if (ImGui::MenuItem("Add Direction Light")) {
                     Event e{ 
                         EventType::AddLight,
                         std::make_unique<EventData_Text>(Builtin::LightType::Directional)
                     };
-                    ece->dispatcher.dispatch(e);
+                    ece->dispatcher->dispatch(e);
                 }
                 ImGui::EndMenu();
             }
@@ -294,46 +301,46 @@ void UIManager::mainMenu(){
                         EventType::AddPrimitive,
                         std::make_unique<EventData_Text>(Builtin::Model::Cube)
                     };
-                    ece->dispatcher.dispatch(e);
+                    ece->dispatcher->dispatch(e);
                 }
                 if (ImGui::MenuItem("Add UV Sphere")) {
                     Event e{ 
                         EventType::AddPrimitive,
                         std::make_unique<EventData_Text>(Builtin::Model::UVSphere)
                     };
-                    ece->dispatcher.dispatch(e);
+                    ece->dispatcher->dispatch(e);
                 }
                 if (ImGui::MenuItem("Add Cone")) {
                     Event e{ 
                         EventType::AddPrimitive,
                         std::make_unique<EventData_Text>(Builtin::Model::Cone)
                     };
-                    ece->dispatcher.dispatch(e);
+                    ece->dispatcher->dispatch(e);
                 }
                 if (ImGui::MenuItem("Add Cylinder")) {
                     Event e{ 
                         EventType::AddPrimitive,
                         std::make_unique<EventData_Text>(Builtin::Model::Cylinder)
                     };
-                    ece->dispatcher.dispatch(e);
+                    ece->dispatcher->dispatch(e);
                 }
                 if (ImGui::MenuItem("Add Plane")) {
                     Event e{ 
                         EventType::AddPrimitive,
                         std::make_unique<EventData_Text>(Builtin::Model::Plane)
                     };
-                    ece->dispatcher.dispatch(e);
+                    ece->dispatcher->dispatch(e);
                 }
                 if (ImGui::MenuItem("Add Torus")) {
                     Event e{ 
                         EventType::AddPrimitive,
                         std::make_unique<EventData_Text>(Builtin::Model::Torus)
                     };
-                    ece->dispatcher.dispatch(e);
+                    ece->dispatcher->dispatch(e);
                 }
                 if (ImGui::MenuItem("Add Monkey")) {
                     Event e{ EventType::AddMonkey };
-                    ece->dispatcher.dispatch(e);
+                    ece->dispatcher->dispatch(e);
                 }
                 ImGui::EndMenu();
 
@@ -359,7 +366,7 @@ void UIManager::shaderPanel()
                 EventType::ShaderSelected, 
                 std::make_unique<EventData_Text>(itemStr)
             };
-            ece->dispatcher.dispatch(e);
+            ece->dispatcher->dispatch(e);
         }
     }
     ImGui::End();
@@ -383,7 +390,7 @@ void UIManager::imageViewer()
     static ImVec2 sizeofTexture;
     if(imageViewerPath != currentPath){
         currentPath = imageViewerPath;
-        myTexture = ece->assets.get<Texture>(imageViewerPath);
+        myTexture = ece->assets->get<Texture>(imageViewerPath);
         float width = myTexture->getWidth();
         float height = myTexture->getHeight();
         if(std::max(width,height) > 900){

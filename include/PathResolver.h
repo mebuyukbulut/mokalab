@@ -4,6 +4,8 @@
 
 class PathResolver{
 public:
+    std::filesystem::path appConfig{"../assets/config/config.yaml"};
+
     std::filesystem::path projectRoot{};
     std::filesystem::path mokaFile{};
     std::filesystem::path projectConfig{};

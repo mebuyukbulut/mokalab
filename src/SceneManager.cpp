@@ -84,7 +84,7 @@ void SceneManager::collectRenderData(SceneRenderData &renderData)
 
 void SceneManager::initCommands()
 {
-    ece->dispatcher.subscribe(EventType::AddLight, [&](std::unique_ptr<EventData> e) {
+    ece->dispatcher->subscribe(EventType::AddLight, [&](std::unique_ptr<EventData> e) {
         std::unique_ptr<EventData_Text> t(static_cast<EventData_Text*>(e.release()));
         if(t->text == Builtin::LightType::Point)
             addLight(LightType::Point);
@@ -94,7 +94,7 @@ void SceneManager::initCommands()
             addLight(LightType::Directional);
     });
 
-    ece->dispatcher.subscribe(EventType::AddPrimitive, [&](std::unique_ptr<EventData> e) {
+    ece->dispatcher->subscribe(EventType::AddPrimitive, [&](std::unique_ptr<EventData> e) {
         std::unique_ptr<EventData_Text> t(static_cast<EventData_Text*>(e.release()));
         std::string pathStr = t->text;
         std::string::iterator beginPos = pathStr.begin() + pathStr.find_last_of(':') + 1 ; 
@@ -102,24 +102,24 @@ void SceneManager::initCommands()
         addModel(pathStr, modelName);
     });
 
-    ece->dispatcher.subscribe(EventType::AddMonkey, [&](std::unique_ptr<EventData> e) {
+    ece->dispatcher->subscribe(EventType::AddMonkey, [&](std::unique_ptr<EventData> e) {
         //std::filesystem::path AssetRoot = std::filesystem::current_path().parent_path() / "assets";
-        auto model = ece->paths.assetRoot / "models/monkey/monkey.obj";
+        auto model = ece->paths->assetRoot / "models/monkey/monkey.obj";
         addModel(model.c_str(), "Monkey", true);
     });
 
-    ece->dispatcher.subscribe(EventType::Delete, [&](std::unique_ptr<EventData> e) {
+    ece->dispatcher->subscribe(EventType::Delete, [&](std::unique_ptr<EventData> e) {
         deleteSelected();
     });
 
 
-    ece->dispatcher.subscribe(EventType::Select, [&](std::unique_ptr<EventData> e) {
+    ece->dispatcher->subscribe(EventType::Select, [&](std::unique_ptr<EventData> e) {
         std::unique_ptr<EventData_Point> p(static_cast<EventData_Point*>(e.release()));
         mouseBeginPos = glm::vec2(p->vec.x, p->vec.y);
         mouseEndPos = glm::vec2(p->vec.x, p->vec.y);
         isViewportSelect = true;
     });
-    ece->dispatcher.subscribe(EventType::MouseDrag, [&](std::unique_ptr<EventData> e){
+    ece->dispatcher->subscribe(EventType::MouseDrag, [&](std::unique_ptr<EventData> e){
         std::unique_ptr<EventData_DoublePoint> p ( static_cast<EventData_DoublePoint*>(e.release()));
         mouseBeginPos = glm::vec2(p->vecA.x, p->vecA.y);
         mouseEndPos = glm::vec2(p->vecB.x, p->vecB.y);
@@ -130,23 +130,23 @@ void SceneManager::initCommands()
     });
 
 
-    ece->dispatcher.subscribe(EventType::ScenePopup, [&](std::unique_ptr<EventData> e) {
+    ece->dispatcher->subscribe(EventType::ScenePopup, [&](std::unique_ptr<EventData> e) {
         isScenePopupOpen = true;
     });
-    ece->dispatcher.subscribe(EventType::NewScene, [&](std::unique_ptr<EventData> e) {
+    ece->dispatcher->subscribe(EventType::NewScene, [&](std::unique_ptr<EventData> e) {
         clearScene();
         _activeScene->clear();
         _activeScene->setName("Untitled Scene");
         refreshSceneTitle("Mokalab - Scene: " + _activeScene->getName());
     });
-    ece->dispatcher.subscribe(EventType::SaveScene, [&](std::unique_ptr<EventData> e) {
+    ece->dispatcher->subscribe(EventType::SaveScene, [&](std::unique_ptr<EventData> e) {
         std::string filePath = _activeScene->getPath();
         if(filePath == "")
             filePath = FileUtils::openFileDialog(L"",true);
         _activeScene->save(filePath);
         refreshSceneTitle("Mokalab - Scene: " + _activeScene->getName());
     });
-    ece->dispatcher.subscribe(EventType::LoadScene, [&](std::unique_ptr<EventData> e) {
+    ece->dispatcher->subscribe(EventType::LoadScene, [&](std::unique_ptr<EventData> e) {
         std::unique_ptr<EventData_Text> t(static_cast<EventData_Text*>(e.release()));
         std::string thePath = t->text;
 
@@ -157,19 +157,19 @@ void SceneManager::initCommands()
         // resolve scene
         for(const auto& entity : _activeScene->entities()){
             for(auto& c : entity->components)
-                c->resolveAssets(ece->assets);
+                c->resolveAssets(*(ece->assets));
         }
 
 
         
     });
-    ece->dispatcher.subscribe(EventType::ModelOpened, [&](std::unique_ptr<EventData> e) {
+    ece->dispatcher->subscribe(EventType::ModelOpened, [&](std::unique_ptr<EventData> e) {
         std::unique_ptr<EventData_Text> t(static_cast<EventData_Text*>(e.release()));
         std::string thePath = t->text;
         addModel(thePath, "", true);
     });
 
-    ece->dispatcher.subscribe(EventType::FocusToSelectedObject, [&](std::unique_ptr<EventData> e) {
+    ece->dispatcher->subscribe(EventType::FocusToSelectedObject, [&](std::unique_ptr<EventData> e) {
         if(Entity* selectedEntity = getSelectedEntity())
             _camera->resetFrame(selectedEntity->transform.get());
     });
@@ -179,13 +179,13 @@ void SceneManager::initDefaults()
 {
     // Load default Material
     for(const char* path : Builtin::Material::All)
-        ece->assets.get<Material>(path); 
+        ece->assets->get<Material>(path); 
 
     // Load default Models
     for(const char* key : Builtin::Model::All)
-        ece->assets.get<Model>(key);
+        ece->assets->get<Model>(key);
 
-    std::filesystem::path AssetRoot = ece->paths.assetRoot;
+    std::filesystem::path AssetRoot = ece->paths->assetRoot;
 
     // Load icons
     for(const char* key : Builtin::Icon::All){
@@ -193,14 +193,14 @@ void SceneManager::initDefaults()
         auto iconPath = AssetRoot / ("icons/" + std::string(key) + ".png");
         LOG_TRACE("{}", iconPath.c_str());
         ts.realPath = iconPath.c_str();
-        ece->assets.get<Texture>(key, &ts, false); // data is not unique ptr so cannot be async
+        ece->assets->get<Texture>(key, &ts, false); // data is not unique ptr so cannot be async
     }
     
 
     auto model = AssetRoot / "models/monkey/monkey.obj";
     
-    ece->assets.get<Model>(model.c_str(), nullptr, true);
-    //g_Assets.get<Model>(MWD + "/../assets/models/monkey/monkey.obj", nullptr, true);
+    ece->assets->get<Model>(model.c_str(), nullptr, true);
+    //g_assets->get<Model>(MWD + "/../assets/models/monkey/monkey.obj", nullptr, true);
 }
 void SceneManager::init(Renderer* renderer, Camera* camera, UIManager* UI, EngineContext& ece) {
     fxReg.init(ece);
@@ -596,19 +596,19 @@ void SceneManager::onInspect()
                 Event e{ 
                     EventType::AddLight,
                     std::make_unique<EventData_Text>(Builtin::LightType::Point)};
-                ece->dispatcher.dispatch(e);
+                ece->dispatcher->dispatch(e);
             }
             if (ImGui::MenuItem("Add Spot Light")) {
                 Event e{ 
                     EventType::AddLight,
                     std::make_unique<EventData_Text>(Builtin::LightType::Spot)};
-                ece->dispatcher.dispatch(e);
+                ece->dispatcher->dispatch(e);
             }
             if (ImGui::MenuItem("Add Direction Light")) {
                 Event e{ 
                     EventType::AddLight,
                     std::make_unique<EventData_Text>(Builtin::LightType::Directional)};
-                ece->dispatcher.dispatch(e);
+                ece->dispatcher->dispatch(e);
             }
             ImGui::EndMenu();
         }
@@ -618,37 +618,37 @@ void SceneManager::onInspect()
                 Event e{ 
                     EventType::AddPrimitive,
                     std::make_unique<EventData_Text>(Builtin::Model::Cube)};
-                ece->dispatcher.dispatch(e);
+                ece->dispatcher->dispatch(e);
             }
             if (ImGui::MenuItem("Add UV Sphere")) {
                 Event e{ 
                     EventType::AddPrimitive,
                     std::make_unique<EventData_Text>(Builtin::Model::UVSphere)};
-                ece->dispatcher.dispatch(e);
+                ece->dispatcher->dispatch(e);
             }
             if (ImGui::MenuItem("Add Cone")) {
                 Event e{ 
                     EventType::AddPrimitive,
                     std::make_unique<EventData_Text>(Builtin::Model::Cone)};
-                ece->dispatcher.dispatch(e);
+                ece->dispatcher->dispatch(e);
             }
             if (ImGui::MenuItem("Add Cylinder")) {
                 Event e{ 
                     EventType::AddPrimitive,
                     std::make_unique<EventData_Text>(Builtin::Model::Cylinder)};
-                ece->dispatcher.dispatch(e);
+                ece->dispatcher->dispatch(e);
             }
             if (ImGui::MenuItem("Add Plane")) {
                 Event e{ 
                     EventType::AddPrimitive,
                     std::make_unique<EventData_Text>(Builtin::Model::Plane)};
-                ece->dispatcher.dispatch(e);
+                ece->dispatcher->dispatch(e);
             }
             if (ImGui::MenuItem("Add Torus")) {
                 Event e{ 
                     EventType::AddPrimitive,
                     std::make_unique<EventData_Text>(Builtin::Model::Torus)};
-                ece->dispatcher.dispatch(e);
+                ece->dispatcher->dispatch(e);
             }
             ImGui::EndMenu();
 
@@ -779,7 +779,7 @@ void SceneManager::onInspect()
     
     if (ImGui::ImageButton(
             "t",
-            (ImTextureID)(intptr_t)ece->assets.get<Texture>(Builtin::Icon::EditorTool::Translate)->getId(),
+            (ImTextureID)(intptr_t)ece->assets->get<Texture>(Builtin::Icon::EditorTool::Translate)->getId(),
             ImVec2(32, 32), ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), tint))
     {
         mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
@@ -787,7 +787,7 @@ void SceneManager::onInspect()
     ImGui::SameLine();
     if (ImGui::ImageButton(
             "r",
-            (ImTextureID)(intptr_t)ece->assets.get<Texture>(Builtin::Icon::EditorTool::Rotate)->getId(),
+            (ImTextureID)(intptr_t)ece->assets->get<Texture>(Builtin::Icon::EditorTool::Rotate)->getId(),
             ImVec2(32, 32), ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), tint))
     {
         mCurrentGizmoOperation = ImGuizmo::ROTATE;
@@ -795,7 +795,7 @@ void SceneManager::onInspect()
     ImGui::SameLine();   
     if (ImGui::ImageButton(
             "s",
-            (ImTextureID)(intptr_t)ece->assets.get<Texture>(Builtin::Icon::EditorTool::Scale)->getId(),
+            (ImTextureID)(intptr_t)ece->assets->get<Texture>(Builtin::Icon::EditorTool::Scale)->getId(),
             ImVec2(32, 32), ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), tint))
     {
         mCurrentGizmoOperation = ImGuizmo::SCALE;
@@ -807,7 +807,7 @@ void SceneManager::onInspect()
 
     if (ImGui::ImageButton(
             "p",
-            (ImTextureID)(intptr_t)ece->assets.get<Texture>(Builtin::Icon::ViewMode::Lit)->getId(),
+            (ImTextureID)(intptr_t)ece->assets->get<Texture>(Builtin::Icon::ViewMode::Lit)->getId(),
             ImVec2(32, 32), ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), tint))
     {
         _renderer->setViewMode(ViewMode::Material);
@@ -816,7 +816,7 @@ void SceneManager::onInspect()
 
     if (ImGui::ImageButton(
             "m",
-            (ImTextureID)(intptr_t)ece->assets.get<Texture>(Builtin::Icon::ViewMode::Matcap)->getId(),
+            (ImTextureID)(intptr_t)ece->assets->get<Texture>(Builtin::Icon::ViewMode::Matcap)->getId(),
             ImVec2(32, 32), ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), tint))
     {
         _renderer->setViewMode(ViewMode::Matcap);
@@ -825,7 +825,7 @@ void SceneManager::onInspect()
 
     if (ImGui::ImageButton(
             "w",
-            (ImTextureID)(intptr_t)ece->assets.get<Texture>(Builtin::Icon::ViewMode::Wireframe)->getId(),
+            (ImTextureID)(intptr_t)ece->assets->get<Texture>(Builtin::Icon::ViewMode::Wireframe)->getId(),
             ImVec2(32, 32), ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), tint))
     {
         _renderer->setViewMode(ViewMode::Wireframe);
@@ -1032,7 +1032,7 @@ void SceneManager::addModel(std::string path, std::string entityName, bool loadA
 
 
     auto renderComponent = std::make_unique<RenderComponent>();
-    renderComponent->_model = ece->assets.get<Model>(path, nullptr, loadAsync);
+    renderComponent->_model = ece->assets->get<Model>(path, nullptr, loadAsync);
     entity->addComponent(std::move(renderComponent));
 
     Entity* createdEntity = entity.get();
@@ -1078,5 +1078,5 @@ void SceneManager::refreshSceneTitle(std::string title)
         EventType::SetMainWindowTitle, 
         std::make_unique<EventData_Text>(title)
     };
-    ece->dispatcher.dispatch(windowTitleTextEvent);
+    ece->dispatcher->dispatch(windowTitleTextEvent);
 }

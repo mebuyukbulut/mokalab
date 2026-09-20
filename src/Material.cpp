@@ -25,8 +25,8 @@ void Material::use(Shader* shader, EngineContext* ece) {
 	shader->set(Builtin::Material::NormalTexture,	 Builtin::TextureSlot::Normal); 
 	shader->set(Builtin::Material::EmissiveTexture,  Builtin::TextureSlot::Emissive); 
 
-	if(!defaultWhite) defaultWhite = ece->assets.get<Texture>(Builtin::Texture::SolidWhite);
-	if(!defaultNormal) defaultNormal = ece->assets.get<Texture>(Builtin::Texture::FlatNormal);
+	if(!defaultWhite) defaultWhite = ece->assets->get<Texture>(Builtin::Texture::SolidWhite);
+	if(!defaultNormal) defaultNormal = ece->assets->get<Texture>(Builtin::Texture::FlatNormal);
 
 	// Bind Textures
 	(baseColorTexture ? baseColorTexture : defaultWhite )->bind(Builtin::TextureSlot::BaseColor);
@@ -168,7 +168,7 @@ void Material::setEmissiveTexture(std::shared_ptr<Texture> texture){
 std::string EditorUI::materialSelector(EngineContext* ece)
 {
     static int selectedMat = -1;
-	auto mats = ece->assets.getAll<Material>();
+	auto mats = ece->assets->getAll<Material>();
 
 
     std::vector<std::string> matNames;

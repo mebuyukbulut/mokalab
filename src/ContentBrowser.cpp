@@ -434,7 +434,7 @@ void ContentBrowser::drawFolderContent()
 
             if (ImGui::ImageButton(
                     "t",
-                    (ImTextureID)(intptr_t)ece->assets.get<Texture>(iconType)->getId(),
+                    (ImTextureID)(intptr_t)ece->assets->get<Texture>(iconType)->getId(),
                     ImVec2(_thumbnailSize, _thumbnailSize)))
             {
             }    
@@ -574,7 +574,7 @@ void ContentBrowser::drawFolderContent()
                             EventType::ModelOpened, 
                             std::make_unique<EventData_Text>(item->path.string())
                         };
-                        ece->dispatcher.dispatch(e);
+                        ece->dispatcher->dispatch(e);
                     }
                     else if(item->type == ContentType::Text)
                     {
@@ -582,7 +582,7 @@ void ContentBrowser::drawFolderContent()
                             EventType::OpenTextViewer, 
                             std::make_unique<EventData_Text>(item->path.string())
                         };
-                        ece->dispatcher.dispatch(e);
+                        ece->dispatcher->dispatch(e);
                     }
                     else if(item->type == ContentType::Image)
                     {
@@ -590,7 +590,7 @@ void ContentBrowser::drawFolderContent()
                             EventType::OpenImageViewer, 
                             std::make_unique<EventData_Text>(item->path.string())
                         };
-                        ece->dispatcher.dispatch(e);
+                        ece->dispatcher->dispatch(e);
                     }
                     else if(item->type == ContentType::Scene)
                     {
@@ -598,7 +598,7 @@ void ContentBrowser::drawFolderContent()
                             EventType::LoadScene, 
                             std::make_unique<EventData_Text>(item->path.string())
                         };
-                        ece->dispatcher.dispatch(e);
+                        ece->dispatcher->dispatch(e);
                     }
                 }
             }
@@ -719,7 +719,7 @@ void ContentBrowser::init(EngineContext* ece){
     root = std::make_shared<ContentItem>();
 
     root->name = "root"; 
-    root->path = ece->paths.contentFolder;
+    root->path = ece->paths->contentFolder;
     root->type = ContentType::Directory;
     root->isDir = true;
     

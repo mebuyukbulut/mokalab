@@ -27,16 +27,6 @@
 class Engine
 {	
     // ==========================
-    // Engine Context
-    // ==========================
-	PathResolver    _paths{};
-    AppConfig		_appConfig{};
-    ProjectConfig	_projectConfig{};
-    AssetManager    _assets{};
-    EventDispatcher _dispatcher{};
-
-
-    // ==========================
     // 
     // ==========================
 
@@ -44,7 +34,7 @@ class Engine
 	GLFWwindow* _window{};
 	Renderer _renderer{};
 	SceneManager SM{};
-	std::shared_ptr<Camera> _camera{new OrbitCamera()};
+	std::shared_ptr<Camera> _camera{new OrbitCamera()}; // bu renderer ya da scene manager altında olabilir
 	UIManager _UI{};
 	Mouse _mouse{};
 	InputManager _IM{}; // Input Manager
@@ -68,12 +58,7 @@ public:
 
 	EngineContext _ece;
 
-	Engine():_ece {_paths, _appConfig, _projectConfig, _assets, _dispatcher } { _assets.setContext(&_ece); };
-	Engine(std::filesystem::path projectPath):_ece {_paths, _appConfig, _projectConfig, _assets, _dispatcher } 
-	{ 
-		_assets.setContext(&_ece); 
-		_paths.setProjectRoot(projectPath); 
-	};
+	Engine(std::filesystem::path projectPath);
 	void run();
 };
 

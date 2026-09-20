@@ -24,10 +24,10 @@ void Engine::initWindow()
     // glfw window creation
     // --------------------
     _window = glfwCreateWindow(
-        _ece.appConfig.window.width, 
-        _ece.appConfig.window.height, 
+        _ece.appConfig->window.width, 
+        _ece.appConfig->window.height, 
         "MOKALAB - TO DO APP CONFIG & PROJECT CONFIG" ,
-        _ece.appConfig.window.fullscreen ? glfwGetPrimaryMonitor() : NULL,
+        _ece.appConfig->window.fullscreen ? glfwGetPrimaryMonitor() : NULL,
         NULL);
     if (_window == NULL)
     {
@@ -47,7 +47,7 @@ void Engine::initWindow()
             if (app) {
                 //LOG_TRACE("Window resized to: {} x {}",width,height);
                 //app->_renderer.resizeViewport(width, height);
-                app->_ece.dispatcher.dispatch(e); 
+                app->_ece.dispatcher->dispatch(e); 
             }
             else{
                 LOG_ERROR("glfwSetDropCallback");
@@ -57,19 +57,19 @@ void Engine::initWindow()
         });
 
     _mouse.init(_window, &_UI, _ece);
-    _ece.dispatcher.subscribe(EventType::onMove, [&](std::unique_ptr<EventData> e) {
+    _ece.dispatcher->subscribe(EventType::onMove, [&](std::unique_ptr<EventData> e) {
         std::unique_ptr<EventData_Point> p(static_cast<EventData_Point*>(e.release()));
         _camera->move(p->vec);
         });
-    _ece.dispatcher.subscribe(EventType::onRotate, [&](std::unique_ptr<EventData> e) {
+    _ece.dispatcher->subscribe(EventType::onRotate, [&](std::unique_ptr<EventData> e) {
         std::unique_ptr<EventData_Point> p(static_cast<EventData_Point*>(e.release()));
         _camera->rotate(p->vec);
         });
-    _ece.dispatcher.subscribe(EventType::onZoom, [&](std::unique_ptr<EventData> e) {
+    _ece.dispatcher->subscribe(EventType::onZoom, [&](std::unique_ptr<EventData> e) {
         std::unique_ptr<EventData_Point> p(static_cast<EventData_Point*>(e.release()));
         _camera->zoom(p->vec.y);
         });
-    _ece.dispatcher.subscribe(EventType::SetMainWindowTitle, [&](std::unique_ptr<EventData> e) {
+    _ece.dispatcher->subscribe(EventType::SetMainWindowTitle, [&](std::unique_ptr<EventData> e) {
         std::unique_ptr<EventData_Text> t(static_cast<EventData_Text*>(e.release()));
         glfwSetWindowTitle(_window, t->text.c_str());
 		});
@@ -100,10 +100,10 @@ void Engine::initUI()
     _UI.init(_window, _camera, _ece);
 	//_UI.setWindowSize(SCR_WIDTH, SCR_HEIGHT);
     
-    _ece.dispatcher.subscribe(EventType::ShaderSelected, [&](std::unique_ptr<EventData> e) {
+    _ece.dispatcher->subscribe(EventType::ShaderSelected, [&](std::unique_ptr<EventData> e) {
         //_renderer.setShader(e.data.text,Renderer::ShaderType::Main);
         });
-    _ece.dispatcher.subscribe(EventType::EngineExit, [&](std::unique_ptr<EventData> e) {
+    _ece.dispatcher->subscribe(EventType::EngineExit, [&](std::unique_ptr<EventData> e) {
         //SM.saveScene("");
         glfwSetWindowShouldClose(_window, true);
         });
@@ -115,15 +115,12 @@ void Engine::initUI()
 
 void Engine::init(){
     _IM.init(_ece);
-    _ece.appConfig.load();
-    LOG_CRITICAL("{}", _ece.paths.projectConfig.c_str());
-    _ece.projectConfig.load(_ece.paths.projectConfig.c_str());
 
     initWindow();
 	initOpenGL();    
     
-	_camera->init(glm::vec2(_ece.appConfig.window.width, _ece.appConfig.window.height));
-	_camera->setWindowSize(_ece.appConfig.window.width, _ece.appConfig.window.height);
+	_camera->init(glm::vec2(_ece.appConfig->window.width, _ece.appConfig->window.height));
+	_camera->setWindowSize(_ece.appConfig->window.width, _ece.appConfig->window.height);
 
     _renderer.init(_camera, _ece);
 
@@ -155,7 +152,7 @@ void Engine::mainLoop()
         //ps.draw();
         
         SM.draw();
-        _ece.assets.update(); 
+        _ece.assets->update(); 
         
         
 		_UI.draw(&SM);
@@ -169,6 +166,11 @@ void Engine::terminate() {
     _renderer.terminate();
     _UI.terminate();
 }
+
+Engine::Engine(std::filesystem::path projectPath){ 
+    _ece.init(projectPath.string());
+    LOG_CRITICAL("{}", _ece.paths->projectConfig.c_str());
+};
 
 void Engine::run()
 {

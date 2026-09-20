@@ -48,7 +48,7 @@ void Mouse::update(float deltaTime)
             Event e{ 
                 EventType::MouseDrag,
                 std::make_unique<EventData_DoublePoint>(vecA, vecB) };                
-            ece->dispatcher.dispatch(e);
+            ece->dispatcher->dispatch(e);
         }
         
     }
@@ -58,7 +58,7 @@ void Mouse::update(float deltaTime)
             Event e{ 
                 EventType::Select,
                 std::make_unique<EventData_Point>(mousePos.x, mousePos.y, 0) };                
-            ece->dispatcher.dispatch(e);
+            ece->dispatcher->dispatch(e);
             
         }
         _dragPosBegin = glm::vec2(0, 0);
@@ -148,14 +148,14 @@ void Mouse::mouse_cursor_callback(GLFWwindow* window, double xposIn, double ypos
         Event e{ 
             EventType::onRotate, 
             std::make_unique<EventData_Point>(glm::vec3(xoffset,yoffset,0))};
-        app->_ece.dispatcher.dispatch(e);
+        app->_ece.dispatcher->dispatch(e);
     }
     else if(_this->_mouseRightPress){ 
         glm::vec3 vec(xoffset * _this->_moveSens, yoffset * _this->_moveSens, 0);
         Event e{ 
             EventType::onMove, 
             std::make_unique<EventData_Point>(vec) };
-        app->_ece.dispatcher.dispatch(e);
+        app->_ece.dispatcher->dispatch(e);
     }
 }
 void Mouse::scroll_callback(GLFWwindow* window, double xoffset, double yoffset){
@@ -167,6 +167,6 @@ void Mouse::scroll_callback(GLFWwindow* window, double xoffset, double yoffset){
         Event e{ 
             EventType::onZoom, 
             std::make_unique<EventData_Point>(vec) };
-        app->_ece.dispatcher.dispatch(e);
+        app->_ece.dispatcher->dispatch(e);
     }
 }

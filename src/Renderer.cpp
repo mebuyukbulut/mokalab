@@ -29,7 +29,7 @@ void Renderer::initMatcap() {
 		LOG_TRACE("Found matcap texture: {}", p);
 
     //matcapTexture = TextureFactory::load(matcapTexturePaths.front(), false);
-    matcapTexture = ece->assets.get<Texture>( matcapTexturePaths.front());
+    matcapTexture = ece->assets->get<Texture>( matcapTexturePaths.front());
     
 }
 
@@ -282,18 +282,18 @@ void Renderer::init(std::shared_ptr<Camera> camera, EngineContext& ece) {
  	//shaders.push_back({"hdr2cubemap",   "../assets/shaders/hdr2cubemap.vert", 		"../assets/shaders/hdr2cubemap.frag"});
  	
     for(auto& ss : shaders)
-        this->ece->assets.get<Shader>(ss.name, &ss);
+        this->ece->assets->get<Shader>(ss.name, &ss);
     
     
 	// Setup rendering passes
-    _shadowShader       = this->ece->assets.get<Shader>(Builtin::Shader::Shadow).get();
-    _materialShader     = this->ece->assets.get<Shader>(Builtin::Shader::PBR).get();
-	_matcapShader       = this->ece->assets.get<Shader>(Builtin::Shader::Matcap).get();
-    _wireframeShader    = this->ece->assets.get<Shader>(Builtin::Shader::Wireframe).get();
-	_backgroundShader   = this->ece->assets.get<Shader>(Builtin::Shader::Background).get();
-	_gridShader         = this->ece->assets.get<Shader>(Builtin::Shader::Grid).get();
-    _lightShader        = this->ece->assets.get<Shader>(Builtin::Shader::Light).get();
-	_selectionShader    = this->ece->assets.get<Shader>(Builtin::Shader::Selection).get();
+    _shadowShader       = this->ece->assets->get<Shader>(Builtin::Shader::Shadow).get();
+    _materialShader     = this->ece->assets->get<Shader>(Builtin::Shader::PBR).get();
+	_matcapShader       = this->ece->assets->get<Shader>(Builtin::Shader::Matcap).get();
+    _wireframeShader    = this->ece->assets->get<Shader>(Builtin::Shader::Wireframe).get();
+	_backgroundShader   = this->ece->assets->get<Shader>(Builtin::Shader::Background).get();
+	_gridShader         = this->ece->assets->get<Shader>(Builtin::Shader::Grid).get();
+    _lightShader        = this->ece->assets->get<Shader>(Builtin::Shader::Light).get();
+	_selectionShader    = this->ece->assets->get<Shader>(Builtin::Shader::Selection).get();
     
 
 
@@ -322,12 +322,12 @@ void Renderer::init(std::shared_ptr<Camera> camera, EngineContext& ece) {
     
 
 
-    _bgModel    = this->ece->assets.get<Model>(Builtin::Model::BgPlane).get();
-    _gridModel  = this->ece->assets.get<Model>(Builtin::Model::GridPlane).get();
+    _bgModel    = this->ece->assets->get<Model>(Builtin::Model::BgPlane).get();
+    _gridModel  = this->ece->assets->get<Model>(Builtin::Model::GridPlane).get();
 
-	_directionLightGizmo    = this->ece->assets.get<Model>(Builtin::Model::Cone).get();
-	_pointLightGizmo        = this->ece->assets.get<Model>(Builtin::Model::Cube).get();
-	_spotLightGizmo         = this->ece->assets.get<Model>(Builtin::Model::Cone).get();
+	_directionLightGizmo    = this->ece->assets->get<Model>(Builtin::Model::Cone).get();
+	_pointLightGizmo        = this->ece->assets->get<Model>(Builtin::Model::Cube).get();
+	_spotLightGizmo         = this->ece->assets->get<Model>(Builtin::Model::Cone).get();
 
 
     //glDisable(GL_FRAMEBUFFER_SRGB);
@@ -401,12 +401,12 @@ void Renderer::renderScene(const SceneRenderData &renderData, bool isViewportSel
     glDisable(GL_DEPTH_TEST);
 
 
-    postProcessPass(_rt.bloomTexture(), _postProcA, ece->assets.get<Shader>(Builtin::FX::BlurHorizontal).get());
-    postProcessPass(_postProcA, _postProcB, ece->assets.get<Shader>(Builtin::FX::BlurVertical).get());
+    postProcessPass(_rt.bloomTexture(), _postProcA, ece->assets->get<Shader>(Builtin::FX::BlurHorizontal).get());
+    postProcessPass(_postProcA, _postProcB, ece->assets->get<Shader>(Builtin::FX::BlurVertical).get());
 
     _postProcA.bind();
     clearBuffer();
-    Shader* prePostShader = ece->assets.get<Shader>(Builtin::FX::PrePost).get();
+    Shader* prePostShader = ece->assets->get<Shader>(Builtin::FX::PrePost).get();
     prePostShader->use();
     prePostShader->set("frameTex0", 0); 
     prePostShader->set("frameTex1", 1); 
@@ -425,7 +425,7 @@ void Renderer::renderScene(const SceneRenderData &renderData, bool isViewportSel
     _postProcA.unbind();
 
 
-    //postProcessPass(_rt.colorTexture(), _postProcA, g_Assets.get<Shader>(Builtin::FX::GammaCorrection).get());
+    //postProcessPass(_rt.colorTexture(), _postProcA, g_assets->get<Shader>(Builtin::FX::GammaCorrection).get());
     
     const std::vector<FXInstance>& postProcessStack = fxReg->getActiveFXStack();
 

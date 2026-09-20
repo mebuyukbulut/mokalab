@@ -67,13 +67,13 @@ FXInstance::FXInstance(const FXInstanceDefinition& definition, EngineContext* ec
 }
 
 Shader* FXInstance::getShader() const {
-    return ece->assets.get<Shader>(builtinID).get();
+    return ece->assets->get<Shader>(builtinID).get();
 }
 void FXInstance::update()
 {
-    ece->assets.get<Shader>(builtinID).get()->use();
+    ece->assets->get<Shader>(builtinID).get()->use();
     for(FXParam& param : parameters)
-        param.update(ece->assets.get<Shader>(builtinID).get());
+        param.update(ece->assets->get<Shader>(builtinID).get());
 }
 
 void FXInstance::onInspect()
@@ -129,7 +129,7 @@ void FXRegistry::init(EngineContext& ece)
     std::string path{"../assets/shaders/postfx/"};
     for(auto& def : FXInstanceDefinitionStack){
         ShaderSettings ss{def.builtinID, path + def.vertexPath, path + def.fragmentPath};
-        this->ece->assets.get<Shader>(ss.name, &ss);
+        this->ece->assets->get<Shader>(ss.name, &ss);
     }
 
 

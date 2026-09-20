@@ -1,16 +1,20 @@
 // EngineContext.h
 #pragma once
+#include <memory>
+#include <string>
 
 class PathResolver;
-class AppConfig;
-class ProjectConfig;
 class AssetManager;
 class EventDispatcher;
+struct AppConfig;
+struct ProjectConfig;
 
 struct EngineContext {
-    PathResolver&    paths;
-    AppConfig&       appConfig;
-    ProjectConfig&   projectConfig;
-    AssetManager&    assets;
-    EventDispatcher& dispatcher;
+    std::unique_ptr<AppConfig>       appConfig;
+    std::unique_ptr<ProjectConfig>   projectConfig;
+    std::unique_ptr<PathResolver>    paths;
+    std::unique_ptr<AssetManager>    assets;
+    std::unique_ptr<EventDispatcher> dispatcher;
+
+    void init(std::string projectPath);
 };
