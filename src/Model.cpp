@@ -177,9 +177,9 @@ void Model::draw(Shader* shader, bool bindMaterial) {
     //if (shader->_type == Shader::Type::Foreground)
     if(bindMaterial)
         if (_materials.size())
-            _materials[0]->use(shader, ece);
+            _materials[0]->use(shader);
         else
-            ece->assets->get<Material>(Builtin::Material::DefaultMaterial)->use(shader,ece);  // her seferinde bunu sormasına gerek yok. initialization kısmında bunu default olarak alması lazım. 
+            ece->assets->get<Material>(Builtin::Material::DefaultMaterial)->use(shader);  // her seferinde bunu sormasına gerek yok. initialization kısmında bunu default olarak alması lazım. 
 
             
     for (unsigned int i = 0; i < meshes.size(); i++)

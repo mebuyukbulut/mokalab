@@ -10,13 +10,6 @@ struct EngineContext;
 
 class Material : public Asset
 {
-	// EngineContext* ece{};
-	// struct DefaultTextures{
-	// 	std::shared_ptr<Texture> white;
-	// 	std::shared_ptr<Texture> black;
-	// 	std::shared_ptr<Texture> normal;
-	// 	DefaultTextures();
-	// } defTex;
 	std::shared_ptr<Texture> defaultWhite{};
 	std::shared_ptr<Texture> defaultNormal{};
 public:
@@ -27,21 +20,16 @@ public:
 	float reflectance;
 	float ao;
 
+	inline static EngineContext* ece = nullptr;
+
 	std::shared_ptr<Texture> baseColorTexture{};
 	std::shared_ptr<Texture> armTexture{}; // AO, Roughness, Metallic
 	std::shared_ptr<Texture> normalTexture{};
 	std::shared_ptr<Texture> emissiveTexture{};
 
-	Material() :
-		baseColor{ 1.0f, 1.0f, 1.0f, 1.0f },
-		emissive{ 0.0f, 0.0f, 0.0f, 0.0f },
-		metallic{ 0.0f },
-		roughness{ 0.5f },
-		reflectance{ 0.45f },
-		ao{ 1.f }
-	{}
+	Material();
 
-	void use(Shader* shader, EngineContext* ece);
+	void use(Shader* shader);
 
 	void loadDefault(std::string path);
 
@@ -49,6 +37,8 @@ public:
 	void load(std::filesystem::path path, IAssetSettings* settings) override;
 	void unload() override;
 	void uploadToGPU() override;
+
+	void save(std::filesystem::path path);
 
 	virtual void onInspect();
 

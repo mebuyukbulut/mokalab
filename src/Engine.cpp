@@ -116,6 +116,8 @@ void Engine::initUI()
 void Engine::init(){
     _IM.init(_ece);
 
+    Material::ece = &_ece;
+
     initWindow();
 	initOpenGL();    
     

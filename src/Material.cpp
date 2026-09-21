@@ -16,17 +16,103 @@
 #include "AssetManager.h"
 #include "EngineContext.h"
 
+#include <fstream>
+#include <yaml-cpp/yaml.h>
 
-void Material::use(Shader* shader, EngineContext* ece) {
-	// Set Texture location uniforms 
+
+	// glm::vec4 baseColor;
+	// glm::vec4 emissive;
+	// float metallic   ;
+	// float roughness  ;
+	// float reflectance;
+	// float ao         ;
+
+
+namespace YAML {
+// --- glm::vec4 ---
+template<>
+struct convert<glm::vec4> {
+	// Deserialize (YAML Node -> glm::vec4)
+	static bool decode(const Node& node, glm::vec4& rhs) {
+		if (!node.IsSequence() || node.size() != 4) {
+			return false;
+		}
+
+		rhs.x = node[0].as<float>();
+		rhs.y = node[1].as<float>();
+		rhs.z = node[2].as<float>();
+		rhs.w = node[3].as<float>();
+		return true;
+	}
+
+	// Serialize (glm::vec4 -> YAML Node)
+	static Node encode(const glm::vec4& rhs) {
+		Node node;
+		node.push_back(rhs.x);
+		node.push_back(rhs.y);
+		node.push_back(rhs.z);
+		node.push_back(rhs.w);
+		node.SetStyle(EmitterStyle::Flow); // [x, y, z, w] formatında yazar
+		return node;
+	}
+};
+
+template<>
+struct convert<Material> {
+
+    static Node encode(const Material& rhs) {
+        Node node;
+        node["name"		  ] = rhs.name		 ;
+        node["baseColor"  ] = rhs.baseColor	 ;
+        node["emissive"   ] = rhs.emissive	 ;
+        node["metallic"   ] = rhs.metallic	 ;
+        node["roughness"  ] = rhs.roughness  ;
+        node["reflectance"] = rhs.reflectance;
+        node["ao"         ] = rhs.ao		 ;
+        return node;
+    }
+
+    static bool decode(const Node& node, Material& rhs) {
+        if (!node.IsMap()) return false;
+        
+        if (node["name"		  ]) rhs.name		 = node["name"		 ].as<std::string>();
+        if (node["baseColor"  ]) rhs.baseColor	 = node["baseColor"  ].as<glm::vec4>();
+        if (node["emissive"   ]) rhs.emissive	 = node["emissive"   ].as<glm::vec4>();
+        if (node["metallic"   ]) rhs.metallic	 = node["metallic"   ].as<float>();
+        if (node["roughness"  ]) rhs.roughness 	 = node["roughness"  ].as<float>();
+        if (node["reflectance"]) rhs.reflectance = node["reflectance"].as<float>();
+        if (node["ao"         ]) rhs.ao			 = node["ao"         ].as<float>();
+        return true;
+    }
+};
+
+
+} // namespace YAML
+
+
+
+
+Material::Material() :
+	baseColor{ 1.0f, 1.0f, 1.0f, 1.0f },
+	emissive{ 0.0f, 0.0f, 0.0f, 0.0f },
+	metallic{ 0.0f },
+	roughness{ 0.5f },
+	reflectance{ 0.45f },
+	ao{ 1.f }
+{
+	if(!defaultWhite) defaultWhite = ece->assets->get<Texture>(Builtin::Texture::SolidWhite);
+	if(!defaultNormal) defaultNormal = ece->assets->get<Texture>(Builtin::Texture::FlatNormal);
+}
+
+void Material::use(Shader *shader)
+{
+    // Set Texture location uniforms 
 	// We should do this for once. Because we always bind the same slot.  
 	shader->set(Builtin::Material::BaseColorTexture, Builtin::TextureSlot::BaseColor); 
 	shader->set(Builtin::Material::ARMTexture, 		 Builtin::TextureSlot::ARM); 
 	shader->set(Builtin::Material::NormalTexture,	 Builtin::TextureSlot::Normal); 
 	shader->set(Builtin::Material::EmissiveTexture,  Builtin::TextureSlot::Emissive); 
 
-	if(!defaultWhite) defaultWhite = ece->assets->get<Texture>(Builtin::Texture::SolidWhite);
-	if(!defaultNormal) defaultNormal = ece->assets->get<Texture>(Builtin::Texture::FlatNormal);
 
 	// Bind Textures
 	(baseColorTexture ? baseColorTexture : defaultWhite )->bind(Builtin::TextureSlot::BaseColor);
@@ -89,15 +175,41 @@ void Material::load(std::filesystem::path path, IAssetSettings* settings)
         }
     }
 
+
 	// dosyadan okuyup material oluştur. 
+	try {
+        YAML::Node root = YAML::LoadFile(path.string());
+        Material m = root.as<Material>();
+		name = m.name;
+		baseColor = m.baseColor;
+		emissive = m.emissive;
+		metallic = m.metallic;
+		roughness = m.roughness;
+		reflectance = m.reflectance;
+		ao = m.ao; 
+    } catch (const std::exception& e) {
+        LOG_ERROR("Material cannot load from file: {}", path.string());
+    }
 }
 
 void Material::unload()
-{
+{ // Buna muhtemelen gerek yok. 
 }
 
 void Material::uploadToGPU()
+{ // Buna da muhtemelen gerek yok. 
+}
+
+void Material::save(std::filesystem::path path)
 {
+    try {
+        YAML::Node root;
+        root = this; // YAML::convert<T>::encode çağrılır
+        std::ofstream fout(path);
+        fout << root;
+    } catch (const std::exception& e) {
+        LOG_ERROR("Material cannot be saved to the file: {}", path.string());		
+    }
 }
 
 void Material::onInspect()
