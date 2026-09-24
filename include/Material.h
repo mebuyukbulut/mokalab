@@ -10,8 +10,9 @@ struct EngineContext;
 
 class Material : public Asset
 {
-	std::shared_ptr<Texture> defaultWhite{};
+	friend class MaterialLoader;
 	std::shared_ptr<Texture> defaultNormal{};
+	std::shared_ptr<Texture> defaultWhite{};
 public:
 	glm::vec4 baseColor;
 	glm::vec4 emissive;
@@ -31,14 +32,15 @@ public:
 
 	void use(Shader* shader);
 
-	void loadDefault(std::string path);
-
 	// Inherited via Asset
-	void load(std::filesystem::path path, IAssetSettings* settings) override;
-	void unload() override;
-	void uploadToGPU() override;
+	void load(std::filesystem::path path, IAssetSettings* settings) override {}; 
+	void save(std::filesystem::path path, IAssetSettings* settings) override {}; 
+	void reload() override {}; 
 
-	void save(std::filesystem::path path);
+	void purgeCPU() override;
+	void purgeGPU() override {};
+	void uploadGPU() override; 
+
 
 	virtual void onInspect();
 

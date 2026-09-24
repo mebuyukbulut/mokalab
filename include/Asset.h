@@ -19,6 +19,7 @@ enum class AssetLoadStatus {
     Error 
 };
 
+
 // Asset ile ilgili extra ayarları bu şekilde pass edeceğiz
 // Belki metadata için de benzer bir şey yapılabilir 
 
@@ -62,8 +63,14 @@ public:
 
     // --- Zorunlu Fonksiyonlar ---
     virtual void load(std::filesystem::path path, IAssetSettings* settings) = 0;   // Diskten yükle
-    virtual void unload() = 0; // Belleği boşalt
-    virtual void uploadToGPU() = 0; // cpu -> gpu yükleme işlemi main threadden çağrılmalı
+    virtual void save(std::filesystem::path path, IAssetSettings* settings) = 0;   // Diske kaydet
+    virtual void reload() = 0;
+
+    virtual void purgeCPU() = 0;
+    virtual void purgeGPU() = 0;    
+
+    virtual void uploadGPU() = 0; // cpu -> gpu yükleme işlemi main threadden çağrılmalı
+    
 
     // --- Getters & Setters ---
     AssetType getType() const { return _type; }

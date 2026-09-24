@@ -11,8 +11,15 @@
 #include "Logger.h"
 #include "EngineContext.h"
 
+#include "AssetSystem/IAssetLoader.h"
+#include "AssetSystem/IAssetSaver.h"
+#include "Shader.h"
+#include "Texture.h"
+
+
 class AssetManager : public Object
 {
+
 	class AssetRegistery {
 	private:
 		std::unordered_map<std::filesystem::path, uint64_t> path2uuid{};
@@ -40,6 +47,23 @@ class AssetManager : public Object
 	EngineContext* ece{};
 	//void load(std::filesystem::path path, const IAssetSettings* settings = nullptr);
 	//void loadAsync(std::filesystem::path path, const IAssetSettings* settings = nullptr);
+	    
+	static inline std::unordered_map<std::type_index, std::function<std::shared_ptr<IAssetLoader>(EngineContext*)> > _loaders;
+	static inline std::unordered_map<std::type_index, std::function<std::shared_ptr<IAssetSaver>()> > _savers;
+
+public:
+
+	template <class T>
+    static void registerLoader(std::function<std::shared_ptr<IAssetLoader>(EngineContext*)> creator) {
+        _loaders[std::type_index(typeid(T))] = creator;
+    }
+	template <class T>
+    static void registerSaver(std::function<std::shared_ptr<IAssetSaver>()> creator) {
+        _savers[std::type_index(typeid(T))] = creator;
+    }
+
+
+
 public:
 
 	template <class T>
@@ -83,41 +107,76 @@ inline std::shared_ptr<T> AssetManager::get(std::filesystem::path path, IAssetSe
 	if (uint64_t assetID = AR(path)) 
 		return get<T>(assetID);
 
-	// Yoksa yükle
-	std::shared_ptr<Asset> asset;
 
-	// C++17 Metaprogramming:
-	// Eğer T sınıfı "T(EngineContext*)" constructor'ına sahipse ona m_context verilir.
-	if constexpr (std::is_constructible_v<T, EngineContext*>) {
-		asset = std::make_shared<T>(ece);
-	} 
-	// Eğer varsayılan "T()" constructor'ına sahipse parametresiz çağrılır.
-	else if constexpr (std::is_constructible_v<T>) {
-		asset = std::make_shared<T>();
-	}
-	//std::shared_ptr<Asset> asset = std::make_shared<T>();
+	auto func = _loaders[std::type_index(typeid(T))];
+	std::shared_ptr<Asset> asset = func(ece)->load(path, settings);
+	
 	_assets[asset->UUID] = asset; 
 	_typeLists[std::type_index(typeid(T))].push_back(asset);
-
 	AR.addRecord(asset->UUID, path);
+	
+	if (asset->getLoadStatus() == AssetLoadStatus::ReadyToUpload)
+		asset->uploadGPU();
+	
+		
+	return get<T>(asset->UUID);
 
-	if (async) {
-		_activeLoads.push_back(std::async(std::launch::async, &Asset::load, asset.get(), path, settings));
-		_pendingUploads.push_back(asset);
-	}
-	else {
-		asset->load(path, settings);
-		if (asset->getLoadStatus() == AssetLoadStatus::ReadyToUpload){
+		//if( _loaders.find(std::type_index(typeid(T))) != _loaders.end() ){
 
-			asset->uploadToGPU();
-			//LOG_SUCCESS("[OK]\nAsset path: {}", asset->getPath().c_str());
-		}
-		else{
-			//LOG_CRITICAL("SOMETHING GOES WRONG\nAsset path: {}", asset->getPath().c_str());
-		}
-	}
+		// if (async) {
+		// 	_activeLoads.push_back(std::async(std::launch::async, &Asset::load, asset.get(), path, settings));
+		// 	_pendingUploads.push_back(asset);
+		// }
+		// else {
+		// 	asset->load(path, settings);
+		// 	if (asset->getLoadStatus() == AssetLoadStatus::ReadyToUpload){
 
-	return get<T>(asset->UUID); // yeni assetin id sini sorgula
+		// 		asset->uploadGPU();
+		// 		//LOG_SUCCESS("[OK]\nAsset path: {}", asset->getPath().c_str());
+		// 	}
+		// 	else{
+		// 		//LOG_CRITICAL("SOMETHING GOES WRONG\nAsset path: {}", asset->getPath().c_str());
+		// 	}
+		// }
+
+
+	//}
+	
+	// // Yoksa yükle
+	// std::shared_ptr<Asset> asset;
+
+	// // C++17 Metaprogramming:
+	// // Eğer T sınıfı "T(EngineContext*)" constructor'ına sahipse ona m_context verilir.
+	// if constexpr (std::is_constructible_v<T, EngineContext*>) {
+	// 	asset = std::make_shared<T>(ece);
+	// } 
+	// // Eğer varsayılan "T()" constructor'ına sahipse parametresiz çağrılır.
+	// else if constexpr (std::is_constructible_v<T>) {
+	// 	asset = std::make_shared<T>();
+	// }
+	// //std::shared_ptr<Asset> asset = std::make_shared<T>();
+	// _assets[asset->UUID] = asset; 
+	// _typeLists[std::type_index(typeid(T))].push_back(asset);
+
+	// AR.addRecord(asset->UUID, path);
+
+	// if (async) {
+	// 	_activeLoads.push_back(std::async(std::launch::async, &Asset::load, asset.get(), path, settings));
+	// 	_pendingUploads.push_back(asset);
+	// }
+	// else {
+	// 	asset->load(path, settings);
+	// 	if (asset->getLoadStatus() == AssetLoadStatus::ReadyToUpload){
+
+	// 		asset->uploadGPU();
+	// 		//LOG_SUCCESS("[OK]\nAsset path: {}", asset->getPath().c_str());
+	// 	}
+	// 	else{
+	// 		//LOG_CRITICAL("SOMETHING GOES WRONG\nAsset path: {}", asset->getPath().c_str());
+	// 	}
+	// }
+
+	// return get<T>(asset->UUID); // yeni assetin id sini sorgula
 
 }
 

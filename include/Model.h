@@ -11,14 +11,16 @@
 #include <assimp/postprocess.h>
 
 #include <stb_image.h>
-#include "Asset.h"
 #include <future>
+
+#include "Asset.h"
 #include <memory>
 
 class Texture;
 struct EngineContext;
 
 class Model : public Asset{
+    friend class ModelLoader;
     EngineContext* ece{};
     //MaterialManager* _materialManager{};
     //TextureManager* _textureManager{};
@@ -27,23 +29,21 @@ class Model : public Asset{
 	
     std::vector<Mesh> meshes;
 
-    void loadDefault(std::string pathStr);
 
     //unsigned int TextureFromFile(const char* path, const std::string& directory, bool gamma = 1);
-    void loadModel(const std::string& path);
-    void processNode(aiNode* node, const aiScene* scene);
-    Mesh processMesh(aiMesh* mesh, const aiScene* scene);
-    std::shared_ptr<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type);
-
+    
 public:
     Model(EngineContext* ece) { _type = AssetType::Model; this->ece = ece; }
 
     void draw(Shader* shader, bool bindMaterial = true);
 
     // Inherited via Asset
-    void load(std::filesystem::path path, IAssetSettings* settings) override;
-    void unload() override;
-    void uploadToGPU() override;
+    void load(std::filesystem::path path, IAssetSettings* settings) override {};
+    void save(std::filesystem::path path, IAssetSettings* settings) override {};
+    void reload() override {};
+    void purgeCPU() override;
+    void purgeGPU() override {};
+    void uploadGPU() override;
 
     virtual void onInspect() override ;
 

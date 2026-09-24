@@ -6,13 +6,13 @@
 class Shader;
 
 class Texture : public Asset {
+	friend class TextureLoader; 
 	unsigned char* _data{};
 	int _nrChannels, _width, _height; 
 
 	unsigned int _id; 
 	unsigned int _type; // OpenGL Enum
 
-	void loadInternal(std::string path);
 
 public:
 
@@ -22,16 +22,19 @@ public:
 	unsigned int getId() const { return _id; }
 
 	// Inherited via Asset
-	void load(std::filesystem::path path, IAssetSettings* settings) override;
-	void unload() override;
-	void uploadToGPU() override;
+	void load(std::filesystem::path path, IAssetSettings* settings) override {};
+	void save(std::filesystem::path path, IAssetSettings* settings) override {};
+	void reload() override {};
+	void purgeCPU() override;
+	void purgeGPU() override {};
+	void uploadGPU() override;
 
 	void createColorTexture(uint32_t width, uint32_t height);
 	void createColorTextureHDR(uint32_t width, uint32_t height);
 	void createDepthTexture(uint32_t width, uint32_t height);
 	void createIdTexture(uint32_t width, uint32_t height);
 	void createShadowDepthTexture(uint32_t width, uint32_t height);
-	void createSolidColorTextureRGBA8(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+	// void createSolidColorTextureRGBA8(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 
 	int getWidth(){return _width;}
 	int getHeight(){return _height;}

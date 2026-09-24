@@ -50,7 +50,7 @@ void AssetManager::update()
 	// Eğer GPU'ya yüklemeye hazırsa GPU'ya yükle
 	for (const auto& asset : _pendingUploads) {
 		if (asset->getLoadStatus() == AssetLoadStatus::ReadyToUpload)
-			asset->uploadToGPU();		
+			asset->uploadGPU();		
 	}
 
 	// Tamamlanmış veya hata alınmış assetleri _pendingUploads listesinden sil 

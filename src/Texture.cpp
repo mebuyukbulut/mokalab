@@ -13,13 +13,6 @@
 #include "Shader.h"
 #include "Builtin.h"
 
-void Texture::loadInternal(std::string path)
-{
-    if(path == Builtin::Texture::SolidBlack)        createSolidColorTextureRGBA8(  0,   0,   0, 255);
-    else if(path == Builtin::Texture::SolidWhite)   createSolidColorTextureRGBA8(255, 255, 255, 255);
-    else if(path == Builtin::Texture::FlatNormal)   createSolidColorTextureRGBA8(128, 128, 255, 255);
-}
-
 void Texture::use()
 {
     if (!_type) 
@@ -35,50 +28,13 @@ void Texture::bind(uint32_t bindingPoint)
     use();
 }
 
-void Texture::load(std::filesystem::path path, IAssetSettings* settings)
-{
-    _path = path.string();
-    _type = GL_TEXTURE_2D;
 
-    std::string pathStr = path.string();
-
-    // Sanal yolla model yükleme
-    for(std::string key : Builtin::Texture::All){
-        if(key == pathStr){
-            // Generated textures
-            loadInternal(pathStr);
-            _loadStatus = AssetLoadStatus::Complete;
-            return;
-        }
-    }
-
-    for(std::string key : Builtin::Icon::All){
-        if(key == pathStr){
-            TextureSettings* ts = static_cast<TextureSettings*>(settings);
-            ts->realPath;
-            _loadStatus = AssetLoadStatus::LoadingToCPU;
-            _data = stbi_load(ts->realPath.c_str(), &_width, &_height, &_nrChannels, 0);
-            //LOG_INFO("{} is ready to upload.", _path.c_str());
-            _loadStatus = AssetLoadStatus::ReadyToUpload;
-            return;            
-        }
-    }
-
-
-    //_type = GL_TEXTURE_CUBE_MAP;
-
-    _loadStatus = AssetLoadStatus::LoadingToCPU;
-    _data = stbi_load(path.string().c_str(), &_width, &_height, &_nrChannels, 0);
-    //LOG_INFO("{} is ready to upload.", _path.c_str());
-    _loadStatus = AssetLoadStatus::ReadyToUpload;
-}
-
-void Texture::unload()
+void Texture::purgeCPU() // YANLIŞ
 {
     glDeleteTextures(1, &_id);
 }
 
-void Texture::uploadToGPU()
+void Texture::uploadGPU()
 {
 
     _loadStatus = AssetLoadStatus::LoadingToGPU;
@@ -183,34 +139,34 @@ void Texture::createShadowDepthTexture(uint32_t width, uint32_t height)
 
 }
 
-void Texture::createSolidColorTextureRGBA8(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
-{   
-    _type = GL_TEXTURE_2D;
+// void Texture::createSolidColorTextureRGBA8(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+// {   
+//     _type = GL_TEXTURE_2D;
 
-    glGenTextures(1, &_id);
-    glBindTexture(GL_TEXTURE_2D, _id);
+//     glGenTextures(1, &_id);
+//     glBindTexture(GL_TEXTURE_2D, _id);
 
-    uint8_t pixel[4] = { r, g, b, a };
+//     uint8_t pixel[4] = { r, g, b, a };
 
-    glTexImage2D(
-        GL_TEXTURE_2D,
-        0,
-        GL_RGBA8,
-        1,
-        1,
-        0,
-        GL_RGBA,
-        GL_UNSIGNED_BYTE,
-        pixel
-    );
+//     glTexImage2D(
+//         GL_TEXTURE_2D,
+//         0,
+//         GL_RGBA8,
+//         1,
+//         1,
+//         0,
+//         GL_RGBA,
+//         GL_UNSIGNED_BYTE,
+//         pixel
+//     );
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-    //glBindTexture(GL_TEXTURE_2D, 0);
-}
+//     //glBindTexture(GL_TEXTURE_2D, 0);
+// }
 
 void Texture::destroy()
 {
