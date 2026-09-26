@@ -2,6 +2,7 @@
 #include "AssetSystem/IAssetLoader.h"
 #include "Material.h"
 #include "AssetManager.h"
+#include "Logger.h"
 
 
 class MaterialLoader : public IAssetLoader{

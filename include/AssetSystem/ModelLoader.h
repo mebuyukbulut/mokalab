@@ -3,6 +3,7 @@
 #include "Model.h"
 #include "AssetManager.h"
 #include "AssetHandle.h"
+#include "Logger.h"
 
 struct EngineContext;
 class ModelLoader : public IAssetLoader{

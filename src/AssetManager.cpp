@@ -1,4 +1,14 @@
 ﻿#include "AssetManager.h"
+#include "EngineContext.h"
+
+#include "Logger.h"
+
+#include "Model.h"
+#include "Shader.h"
+#include "Texture.h"
+#include "AssetSystem/IAssetLoader.h"
+#include "AssetSystem/IAssetSaver.h"
+#include "AssetHandle.h"
 
 void AssetManager::AssetRegistery::addRecord(uint64_t uuid, std::filesystem::path path)
 {
@@ -65,3 +75,130 @@ void AssetManager::update()
 	});
 
 }
+
+void AssetManager::setContext(EngineContext *context) { 
+	ece = context; 
+}
+
+template<class T>
+inline std::shared_ptr<T> AssetManager::get(uint64_t id)
+{
+	// Acaba buradaki complete statüsün sorgulamamız yanlış mı? 
+	//if (_assets.find(id) != _assets.end() && _assets[id]->getLoadStatus == AssetLoadStatus::Complete) 
+	if (_assets.find(id) != _assets.end()) 
+		return std::dynamic_pointer_cast<T>(_assets[id]);
+
+	return std::shared_ptr<T>();
+
+}
+
+template<class T>
+inline AssetHandle<T> AssetManager::get(std::filesystem::path path, IAssetSettings* settings, bool async)
+{
+	// Asset varsa olanı döndür
+	if (uint64_t assetID = AR(path)) 
+		return AssetHandle<T>(assetID);
+		//return get<T>(assetID);
+
+
+	auto func = _loaders[std::type_index(typeid(T))];
+
+	std::shared_ptr<Asset> asset;
+
+	auto loader = func(ece); // Loader örneği oluşturulur
+	if (!loader) {
+		LOG_CRITICAL("loader function is empty!");
+		return AssetHandle<T>();
+	}		
+	
+	if (async) {
+		if constexpr (std::is_constructible_v<T, EngineContext*>) 
+			asset = std::make_shared<T>(ece);		
+		else if constexpr (std::is_constructible_v<T>) 
+			asset = std::make_shared<T>();
+			
+		auto uuidOfTemp = asset->UUID;
+
+		_activeLoads.push_back(
+			std::async(std::launch::async, 
+				[uuidOfTemp, loader, path, settings]() -> std::shared_ptr<Asset>{
+					auto myAsset = loader->load(path, settings);
+					myAsset->UUID = uuidOfTemp;
+					return myAsset;
+				}
+		
+		));
+
+	}
+	else{
+		asset = loader->load(path, settings);	
+
+		if (asset->getLoadStatus() == AssetLoadStatus::ReadyToUpload){
+			asset->uploadGPU();
+			LOG_SUCCESS("Asset was loaded:\t {}" , asset->getPath().c_str());
+		}
+		else{
+			LOG_ERROR("Asset loading failed:\t {}" , asset->getPath().c_str());
+		}
+	}
+
+	_assets[asset->UUID] = asset; 
+	_typeLists[std::type_index(typeid(T))].push_back(asset);
+	AR.addRecord(asset->UUID, path);
+
+	
+	return AssetHandle<T>(asset->UUID);
+}
+
+template <class T>
+inline std::vector<std::shared_ptr<T>> AssetManager::getAll()
+{
+	auto typeindex = std::type_index(typeid(T));
+	// if there is no index return empty vector
+	if(! _typeLists.contains(typeindex)) return {};
+
+	const std::vector<std::weak_ptr<Asset>>& src = _typeLists.at(typeindex);
+
+	std::vector<std::shared_ptr<T>> result; 
+	result.reserve(src.size());
+
+    std::transform(src.begin(), src.end(), std::back_inserter(result),
+        [](const std::weak_ptr<Asset>& weakAsset)
+        {
+			auto sharedAsset = weakAsset.lock();
+			if(sharedAsset)
+            	return std::static_pointer_cast<T>(sharedAsset);
+			else
+				return std::shared_ptr<T>(); 
+        });
+
+    std::erase_if(result,
+        [](const std::shared_ptr<T>& asset)
+        { // !asset could be verbose! 
+            return !asset || asset->getLoadStatus() != AssetLoadStatus::Complete;
+        });
+
+    return result;
+}
+
+
+
+template std::shared_ptr<Material>    AssetManager::get<Material>(uint64_t);
+template AssetHandle<Material>        AssetManager::get<Material>(std::filesystem::path, IAssetSettings*, bool);
+template std::vector<std::shared_ptr<Material>> AssetManager::getAll<Material>();
+
+template std::shared_ptr<Model>    AssetManager::get<Model>(uint64_t);
+template AssetHandle<Model>        AssetManager::get<Model>(std::filesystem::path, IAssetSettings*, bool);
+template std::vector<std::shared_ptr<Model>> AssetManager::getAll<Model>();
+
+template std::shared_ptr<Shader>    AssetManager::get<Shader>(uint64_t);
+template AssetHandle<Shader>        AssetManager::get<Shader>(std::filesystem::path, IAssetSettings*, bool);
+template std::vector<std::shared_ptr<Shader>> AssetManager::getAll<Shader>();
+
+template std::shared_ptr<Texture>    AssetManager::get<Texture>(uint64_t);
+template AssetHandle<Texture>        AssetManager::get<Texture>(std::filesystem::path, IAssetSettings*, bool);
+template std::vector<std::shared_ptr<Texture>> AssetManager::getAll<Texture>();
+
+// template std::shared_ptr<Mesh>    AssetManager::get<Mesh>(uint64_t);
+// template AssetHandle<Mesh>        AssetManager::get<Mesh>(std::filesystem::path, IAssetSettings*, bool);
+// template std::vector<std::shared_ptr<Mesh>> AssetManager::getAll<Mesh>();

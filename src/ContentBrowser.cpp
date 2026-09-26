@@ -8,9 +8,11 @@
 #include "EngineContext.h"
 #include "PathResolver.h"
 #include "AssetManager.h"
+#include "AssetHandle.h"
 #include "EventDispatcher.h"
 #include "Texture.h"
 #include "Builtin.h"
+#include "Logger.h"
 
 #include <iostream>
 #include <algorithm>
