@@ -390,7 +390,7 @@ void UIManager::imageViewer()
     static ImVec2 sizeofTexture;
     if(imageViewerPath != currentPath){
         currentPath = imageViewerPath;
-        myTexture = ece->assets->get<Texture>(imageViewerPath);
+        myTexture = ece->assets->get<Texture>(imageViewerPath).resolve(ece);
         float width = myTexture->getWidth();
         float height = myTexture->getHeight();
         if(std::max(width,height) > 900){

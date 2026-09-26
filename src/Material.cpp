@@ -37,8 +37,8 @@ Material::Material() :
 	reflectance{ 0.45f },
 	ao{ 1.f }
 {
-	if(!defaultWhite) defaultWhite = ece->assets->get<Texture>(Builtin::Texture::SolidWhite);
-	if(!defaultNormal) defaultNormal = ece->assets->get<Texture>(Builtin::Texture::FlatNormal);
+	if(!defaultWhite.isValid()) defaultWhite = ece->assets->get<Texture>(Builtin::Texture::SolidWhite);
+	if(!defaultNormal.isValid()) defaultNormal = ece->assets->get<Texture>(Builtin::Texture::FlatNormal);
 }
 
 void Material::use(Shader *shader)
@@ -50,12 +50,32 @@ void Material::use(Shader *shader)
 	shader->set(Builtin::Material::NormalTexture,	 Builtin::TextureSlot::Normal); 
 	shader->set(Builtin::Material::EmissiveTexture,  Builtin::TextureSlot::Emissive); 
 
-
+	
 	// Bind Textures
-	(baseColorTexture ? baseColorTexture : defaultWhite )->bind(Builtin::TextureSlot::BaseColor);
-	(armTexture 	  ? armTexture : 	   defaultWhite )->bind(Builtin::TextureSlot::ARM);
-	(normalTexture	  ? normalTexture :    defaultNormal)->bind(Builtin::TextureSlot::Normal);
-	(emissiveTexture  ? emissiveTexture :  defaultWhite )->bind(Builtin::TextureSlot::Emissive);
+	if(baseColorTexture.isValid() && baseColorTexture.resolve(ece)->isLoaded())
+		baseColorTexture.resolve(ece)->bind(Builtin::TextureSlot::BaseColor);
+	else
+		defaultWhite.resolve(ece)->bind(Builtin::TextureSlot::BaseColor);
+
+	if(armTexture.isValid() && armTexture.resolve(ece)->isLoaded())
+		armTexture.resolve(ece)->bind(Builtin::TextureSlot::ARM);
+	else
+		defaultWhite.resolve(ece)->bind(Builtin::TextureSlot::ARM);
+
+	if(normalTexture.isValid() && normalTexture.resolve(ece)->isLoaded())
+		normalTexture.resolve(ece)->bind(Builtin::TextureSlot::Normal);
+	else
+		defaultNormal.resolve(ece)->bind(Builtin::TextureSlot::Normal);
+
+	if(emissiveTexture.isValid() && emissiveTexture.resolve(ece)->isLoaded())
+		emissiveTexture.resolve(ece)->bind(Builtin::TextureSlot::Emissive);
+	else
+		defaultWhite.resolve(ece)->bind(Builtin::TextureSlot::Emissive);
+		
+	// (baseColorTexture.isValid() ? baseColorTexture : defaultWhite ).resolve(ece)->bind(Builtin::TextureSlot::BaseColor);
+	// (armTexture.isValid()	  	? armTexture : 	     defaultWhite ).resolve(ece)->bind(Builtin::TextureSlot::ARM);
+	// (normalTexture.isValid()	? normalTexture :    defaultNormal).resolve(ece)->bind(Builtin::TextureSlot::Normal);
+	// (emissiveTexture.isValid() 	? emissiveTexture :  defaultWhite ).resolve(ece)->bind(Builtin::TextureSlot::Emissive);
 
 
 
@@ -99,16 +119,16 @@ void Material::onInspect()
 	ImGui::ColorEdit4("emissive", glm::value_ptr(emissive), ImGuiColorEditFlags_::ImGuiColorEditFlags_PickerHueWheel);
 }
 
-void Material::setBaseColorTexture(std::shared_ptr<Texture> texture){
+void Material::setBaseColorTexture(AssetHandle<Texture> texture){
 	baseColorTexture = texture;
 }
-void Material::setArmTexture(std::shared_ptr<Texture> texture){
+void Material::setArmTexture(AssetHandle<Texture> texture){
 	armTexture = texture;
 }
-void Material::setNormalTexture(std::shared_ptr<Texture> texture){
+void Material::setNormalTexture(AssetHandle<Texture> texture){
 	normalTexture = texture;
 }
-void Material::setEmissiveTexture(std::shared_ptr<Texture> texture){
+void Material::setEmissiveTexture(AssetHandle<Texture> texture){
 	emissiveTexture = texture;
 }
 

@@ -15,7 +15,7 @@ const bool RenderComponent::registered = []() {
 
 void RenderComponent::onInspect()
 {
-    _model->onInspect();
+    _model.resolve(ece)->onInspect();
 }
 
 void RenderComponent::resolveAssets(AssetManager & assets)
@@ -37,7 +37,7 @@ void RenderComponent::serialize(YAML::Emitter& out)
 
     out << YAML::BeginMap;
     Component::serialize(out);
-    out << YAML::Key << "path" << YAML::Value << _model->getPath();
+    out << YAML::Key << "path" << YAML::Value << _model.resolve(ece)->getPath();
     //out << YAML::Key << "shape" << YAML::Value << static_cast<int>(_shape);
     out << YAML::EndMap;
 }

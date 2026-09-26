@@ -3,6 +3,7 @@
 #include "Component.h"
 #include "Material.h"
 #include "Model.h"
+#include "AssetHandle.h"
 
 struct EngineContext; 
 
@@ -13,7 +14,7 @@ class RenderComponent : public Component
     std::string _path;
 
 public:
-    std::shared_ptr<Model> _model; 
+    AssetHandle<Model> _model; 
 
     RenderComponent() { type = ComponentType::Model; }
 

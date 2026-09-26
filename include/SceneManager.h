@@ -40,6 +40,14 @@ class SceneManager : public Object
     glm::vec2 viewportPos; 
     glm::vec2 viewportPanelSize; 
 
+    // Icons
+    AssetHandle<Texture> translateIcon{};
+    AssetHandle<Texture> rotateIcon{};
+    AssetHandle<Texture> scaleIcon{};
+    AssetHandle<Texture> materialIcon{};
+    AssetHandle<Texture> matcapIcon{};
+    AssetHandle<Texture> wireframeIcon{};
+
 
     void collectRenderData(SceneRenderData& renderData);
 

@@ -2,6 +2,7 @@
 #include "AssetSystem/IAssetLoader.h"
 #include "Model.h"
 #include "AssetManager.h"
+#include "AssetHandle.h"
 
 struct EngineContext;
 class ModelLoader : public IAssetLoader{
@@ -17,7 +18,7 @@ class ModelLoader : public IAssetLoader{
     void loadModel(std::shared_ptr<Model> model, const std::string& path);
     void processNode(std::shared_ptr<Model> model, aiNode* node, const aiScene* scene);
     Mesh processMesh(std::shared_ptr<Model> model, aiMesh* mesh, const aiScene* scene);
-    std::shared_ptr<Texture> loadMaterialTextures(std::shared_ptr<Model> model, aiMaterial* mat, aiTextureType type);
+    AssetHandle<Texture> loadMaterialTextures(std::shared_ptr<Model> model, aiMaterial* mat, aiTextureType type);
 
 public:
     ModelLoader(EngineContext* ece) : _ece{ece}{}

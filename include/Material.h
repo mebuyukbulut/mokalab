@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <memory>
 #include "Asset.h"
+#include "AssetHandle.h"
 
 class Texture;
 class Shader;
@@ -11,8 +12,8 @@ struct EngineContext;
 class Material : public Asset
 {
 	friend class MaterialLoader;
-	std::shared_ptr<Texture> defaultNormal{};
-	std::shared_ptr<Texture> defaultWhite{};
+	AssetHandle<Texture> defaultNormal{};
+	AssetHandle<Texture> defaultWhite{};
 public:
 	glm::vec4 baseColor;
 	glm::vec4 emissive;
@@ -23,10 +24,10 @@ public:
 
 	inline static EngineContext* ece = nullptr;
 
-	std::shared_ptr<Texture> baseColorTexture{};
-	std::shared_ptr<Texture> armTexture{}; // AO, Roughness, Metallic
-	std::shared_ptr<Texture> normalTexture{};
-	std::shared_ptr<Texture> emissiveTexture{};
+	AssetHandle<Texture> baseColorTexture{};
+	AssetHandle<Texture> armTexture{}; // AO, Roughness, Metallic
+	AssetHandle<Texture> normalTexture{};
+	AssetHandle<Texture> emissiveTexture{};
 
 	Material();
 
@@ -44,10 +45,10 @@ public:
 
 	virtual void onInspect();
 
-	void setBaseColorTexture(std::shared_ptr<Texture> texture);
-	void setArmTexture(std::shared_ptr<Texture> texture);
-	void setNormalTexture(std::shared_ptr<Texture> texture);
-	void setEmissiveTexture(std::shared_ptr<Texture> texture);
+	void setBaseColorTexture(AssetHandle<Texture> texture);
+	void setArmTexture(AssetHandle<Texture> texture);
+	void setNormalTexture(AssetHandle<Texture> texture);
+	void setEmissiveTexture(AssetHandle<Texture> texture);
 
 };
 

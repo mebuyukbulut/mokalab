@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 #include "Builtin.h"
 #include "IInspectable.h"
+#include "AssetHandle.h"
 
 class Shader;
 struct EngineContext; 
@@ -107,7 +108,7 @@ public:
     FXInstance(EngineContext* ece);
     FXInstance(const FXInstanceDefinition& definition, EngineContext* ece);
 
-    Shader* getShader() const;
+    AssetHandle<Shader> getShader() const;
     std::vector<FXParam>& getParameters(){ return parameters; }
 
     bool isActive(){return enabled;}

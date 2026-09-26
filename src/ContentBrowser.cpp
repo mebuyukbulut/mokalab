@@ -432,9 +432,10 @@ void ContentBrowser::drawFolderContent()
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.15f, 0.15f, 0.15f, 1.0f));
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
 
+            auto iconImg = ece->assets->get<Texture>(iconType).resolve(ece);
             if (ImGui::ImageButton(
                     "t",
-                    (ImTextureID)(intptr_t)ece->assets->get<Texture>(iconType)->getId(),
+                    (ImTextureID)(intptr_t) iconImg->getId(),
                     ImVec2(_thumbnailSize, _thumbnailSize)))
             {
             }    

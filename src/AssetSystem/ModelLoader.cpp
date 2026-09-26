@@ -3,7 +3,6 @@
 #include "EngineContext.h"
 
 
-
 std::shared_ptr<Asset> ModelLoader::load(std::filesystem::path path, IAssetSettings* settings)
 {
     std::shared_ptr<Model> model = std::make_shared<Model>(_ece); 
@@ -159,18 +158,27 @@ Mesh ModelLoader::processMesh(std::shared_ptr<Model> model, aiMesh* mesh, const 
     // specular: texture_specularN
     // normal: texture_normalN
 
-    std::shared_ptr<Material> mat = _ece->assets->get<Material>("internal::materials::redscarf");     
+    AssetHandle<Material> matHandle = _ece->assets->get<Material>("internal::materials::redscarf");   
+    auto mat = matHandle.resolve(_ece);  
+    AssetHandle<Texture> baseTex = loadMaterialTextures(model, material, aiTextureType_DIFFUSE);
+    AssetHandle<Texture> normalTex = loadMaterialTextures(model, material, aiTextureType_NORMALS);
+    
+    //AssetHandle<Texture> roughTex = loadMaterialTextures(model, material, aiTextureType_GLTF_METALLIC_ROUGHNESS);
+    //AssetHandle<Texture> heightTex = loadMaterialTextures(model, material, aiTextureType_HEIGHT);
+    //AssetHandle<Texture> aoTex = loadMaterialTextures(model, material, aiTextureType_AMBIENT);
+    
+    if (baseTex.isValid())
+        mat->baseColorTexture = baseTex;
+    if(normalTex.isValid())
+        mat->normalTexture = normalTex;
+    // if (roughTex.isValid())
+    //     mat->roughnessTexture = roughTex;
+    // if (heightTex.isValid())
+    //     mat->heightTexture = heightTex;
+    // if (aoTex.isValid())
+    //     mat->aoTexture = aoTex;
 
-    if (auto tex = loadMaterialTextures(model, material, aiTextureType_DIFFUSE))
-        mat->baseColorTexture = tex;
-    // if (auto tex = loadMaterialTextures(material, aiTextureType_GLTF_METALLIC_ROUGHNESS))
-    //     mat->roughnessTexture = tex;
-    // //if (auto tex = loadMaterialTextures(material, aiTextureType_HEIGHT))
-    // //    mat-> = tex;
-    // if (auto tex = loadMaterialTextures(material, aiTextureType_AMBIENT))
-    //     mat->aoTexture = tex;
-
-    model->_materials.push_back(mat);
+    model->_materials.push_back(matHandle);
 
     // return a mesh object created from the extracted mesh data
     Mesh newMesh;
@@ -181,7 +189,7 @@ Mesh ModelLoader::processMesh(std::shared_ptr<Model> model, aiMesh* mesh, const 
 
 // checks all material textures of a given type and loads the textures if they're not loaded yet.
 // the required info is returned as a Texture struct.
-std::shared_ptr<Texture> ModelLoader::loadMaterialTextures(std::shared_ptr<Model> model, aiMaterial* mat, aiTextureType type)
+AssetHandle<Texture> ModelLoader::loadMaterialTextures(std::shared_ptr<Model> model, aiMaterial* mat, aiTextureType type)
 {
     // has parent path? 
     //std::string directory = _path.parent_path().().string();
@@ -194,11 +202,12 @@ std::shared_ptr<Texture> ModelLoader::loadMaterialTextures(std::shared_ptr<Model
         std::string filename = directory + textureStr.C_Str();
 
         // texture asekron yüklenmek zorunda. Yoksa modelle beraber non-main thread de opengl çağrısına giriyor. 
-        if (std::shared_ptr<Texture> tex = _ece->assets->get<Texture>(filename, nullptr, true)) {
+        AssetHandle<Texture> tex = _ece->assets->get<Texture>(filename, nullptr, true);
+        if (tex.isValid()) {
             return tex; // ilk bulduğun texture ile devam et sonra birden fazla texture için destek koyarız
         }
     }
-    return std::shared_ptr<Texture>();
+    return AssetHandle<Texture>();
 }
 
 

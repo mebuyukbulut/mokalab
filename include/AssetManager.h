@@ -15,6 +15,10 @@
 #include "AssetSystem/IAssetSaver.h"
 #include "Shader.h"
 #include "Texture.h"
+#include "AssetHandle.h"
+
+class Shader;
+class Texture;
 
 
 class AssetManager : public Object
@@ -39,10 +43,10 @@ class AssetManager : public Object
 	}AR;
 
 	std::unordered_map<uint64_t, std::shared_ptr<Asset>> _assets; // Tüm assetler
-	std::vector<std::future<void>> _activeLoads; // Async ile CPU da işlem görenler 
-	std::vector<std::shared_ptr<Asset>> _pendingUploads; // Async işlemi sonrası GPU ya yüklenmeyi bekleyenler 
+	std::vector<std::future<std::shared_ptr<Asset>>> _activeLoads; // Async ile CPU da işlem görenler 
+	//std::vector<std::shared_ptr<Asset>> _pendingUploads; // Async işlemi sonrası GPU ya yüklenmeyi bekleyenler 
 
-	std::map<std::type_index, std::vector<std::shared_ptr<Asset>>> _typeLists ; 
+	std::map<std::type_index, std::vector<std::weak_ptr<Asset>>> _typeLists ; 
 
 	EngineContext* ece{};
 	//void load(std::filesystem::path path, const IAssetSettings* settings = nullptr);
@@ -70,7 +74,7 @@ public:
 	std::shared_ptr<T> get(uint64_t id);
 
 	template <class T>
-	std::shared_ptr<T> get(std::filesystem::path path, IAssetSettings* settings = nullptr, bool async = false);
+	AssetHandle<T> get(std::filesystem::path path, IAssetSettings* settings = nullptr, bool async = false);
 
 	template <class T>
 	std::vector<std::shared_ptr<T>> getAll();
@@ -101,83 +105,61 @@ inline std::shared_ptr<T> AssetManager::get(uint64_t id)
 }
 
 template<class T>
-inline std::shared_ptr<T> AssetManager::get(std::filesystem::path path, IAssetSettings* settings, bool async)
+inline AssetHandle<T> AssetManager::get(std::filesystem::path path, IAssetSettings* settings, bool async)
 {
 	// Asset varsa olanı döndür
 	if (uint64_t assetID = AR(path)) 
-		return get<T>(assetID);
+		return AssetHandle<T>(assetID);
+		//return get<T>(assetID);
 
 
 	auto func = _loaders[std::type_index(typeid(T))];
-	std::shared_ptr<Asset> asset = func(ece)->load(path, settings);
+
+	std::shared_ptr<Asset> asset;
+
+	auto loader = func(ece); // Loader örneği oluşturulur
+	if (!loader) {
+		LOG_CRITICAL("loader function is empty!");
+		return AssetHandle<T>();
+	}		
 	
+	if (async) {
+		if constexpr (std::is_constructible_v<T, EngineContext*>) 
+			asset = std::make_shared<T>(ece);		
+		else if constexpr (std::is_constructible_v<T>) 
+			asset = std::make_shared<T>();
+			
+		auto uuidOfTemp = asset->UUID;
+
+		_activeLoads.push_back(
+			std::async(std::launch::async, 
+				[uuidOfTemp, loader, path, settings]() -> std::shared_ptr<Asset>{
+					auto myAsset = loader->load(path, settings);
+					myAsset->UUID = uuidOfTemp;
+					return myAsset;
+				}
+		
+		));
+
+	}
+	else{
+		asset = loader->load(path, settings);	
+
+		if (asset->getLoadStatus() == AssetLoadStatus::ReadyToUpload){
+			asset->uploadGPU();
+			LOG_SUCCESS("Asset was loaded:\t {}" , asset->getPath().c_str());
+		}
+		else{
+			LOG_ERROR("Asset loading failed:\t {}" , asset->getPath().c_str());
+		}
+	}
+
 	_assets[asset->UUID] = asset; 
 	_typeLists[std::type_index(typeid(T))].push_back(asset);
 	AR.addRecord(asset->UUID, path);
+
 	
-	if (asset->getLoadStatus() == AssetLoadStatus::ReadyToUpload)
-		asset->uploadGPU();
-	
-		
-	return get<T>(asset->UUID);
-
-		//if( _loaders.find(std::type_index(typeid(T))) != _loaders.end() ){
-
-		// if (async) {
-		// 	_activeLoads.push_back(std::async(std::launch::async, &Asset::load, asset.get(), path, settings));
-		// 	_pendingUploads.push_back(asset);
-		// }
-		// else {
-		// 	asset->load(path, settings);
-		// 	if (asset->getLoadStatus() == AssetLoadStatus::ReadyToUpload){
-
-		// 		asset->uploadGPU();
-		// 		//LOG_SUCCESS("[OK]\nAsset path: {}", asset->getPath().c_str());
-		// 	}
-		// 	else{
-		// 		//LOG_CRITICAL("SOMETHING GOES WRONG\nAsset path: {}", asset->getPath().c_str());
-		// 	}
-		// }
-
-
-	//}
-	
-	// // Yoksa yükle
-	// std::shared_ptr<Asset> asset;
-
-	// // C++17 Metaprogramming:
-	// // Eğer T sınıfı "T(EngineContext*)" constructor'ına sahipse ona m_context verilir.
-	// if constexpr (std::is_constructible_v<T, EngineContext*>) {
-	// 	asset = std::make_shared<T>(ece);
-	// } 
-	// // Eğer varsayılan "T()" constructor'ına sahipse parametresiz çağrılır.
-	// else if constexpr (std::is_constructible_v<T>) {
-	// 	asset = std::make_shared<T>();
-	// }
-	// //std::shared_ptr<Asset> asset = std::make_shared<T>();
-	// _assets[asset->UUID] = asset; 
-	// _typeLists[std::type_index(typeid(T))].push_back(asset);
-
-	// AR.addRecord(asset->UUID, path);
-
-	// if (async) {
-	// 	_activeLoads.push_back(std::async(std::launch::async, &Asset::load, asset.get(), path, settings));
-	// 	_pendingUploads.push_back(asset);
-	// }
-	// else {
-	// 	asset->load(path, settings);
-	// 	if (asset->getLoadStatus() == AssetLoadStatus::ReadyToUpload){
-
-	// 		asset->uploadGPU();
-	// 		//LOG_SUCCESS("[OK]\nAsset path: {}", asset->getPath().c_str());
-	// 	}
-	// 	else{
-	// 		//LOG_CRITICAL("SOMETHING GOES WRONG\nAsset path: {}", asset->getPath().c_str());
-	// 	}
-	// }
-
-	// return get<T>(asset->UUID); // yeni assetin id sini sorgula
-
+	return AssetHandle<T>(asset->UUID);
 }
 
 template <class T>
@@ -187,15 +169,19 @@ inline std::vector<std::shared_ptr<T>> AssetManager::getAll()
 	// if there is no index return empty vector
 	if(! _typeLists.contains(typeindex)) return {};
 
-	const std::vector<std::shared_ptr<Asset>>& src = _typeLists.at(typeindex);
+	const std::vector<std::weak_ptr<Asset>>& src = _typeLists.at(typeindex);
 
 	std::vector<std::shared_ptr<T>> result; 
 	result.reserve(src.size());
 
     std::transform(src.begin(), src.end(), std::back_inserter(result),
-        [](const std::shared_ptr<Asset>& asset)
+        [](const std::weak_ptr<Asset>& weakAsset)
         {
-            return std::static_pointer_cast<T>(asset);
+			auto sharedAsset = weakAsset.lock();
+			if(sharedAsset)
+            	return std::static_pointer_cast<T>(sharedAsset);
+			else
+				return std::shared_ptr<T>(); 
         });
 
     std::erase_if(result,

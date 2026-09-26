@@ -66,14 +66,15 @@ FXInstance::FXInstance(const FXInstanceDefinition& definition, EngineContext* ec
     }
 }
 
-Shader* FXInstance::getShader() const {
-    return ece->assets->get<Shader>(builtinID).get();
+AssetHandle<Shader> FXInstance::getShader() const {
+    return ece->assets->get<Shader>(builtinID);
 }
 void FXInstance::update()
 {
-    ece->assets->get<Shader>(builtinID).get()->use();
+    auto sh = ece->assets->get<Shader>(builtinID).resolve(ece);
+    sh->use();
     for(FXParam& param : parameters)
-        param.update(ece->assets->get<Shader>(builtinID).get());
+        param.update(sh.get());
 }
 
 void FXInstance::onInspect()

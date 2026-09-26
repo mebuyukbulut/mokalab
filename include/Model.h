@@ -14,6 +14,7 @@
 #include <future>
 
 #include "Asset.h"
+#include "AssetHandle.h"
 #include <memory>
 
 class Texture;
@@ -25,15 +26,15 @@ class Model : public Asset{
     //MaterialManager* _materialManager{};
     //TextureManager* _textureManager{};
     
-    std::vector<std::shared_ptr<Material>> _materials{};
-	
+    std::vector<AssetHandle<Material>> _materials{};
+	AssetHandle<Material> fallbackMaterial{};
     std::vector<Mesh> meshes;
 
 
     //unsigned int TextureFromFile(const char* path, const std::string& directory, bool gamma = 1);
     
 public:
-    Model(EngineContext* ece) { _type = AssetType::Model; this->ece = ece; }
+    Model(EngineContext* ece);
 
     void draw(Shader* shader, bool bindMaterial = true);
 

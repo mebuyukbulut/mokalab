@@ -59,7 +59,7 @@ void SceneManager::collectRenderData(SceneRenderData &renderData)
         if (entity->tombstone) continue;
 
         if(RenderComponent* renderComponent = entity->getComponent<RenderComponent>()){
-            if (Model* model = renderComponent->_model.get()) {
+            if (Model* model = renderComponent->_model.resolve(ece).get()) {
                 RenderItem item;
                 item.model = model;
                 item.transform = entity->transform->getGlobalMatrix();
@@ -195,7 +195,16 @@ void SceneManager::initDefaults()
         ts.realPath = iconPath.c_str();
         ece->assets->get<Texture>(key, &ts, false); // data is not unique ptr so cannot be async
     }
+
+    translateIcon = ece->assets->get<Texture>(Builtin::Icon::EditorTool::Translate);
+    rotateIcon = ece->assets->get<Texture>(Builtin::Icon::EditorTool::Rotate);
+    scaleIcon = ece->assets->get<Texture>(Builtin::Icon::EditorTool::Scale);
+
+    materialIcon  = ece->assets->get<Texture>(Builtin::Icon::ViewMode::Lit);
+    matcapIcon    = ece->assets->get<Texture>(Builtin::Icon::ViewMode::Matcap);
+    wireframeIcon = ece->assets->get<Texture>(Builtin::Icon::ViewMode::Wireframe);
     
+
 
     auto model = AssetRoot / "models/monkey/monkey.obj";
     
@@ -776,10 +785,11 @@ void SceneManager::onInspect()
     ? ImVec4(0.4f, 0.7f, 1.0f, 1.0f)
     : ImVec4(1, 1, 1, 1);
 
-    
+
+
     if (ImGui::ImageButton(
             "t",
-            (ImTextureID)(intptr_t)ece->assets->get<Texture>(Builtin::Icon::EditorTool::Translate)->getId(),
+            (ImTextureID)(intptr_t)translateIcon.resolve(ece)->getId(),
             ImVec2(32, 32), ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), tint))
     {
         mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
@@ -787,7 +797,7 @@ void SceneManager::onInspect()
     ImGui::SameLine();
     if (ImGui::ImageButton(
             "r",
-            (ImTextureID)(intptr_t)ece->assets->get<Texture>(Builtin::Icon::EditorTool::Rotate)->getId(),
+            (ImTextureID)(intptr_t)rotateIcon.resolve(ece)->getId(),
             ImVec2(32, 32), ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), tint))
     {
         mCurrentGizmoOperation = ImGuizmo::ROTATE;
@@ -795,7 +805,7 @@ void SceneManager::onInspect()
     ImGui::SameLine();   
     if (ImGui::ImageButton(
             "s",
-            (ImTextureID)(intptr_t)ece->assets->get<Texture>(Builtin::Icon::EditorTool::Scale)->getId(),
+            (ImTextureID)(intptr_t)scaleIcon.resolve(ece)->getId(),
             ImVec2(32, 32), ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), tint))
     {
         mCurrentGizmoOperation = ImGuizmo::SCALE;
@@ -807,7 +817,7 @@ void SceneManager::onInspect()
 
     if (ImGui::ImageButton(
             "p",
-            (ImTextureID)(intptr_t)ece->assets->get<Texture>(Builtin::Icon::ViewMode::Lit)->getId(),
+            (ImTextureID)(intptr_t)materialIcon.resolve(ece)->getId(),
             ImVec2(32, 32), ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), tint))
     {
         _renderer->setViewMode(ViewMode::Material);
@@ -816,7 +826,7 @@ void SceneManager::onInspect()
 
     if (ImGui::ImageButton(
             "m",
-            (ImTextureID)(intptr_t)ece->assets->get<Texture>(Builtin::Icon::ViewMode::Matcap)->getId(),
+            (ImTextureID)(intptr_t)matcapIcon.resolve(ece)->getId(),
             ImVec2(32, 32), ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), tint))
     {
         _renderer->setViewMode(ViewMode::Matcap);
@@ -825,7 +835,7 @@ void SceneManager::onInspect()
 
     if (ImGui::ImageButton(
             "w",
-            (ImTextureID)(intptr_t)ece->assets->get<Texture>(Builtin::Icon::ViewMode::Wireframe)->getId(),
+            (ImTextureID)(intptr_t)wireframeIcon.resolve(ece)->getId(),
             ImVec2(32, 32), ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), tint))
     {
         _renderer->setViewMode(ViewMode::Wireframe);
@@ -1032,7 +1042,7 @@ void SceneManager::addModel(std::string path, std::string entityName, bool loadA
 
 
     auto renderComponent = std::make_unique<RenderComponent>();
-    renderComponent->_model = ece->assets->get<Model>(path, nullptr, loadAsync);
+    renderComponent->_model = ece->assets->get<Model>(path, nullptr, true); //loadAsync);
     entity->addComponent(std::move(renderComponent));
 
     Entity* createdEntity = entity.get();

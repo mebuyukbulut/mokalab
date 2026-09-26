@@ -3,6 +3,7 @@
 #include "Entity.h"
 #include "RenderItem.h"
 #include <memory>
+#include "AssetHandle.h"
 
 class Camera;
 class Shader;
@@ -191,7 +192,7 @@ private:
 
 	Texture* cubemapTexture;
 	//std::vector<Texture*> loadedMatcapTextures; 
-	std::shared_ptr<Texture> matcapTexture;
+	AssetHandle<Texture> matcapTexture;
 	std::vector<std::string> matcapTexturePaths;
 
 	struct EngineContext* ece;

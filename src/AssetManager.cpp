@@ -42,19 +42,26 @@ void AssetManager::AssetRegistery::clear()
 
 void AssetManager::update()
 {
-	// thread bitmişse vector den sil 
-	std::erase_if(_activeLoads, [](auto& f) {
-		return f.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
-		});
+	// thread bitmişse vector den sil
+	std::erase_if(_activeLoads, [this](auto& f) {
+		bool ready = f.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
 
-	// Eğer GPU'ya yüklemeye hazırsa GPU'ya yükle
-	for (const auto& asset : _pendingUploads) {
-		if (asset->getLoadStatus() == AssetLoadStatus::ReadyToUpload)
-			asset->uploadGPU();		
-	}
+		if(ready){
+			auto newAsset = f.get();
+			
+			if (newAsset->getLoadStatus() == AssetLoadStatus::ReadyToUpload){
+				newAsset->uploadGPU();
+				LOG_SUCCESS( "ASYNC asset loading was complete:\t {}", newAsset->getPath().c_str());
+			}
+			else{
+				LOG_ERROR( "ASYNC asset loading failed:\t {}", newAsset->getPath().c_str());
+			}
 
-	// Tamamlanmış veya hata alınmış assetleri _pendingUploads listesinden sil 
-	std::erase_if(_pendingUploads, [](const auto& f) {
-		return f->getLoadStatus() == AssetLoadStatus::Complete || f->getLoadStatus() == AssetLoadStatus::Error;
-		});
+
+			_assets[newAsset->UUID] = newAsset; 
+		}
+
+		return ready;
+	});
+
 }

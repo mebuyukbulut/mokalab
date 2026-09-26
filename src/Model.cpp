@@ -10,9 +10,11 @@
 #include <imgui.h>
 #include "EngineContext.h"
 
-
-
-
+Model::Model(EngineContext *ece) { 
+    _type = AssetType::Model; 
+    this->ece = ece; 
+    fallbackMaterial = ece->assets->get<Material>(Builtin::Material::DefaultMaterial);
+}
 // draws the model, and thus all its meshes
 void Model::draw(Shader* shader, bool bindMaterial) {
     if (_loadStatus != AssetLoadStatus::Complete) return; 
@@ -20,11 +22,10 @@ void Model::draw(Shader* shader, bool bindMaterial) {
     //if (shader->_type == Shader::Type::Foreground)
     if(bindMaterial)
         if (_materials.size())
-            _materials[0]->use(shader);
+            _materials[0].resolve(ece)->use(shader);
         else
-            ece->assets->get<Material>(Builtin::Material::DefaultMaterial)->use(shader);  // her seferinde bunu sormasına gerek yok. initialization kısmında bunu default olarak alması lazım. 
+            fallbackMaterial.resolve(ece)->use(shader);  // her seferinde bunu sormasına gerek yok. initialization kısmında bunu default olarak alması lazım. 
 
-            
     for (unsigned int i = 0; i < meshes.size(); i++)
         meshes[i].draw(shader);
 }
@@ -57,7 +58,7 @@ void Model::onInspect(){
         _materials.push_back(ece->assets->get<Material>(path));
     }
 
-    Material* mat = _materials.front().get();
+    Material* mat = _materials.front().resolve(ece).get();
 
     ImGui::Text(mat->name.c_str());
     mat->onInspect();
