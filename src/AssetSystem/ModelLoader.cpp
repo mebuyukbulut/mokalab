@@ -1,7 +1,7 @@
 #include "AssetSystem/ModelLoader.h"
 #include "Builtin.h"
 #include "EngineContext.h"
-
+#include "Logger.h"
 
 std::shared_ptr<Asset> ModelLoader::load(std::filesystem::path path, IAssetSettings* settings)
 {

@@ -1,7 +1,5 @@
 #pragma once
 #include <glm/glm.hpp>
-#include <unordered_map>
-#include <memory>
 #include "Asset.h"
 #include "AssetHandle.h"
 
@@ -43,7 +41,7 @@ public:
 	void uploadGPU() override; 
 
 
-	virtual void onInspect();
+	virtual void onInspect() override;
 
 	void setBaseColorTexture(AssetHandle<Texture> texture);
 	void setArmTexture(AssetHandle<Texture> texture);

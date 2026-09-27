@@ -73,6 +73,13 @@ public:
 	template <class T>
 	std::vector<std::shared_ptr<T>> getAll();
 
+	template <class T>
+	std::shared_ptr<T> get();
+	
+	template <class T>
+	void save(std::filesystem::path path, std::shared_ptr<T> asset);
+	
+	// assethandle ile overload olabilir
 
 	void update();
 	

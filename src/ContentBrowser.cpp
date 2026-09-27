@@ -17,6 +17,8 @@
 #include <iostream>
 #include <algorithm>
 
+#include "Material.h"
+
 std::string ContentBrowser::fileTypeString(const ContentType &type)
 {
     switch (type)
@@ -243,6 +245,7 @@ void ContentBrowser::newButton()
     // State takibi için flag'ler ve isim değişkenleri
     static bool open_new_folder_modal = false;
     static bool open_new_scene_modal = false;
+    static bool open_new_material_modal = false;
 
     // "+ New" Butonuna tıklandığında açılacak popup menü
     if (ImGui::BeginPopup("NewItemMenu")) {
@@ -253,6 +256,9 @@ void ContentBrowser::newButton()
         }
         if (ImGui::MenuItem("Sahne (.scene)")) {
             open_new_scene_modal = true;
+        }
+        if (ImGui::MenuItem("Material (.mat)")) {
+            open_new_material_modal = true;
         }
         
         double elapsedTime = ImGui::GetTime() - newButton_PopupOpenTime;
@@ -266,7 +272,11 @@ void ContentBrowser::newButton()
     // MODAL PENCERELER (İsim Alma İşlemleri)
     // ------------------------------------------------------------------------
 
-    // Klasör Oluşturma Modal'ı
+
+    // ==========================
+    // Folder Modal
+    // ==========================
+
     if (open_new_folder_modal) {
         ImGui::OpenPopup("Create New Folder");
         open_new_folder_modal = false; // Pop-up'ın her frame tekrar tetiklenmesini önlemek için resetliyoruz
@@ -294,7 +304,10 @@ void ContentBrowser::newButton()
         ImGui::EndPopup();
     }
 
-    // Sahne Oluşturma Modal'ı
+    // ==========================
+    // Scene Modal
+    // ==========================
+    
     if (open_new_scene_modal) {
         ImGui::OpenPopup("Create New Scene");
         open_new_scene_modal = false;
@@ -320,6 +333,44 @@ void ContentBrowser::newButton()
         
         ImGui::EndPopup();
     }
+
+
+    // ==========================
+    // Material Modal
+    // ==========================
+
+    if (open_new_material_modal) {
+        ImGui::OpenPopup("Create New Material");
+        open_new_material_modal = false;
+    }
+
+    if (ImGui::BeginPopupModal("Create New Material", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        static char material_name[128] = "NewMaterial";
+        ImGui::InputText("Material Name:", material_name, IM_ARRAYSIZE(material_name));
+
+        if (ImGui::Button("Create", ImVec2(120, 0)))
+        {
+            auto mat = ece->assets->get<Material>();
+            auto matPath = (selectedDir->path / material_name);
+            matPath +=  ".mat";
+            ece->assets->save(matPath, mat);
+            scan();
+
+            material_name[0] = '\0'; // Input sıfırlama
+            ImGui::CloseCurrentPopup();
+        }
+        
+        ImGui::SameLine();
+        
+        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+            ImGui::CloseCurrentPopup();
+        }
+        
+        ImGui::EndPopup();
+    }
+
+
+
 }
 
 void ContentBrowser::breadcrumb()
@@ -391,6 +442,8 @@ void ContentBrowser::drawFolderContent()
 
     int columnCount = static_cast<int>(panelWidth / cellSize);
     if (columnCount < 1) columnCount = 1;
+
+    std::shared_ptr<ContentItem> deletedItem {};
 
     // Table kullanarak ızgara yapısını başlatıyoruz
     if (ImGui::BeginTable("ContentGrid", columnCount)) {
@@ -492,10 +545,8 @@ void ContentBrowser::drawFolderContent()
                 ImGui::Text("Are you sure to delete selected items recursively?"); ImGui::SameLine();
                 
                 if (ImGui::Button("Delete", ImVec2(120, 0))) {
-                    auto selectedFile = item->path;
-                    std::filesystem::remove_all(selectedFile);
-                    scan();
-
+                    deletedItem = item; // burada silemiyoruz döngüdeyiz. 
+                    // Döngünün bitiminden sonraya aldık mantığı
                     ImGui::CloseCurrentPopup();
                 }
                 
@@ -610,6 +661,12 @@ void ContentBrowser::drawFolderContent()
         }
 
         ImGui::EndTable();
+    }
+
+    if(deletedItem){
+        auto selectedFile = deletedItem->path;
+        std::filesystem::remove_all(selectedFile);
+        scan();
     }
 }
 

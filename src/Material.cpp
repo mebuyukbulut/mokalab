@@ -16,19 +16,6 @@
 #include "AssetManager.h"
 #include "EngineContext.h"
 
-
-
-	// glm::vec4 baseColor;
-	// glm::vec4 emissive;
-	// float metallic   ;
-	// float roughness  ;
-	// float reflectance;
-	// float ao         ;
-
-
-
-
-
 Material::Material() :
 	baseColor{ 1.0f, 1.0f, 1.0f, 1.0f },
 	emissive{ 0.0f, 0.0f, 0.0f, 0.0f },
@@ -72,12 +59,6 @@ void Material::use(Shader *shader)
 	else
 		defaultWhite.resolve(ece)->bind(Builtin::TextureSlot::Emissive);
 		
-	// (baseColorTexture.isValid() ? baseColorTexture : defaultWhite ).resolve(ece)->bind(Builtin::TextureSlot::BaseColor);
-	// (armTexture.isValid()	  	? armTexture : 	     defaultWhite ).resolve(ece)->bind(Builtin::TextureSlot::ARM);
-	// (normalTexture.isValid()	? normalTexture :    defaultNormal).resolve(ece)->bind(Builtin::TextureSlot::Normal);
-	// (emissiveTexture.isValid() 	? emissiveTexture :  defaultWhite ).resolve(ece)->bind(Builtin::TextureSlot::Emissive);
-
-
 
 	shader->set(Builtin::Material::BaseColor, 	 	baseColor);
 	shader->set(Builtin::Material::Emissive, 	 	emissive);
@@ -95,17 +76,7 @@ void Material::uploadGPU()
 { // Buna da muhtemelen gerek yok. 
 }
 
-// void Material::save(std::filesystem::path path, IAssetSettings* settings)
-// {
-//     try {
-//         YAML::Node root;
-//         root = *this; // YAML::convert<T>::encode çağrılır
-//         std::ofstream fout(path);
-//         fout << root;
-//     } catch (const std::exception& e) {
-//         LOG_ERROR("Material cannot be saved to the file: {}", path.string());		
-//     }
-// }
+
 
 void Material::onInspect()
 {

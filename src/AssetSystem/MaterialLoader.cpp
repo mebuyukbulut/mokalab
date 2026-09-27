@@ -1,7 +1,6 @@
 #include "AssetSystem/MaterialLoader.h"
 #include "Builtin.h"
 
-#include <fstream>
 #include <yaml-cpp/yaml.h>
 #include "Material.h"
 

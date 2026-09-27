@@ -135,10 +135,10 @@ inline AssetHandle<T> AssetManager::get(std::filesystem::path path, IAssetSettin
 
 		if (asset->getLoadStatus() == AssetLoadStatus::ReadyToUpload){
 			asset->uploadGPU();
-			LOG_SUCCESS("Asset was loaded:\t {}" , asset->getPath().c_str());
+			//LOG_SUCCESS("Asset was loaded: {}" , asset->getPath().c_str());
 		}
 		else{
-			LOG_ERROR("Asset loading failed:\t {}" , asset->getPath().c_str());
+			//LOG_ERROR("Asset loading failed: {}" , asset->getPath().c_str());
 		}
 	}
 
@@ -181,24 +181,52 @@ inline std::vector<std::shared_ptr<T>> AssetManager::getAll()
     return result;
 }
 
+template <class T>
+std::shared_ptr<T> AssetManager::get(){		
+	if constexpr (std::is_constructible_v<T, EngineContext*>) 
+		return std::make_shared<T>(ece);		
+	else if constexpr (std::is_constructible_v<T>) 
+		return std::make_shared<T>();
+}
 
+template <class T>
+void AssetManager::save(std::filesystem::path path, std::shared_ptr<T> asset){
 
+	auto func = _savers[std::type_index(typeid(T))];
+	auto saver = func(); // Loader örneği oluşturulur
+	if (!saver) {
+		LOG_ERROR("Saver is not defined for this type!");
+		return;
+	}		
+
+	saver->save(path, asset);
+}
+
+template std::shared_ptr<Material>    AssetManager::get<Material>();
 template std::shared_ptr<Material>    AssetManager::get<Material>(uint64_t);
 template AssetHandle<Material>        AssetManager::get<Material>(std::filesystem::path, IAssetSettings*, bool);
 template std::vector<std::shared_ptr<Material>> AssetManager::getAll<Material>();
 
+template std::shared_ptr<Model>    AssetManager::get<Model>();
 template std::shared_ptr<Model>    AssetManager::get<Model>(uint64_t);
 template AssetHandle<Model>        AssetManager::get<Model>(std::filesystem::path, IAssetSettings*, bool);
 template std::vector<std::shared_ptr<Model>> AssetManager::getAll<Model>();
 
+template std::shared_ptr<Shader>    AssetManager::get<Shader>();
 template std::shared_ptr<Shader>    AssetManager::get<Shader>(uint64_t);
 template AssetHandle<Shader>        AssetManager::get<Shader>(std::filesystem::path, IAssetSettings*, bool);
 template std::vector<std::shared_ptr<Shader>> AssetManager::getAll<Shader>();
 
+template std::shared_ptr<Texture>    AssetManager::get<Texture>();
 template std::shared_ptr<Texture>    AssetManager::get<Texture>(uint64_t);
 template AssetHandle<Texture>        AssetManager::get<Texture>(std::filesystem::path, IAssetSettings*, bool);
 template std::vector<std::shared_ptr<Texture>> AssetManager::getAll<Texture>();
 
+// template std::shared_ptr<Mesh>    AssetManager::get<Mesh>();
 // template std::shared_ptr<Mesh>    AssetManager::get<Mesh>(uint64_t);
 // template AssetHandle<Mesh>        AssetManager::get<Mesh>(std::filesystem::path, IAssetSettings*, bool);
 // template std::vector<std::shared_ptr<Mesh>> AssetManager::getAll<Mesh>();
+
+
+
+template void AssetManager::save<Material>(std::filesystem::path path, std::shared_ptr<Material> asset);

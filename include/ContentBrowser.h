@@ -55,29 +55,36 @@ public:
 
 };
 
-// bread crumbs 
-// filter 
-// cache 
-// directory tree 
-// directory browser 
-// description 
-// thumbnail 
-// drag/drop
-// basic operations for folder & files
-// - add 
-// - remove 
-// - move 
-// - remame 
-// - duplicate ?
-// favorites
-// collections 
-// search 
+// 🔴 Yapılmadı / Başlanmadı
+// 🟡 Devam Ediyor / Yapılıyor
+// 🔶 Kısmen Yapıldı
+// 🟢 Tamamlandı
+// ⚪ Beklemede / Askıda
+// 🟣 İnceleme / Test Aşamasında
+
+// bread crumbs 🟢 
+// filter 🔴 
+// cache 🔴 
+// directory tree 🟢 
+// directory browser 🟢 
+// description 🔶 
+// thumbnail 🔶 
+// drag/drop 🔴 
+// basic operations for folder & files 🔶 
+// - add 🔶
+// - remove 🔶
+// - move 🔴 
+// - remame 🔴 
+// - duplicate ? 🔴 
+// favorites 🔴 
+// collections 🔴 
+// search 🔴
 // 
-// browsing history  <- ->
-// up folder button 
-// +- for scale slider
-// breadcrumbs buttons
-// breadcrumsb home button? 
-// drawFolderContent içinde dosya yazılar maks 2-3 satır olsun belki default olarak 2 satır ayırabiliriz. 
+// browsing history  <- -> 🔴
+// up folder button 🟢
+// +- for scale slider 🟢
+// breadcrumbs buttons 🟢
+// breadcrumsb home button? 🟢
+// drawFolderContent içinde dosya yazılar maks 2-3 satır olsun belki default olarak 2 satır ayırabiliriz. 🔴
 
 
