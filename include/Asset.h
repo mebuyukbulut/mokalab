@@ -62,10 +62,6 @@ public:
     virtual ~Asset() = default;
 
     // --- Zorunlu Fonksiyonlar ---
-    virtual void load(std::filesystem::path path, IAssetSettings* settings) = 0;   // Diskten yükle
-    virtual void save(std::filesystem::path path, IAssetSettings* settings) = 0;   // Diske kaydet
-    virtual void reload() = 0;
-
     virtual void purgeCPU() = 0;
     virtual void purgeGPU() = 0;    
 

@@ -22,9 +22,6 @@ public:
 	unsigned int getId() const { return _id; }
 
 	// Inherited via Asset
-	void load(std::filesystem::path path, IAssetSettings* settings) override {};
-	void save(std::filesystem::path path, IAssetSettings* settings) override {};
-	void reload() override {};
 	void purgeCPU() override;
 	void purgeGPU() override {};
 	void uploadGPU() override;
