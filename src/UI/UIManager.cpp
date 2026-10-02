@@ -1,4 +1,4 @@
-﻿#include "UIManager.h"
+﻿#include "UI/UIManager.h"
 
 #include "Commands/CommandHistory.h"
 
@@ -22,7 +22,7 @@
 #include "SceneManager.h"
 #include "Builtin.h"
 
-#include "ContentBrowser.h"
+#include "UI/ContentBrowser.h"
 #include "AssetManager.h"
 #include "Texture.h"
 

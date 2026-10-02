@@ -9,7 +9,7 @@
 #include "Renderer.h"
 #include "Model.h"
 #include "Camera.h"
-#include "UIManager.h"
+#include "UI/UIManager.h"
 #include "LightManager.h"
 #include "Time.h"
 #include "Mouse.h"

@@ -158,7 +158,7 @@ Mesh ModelLoader::processMesh(std::shared_ptr<Model> model, aiMesh* mesh, const 
     // specular: texture_specularN
     // normal: texture_normalN
 
-    AssetHandle<Material> matHandle = _ece->assets->get<Material>("internal::materials::redscarf");   
+    AssetHandle<Material> matHandle = _ece->assets->get<Material>("BurasıSıkıntılı->ModelLoader.cpp");   
     auto mat = matHandle.resolve(_ece);  
     AssetHandle<Texture> baseTex = loadMaterialTextures(model, material, aiTextureType_DIFFUSE);
     AssetHandle<Texture> normalTex = loadMaterialTextures(model, material, aiTextureType_NORMALS);

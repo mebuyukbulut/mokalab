@@ -5,9 +5,8 @@
 enum class AssetType {
 	Texture,
 	Model,
-	Mesh, 
 	Material,
-	Shader,  // ?
+	Shader,  
 	Unknown, // ?
 };
 enum class AssetLoadStatus {

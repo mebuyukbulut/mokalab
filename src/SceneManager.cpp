@@ -24,7 +24,7 @@
 #include "LightManager.h"
 #include "Renderer.h"
 #include "Shader.h"
-#include "UIManager.h"
+#include "UI/UIManager.h"
 
 #include "Logger.h"
 #include "AssetManager.h"
