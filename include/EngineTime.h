@@ -3,7 +3,7 @@
 
 // This class must have only 1 unique instance because of we reset glfw time inside init function
 // So we can use singleton pattern in future but for now it is unnecessary
-class Time
+class EngineTime
 {
 	double _deltaTime{};
 	double _lastTime{};

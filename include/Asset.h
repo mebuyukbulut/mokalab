@@ -40,12 +40,12 @@ struct ModelSettings : IAssetSettings {
 struct ShaderSettings : IAssetSettings
 {
     ShaderSettings() = default;
-    ShaderSettings(std::string name, std::string vertexPath, std::string fragmentPath) 
+    ShaderSettings(std::string name, std::filesystem::path vertexPath, std::filesystem::path fragmentPath)
         : name{name}, vertexPath{vertexPath}, fragmentPath{fragmentPath}{}
 
     std::string name{};
-    std::string vertexPath{};
-    std::string fragmentPath{};
+    std::filesystem::path vertexPath{};
+    std::filesystem::path fragmentPath{};
 };
 
 class Asset : public Object{

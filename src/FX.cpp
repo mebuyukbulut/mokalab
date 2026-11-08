@@ -3,6 +3,7 @@
 #include "AssetManager.h"
 #include "Logger.h"
 #include "EngineContext.h"
+#include "PathResolver.h"
 #include <imgui.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -127,7 +128,7 @@ void FXRegistry::init(EngineContext& ece)
     this->ece = &ece; 
 
     // load all shaders from files
-    std::string path{"../assets/shaders/postfx/"};
+    std::string path = (ece.paths->assetRoot / "shaders" / "postfx").string() + "\\";
     for(auto& def : FXInstanceDefinitionStack){
         ShaderSettings ss{def.builtinID, path + def.vertexPath, path + def.fragmentPath};
         this->ece->assets->get<Shader>(ss.name, &ss);

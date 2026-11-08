@@ -171,7 +171,7 @@ void Engine::terminate() {
 
 Engine::Engine(std::filesystem::path projectPath){ 
     _ece.init(projectPath.string());
-    LOG_CRITICAL("{}", _ece.paths->projectConfig.c_str());
+    LOG_CRITICAL("{}", _ece.paths->projectConfig.string());
 };
 
 void Engine::run()

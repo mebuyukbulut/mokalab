@@ -7,11 +7,11 @@ Chronometer::Chronometer(int sampleCount) : sampleCount{ sampleCount } {
 }
 
 void Chronometer::start() {
-	_start = std::chrono::high_resolution_clock::now();
+    _start = std::chrono::steady_clock::now();
 }
 
 double Chronometer::stop() {
-    _finish = std::chrono::high_resolution_clock::now();
+    _finish = std::chrono::steady_clock::now();
 
     double elapsed_time = std::chrono::duration_cast<
         std::chrono::duration<double>>(_finish - _start).count();

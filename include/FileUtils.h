@@ -8,7 +8,7 @@ class FileUtils
 public:
 	static bool isExists(const std::string& filePath);
 	static std::string readFile(const std::string& filePath);
-	static void writeFile(const std::string& filePath, const std::string& str);
+	static void writeFile(const std::filesystem::path& filePath, const std::string& str);
 
 	static std::string openFileDialog(const wchar_t* filter = L"All Files\0*.*\0", bool isSaveMode = false, bool directoryOnly = false);
 	static void createDirectory(const std::filesystem::path& newDirectoryPath);

@@ -15,7 +15,7 @@ std::string FileUtils::readFile(const std::string& filePath)
     return file_contents;
 }
 
-void FileUtils::writeFile(const std::string &filePath, const std::string &str)
+void FileUtils::writeFile(const std::filesystem::path& filePath, const std::string &str)
 {
 	std::ofstream fout(filePath);
 	fout << str;
@@ -47,32 +47,32 @@ bool FileUtils::isExists(const std::string& name) {
 std::string FileUtils::openFileDialog(const wchar_t* filter, bool isSaveMode, bool directoryOnly) {
     //LOG_ERROR("FileUtils is OS dependent!");
     char filename[1024];
-    FILE *f{};
+    //FILE *f{};
 
-    if(!directoryOnly){
-        if(isSaveMode)
-            f = popen("zenity --file-selection --save", "r");
-        else
-            f = popen("zenity --file-selection", "r");
-    }
-    else
-    {
-        f = popen("zenity --file-selection --directory", "r");
-    }
-    
+    //if(!directoryOnly){
+    //    if(isSaveMode)
+    //        f = popen("zenity --file-selection --save", "r");
+    //    else
+    //        f = popen("zenity --file-selection", "r");
+    //}
+    //else
+    //{
+    //    f = popen("zenity --file-selection --directory", "r");
+    //}
+    //
 
-    if (!f) {
-        LOG_ERROR("Zenity başlatılamadı!");
-        return "";
-    }
-    
-    // Kullanıcı iptal ederse fgets nullptr döner
-    if (fgets(filename, sizeof(filename), f) == nullptr) {
-        pclose(f);
-        return ""; // Seçim yapılmadı
-    }
+    //if (!f) {
+    //    LOG_ERROR("Zenity başlatılamadı!");
+    //    return "";
+    //}
+    //
+    //// Kullanıcı iptal ederse fgets nullptr döner
+    //if (fgets(filename, sizeof(filename), f) == nullptr) {
+    //    pclose(f);
+    //    return ""; // Seçim yapılmadı
+    //}
 
-    pclose(f);
+    //pclose(f);
 
 
     std::string path(filename);

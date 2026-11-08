@@ -4,7 +4,7 @@
 
 class PathResolver{
 public:
-    std::filesystem::path appConfig{"../assets/config/config.yaml"};
+    std::filesystem::path appConfig; //  { "../assets/config/config.yaml" };
 
     std::filesystem::path projectRoot{};
     std::filesystem::path mokaFile{};
@@ -19,11 +19,13 @@ public:
     std::filesystem::path assetRoot{}; 
 
     PathResolver(){
-        engineRoot = std::filesystem::current_path().parent_path();
+        engineRoot = std::filesystem::current_path().parent_path().parent_path().parent_path();
         assetRoot = engineRoot / "assets";
 
         applicationRoot = engineRoot / "appData"; 
         lastProjectsPath = applicationRoot / "last-projects-list.txt"; 
+
+        appConfig = assetRoot / "config/config.yaml";
     }
 
     void setProjectRoot(std::filesystem::path newProjectRoot){ 

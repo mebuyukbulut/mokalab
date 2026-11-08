@@ -27,6 +27,7 @@
 #include "Texture.h"
 
 #include "ConfigManager.h"
+#include <GLFW/glfw3.h>
 
 UIManager::UIManager() = default;
 UIManager::~UIManager() = default;
@@ -54,7 +55,8 @@ void UIManager::init(GLFWwindow* window, std::shared_ptr<Camera> camera, EngineC
     //io.Fonts->AddFontFromFileTTF("fonts/Roboto-VariableFont_wdth,wght.ttf", 16.0f, NULL, ranges);
 
     // Eğer default fontu da korumak istersen:
-    io.FontDefault = io.Fonts->AddFontFromFileTTF("../assets/fonts/Roboto-VariableFont_wdth,wght.ttf", 16.0f, NULL, ranges);
+    std::string fontPath = (ece.paths->assetRoot / "fonts" / "Roboto-VariableFont_wdth,wght.ttf").string(); 
+    io.FontDefault = io.Fonts->AddFontFromFileTTF(fontPath.data(), 16.0f, NULL, ranges);
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
 
@@ -200,6 +202,16 @@ void UIManager::beginFrame() {
 void UIManager::endFrame() {
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    {
+        GLFWwindow* backup_context = glfwGetCurrentContext();
+
+        ImGui::UpdatePlatformWindows();
+        ImGui::RenderPlatformWindowsDefault();
+
+        glfwMakeContextCurrent(backup_context);
+    }
 }
 
 void UIManager::mainMenu(){	

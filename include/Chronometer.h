@@ -7,7 +7,7 @@ class Chronometer
 {
     int sampleCount{};
     int timeIterator{};
-	std::chrono::system_clock::time_point _start{}, _finish{};
+	std::chrono::steady_clock::time_point _start{}, _finish{};
     std::vector<double> timeSteps{};
 
 public:

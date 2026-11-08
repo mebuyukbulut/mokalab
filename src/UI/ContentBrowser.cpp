@@ -48,7 +48,7 @@ ContentType ContentBrowser::determineFileType(const std::filesystem::directory_e
     if(entry.is_directory())
         return ContentType::Directory;
 
-    std::string ext = entry.path().extension();
+    std::string ext = entry.path().extension().string();
 
     if(ext == ".txt")
         return ContentType::Text;

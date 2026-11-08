@@ -104,8 +104,8 @@ void SceneManager::initCommands()
 
     ece->dispatcher->subscribe(EventType::AddMonkey, [&](std::unique_ptr<EventData> e) {
         //std::filesystem::path AssetRoot = std::filesystem::current_path().parent_path() / "assets";
-        auto model = ece->paths->assetRoot / "models/monkey/monkey.obj";
-        addModel(model.c_str(), "Monkey", true);
+        auto model = ece->paths->assetRoot / "models\\monkey\\monkey.obj";
+        addModel(model.string(), "Monkey", true);
     });
 
     ece->dispatcher->subscribe(EventType::Delete, [&](std::unique_ptr<EventData> e) {
@@ -191,8 +191,8 @@ void SceneManager::initDefaults()
     for(const char* key : Builtin::Icon::All){
         TextureSettings ts;
         auto iconPath = AssetRoot / ("icons/" + std::string(key) + ".png");
-        LOG_TRACE("{}", iconPath.c_str());
-        ts.realPath = iconPath.c_str();
+        LOG_TRACE("{}", iconPath.string());
+        ts.realPath = iconPath.string();
         ece->assets->get<Texture>(key, &ts, false); // data is not unique ptr so cannot be async
     }
 

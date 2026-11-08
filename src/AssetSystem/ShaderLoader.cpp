@@ -1,7 +1,7 @@
 #include "AssetSystem/ShaderLoader.h"
 #include "Builtin.h"
 #include "FileUtils.h"
-
+#include "Logger.h"
 
 std::shared_ptr<Asset> ShaderLoader::load(std::filesystem::path path, IAssetSettings *settings)
 {
@@ -28,21 +28,21 @@ std::shared_ptr<Asset> ShaderLoader::load(std::filesystem::path path, IAssetSett
 
     if (isVirtual){
         ShaderSettings* a  = dynamic_cast<ShaderSettings*>(settings);
-        vertexShaderName = a->vertexPath;
-        fragmentShaderName = a->fragmentPath;
+        vertexShaderName = a->vertexPath.string();
+        fragmentShaderName = a->fragmentPath.string();
     }
     else if(isFX){
         ShaderSettings* a  = dynamic_cast<ShaderSettings*>(settings);
-        vertexShaderName = a->vertexPath;
-        fragmentShaderName = a->fragmentPath;
+        vertexShaderName = a->vertexPath.string();
+        fragmentShaderName = a->fragmentPath.string();
     }
     else{
-        vertexShaderName = path.c_str();
-        fragmentShaderName = path.c_str();
+        vertexShaderName = path.string();
+        fragmentShaderName = path.string();
         vertexShaderName += ".vert";
         fragmentShaderName += ".frag";
     }
-
+    LOG_TRACE("[ShaderLoader]\nvertex path: {}\nfragment path: {}", vertexShaderName, fragmentShaderName);
     std::string vertexShaderSource = FileUtils::readFile(vertexShaderName);
     std::string fragmentShaderSource = FileUtils::readFile(fragmentShaderName);
 

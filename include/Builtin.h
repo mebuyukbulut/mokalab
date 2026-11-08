@@ -151,28 +151,28 @@ namespace Builtin
 
     namespace Icon{
         namespace EditorTool{
-            inline constexpr const char* Select    = "builtin::editorTool::select";
-            inline constexpr const char* BoxSelect = "builtin::editorTool::boxSelect";
-            inline constexpr const char* Translate = "builtin::editorTool::translate";
-            inline constexpr const char* Rotate    = "builtin::editorTool::rotate";
-            inline constexpr const char* Scale     = "builtin::editorTool::scale";
+            inline constexpr const char* Select    = "builtin_editorTool_select";
+            inline constexpr const char* BoxSelect = "builtin_editorTool_boxSelect";
+            inline constexpr const char* Translate = "builtin_editorTool_translate";
+            inline constexpr const char* Rotate    = "builtin_editorTool_rotate";
+            inline constexpr const char* Scale     = "builtin_editorTool_scale";
 
         }
         namespace ViewMode
         {
-            inline constexpr const char* Lit        = "builtin::viewMode::Lit";
-            inline constexpr const char* Matcap     = "builtin::viewMode::Matcap";
-            inline constexpr const char* Wireframe  = "builtin::viewMode::Wireframe";
+            inline constexpr const char* Lit        = "builtin_viewMode_Lit";
+            inline constexpr const char* Matcap     = "builtin_viewMode_Matcap";
+            inline constexpr const char* Wireframe  = "builtin_viewMode_Wireframe";
         }
         namespace ContentBrowser
         {
-            inline constexpr const char* Unknown      = "builtin::contentBrowser::unknown";
-            inline constexpr const char* Folder       = "builtin::contentBrowser::folder";
-            inline constexpr const char* EmptyFolder  = "builtin::contentBrowser::emptyFolder";
-            inline constexpr const char* Texture      = "builtin::contentBrowser::texture";
-            inline constexpr const char* StaticMesh   = "builtin::contentBrowser::staticMesh";
-            inline constexpr const char* Scene        = "builtin::contentBrowser::scene";
-            inline constexpr const char* Material     = "builtin::contentBrowser::material";
+            inline constexpr const char* Unknown      = "builtin_contentBrowser_unknown";
+            inline constexpr const char* Folder       = "builtin_contentBrowser_folder";
+            inline constexpr const char* EmptyFolder  = "builtin_contentBrowser_emptyFolder";
+            inline constexpr const char* Texture      = "builtin_contentBrowser_texture";
+            inline constexpr const char* StaticMesh   = "builtin_contentBrowser_staticMesh";
+            inline constexpr const char* Scene        = "builtin_contentBrowser_scene";
+            inline constexpr const char* Material     = "builtin_contentBrowser_material";
 
         }
 

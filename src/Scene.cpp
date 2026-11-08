@@ -46,7 +46,7 @@ void Scene::save(std::string path) {
     bool isEmptyStem = filePath.extension() == filePath.stem();
     if(isExtensionValid) {
         if(!isEmptyStem){
-            _name = filePath.stem();
+            _name = filePath.stem().string();
         }
         else{
             LOG_ERROR("The name is empty!"); 
@@ -54,7 +54,7 @@ void Scene::save(std::string path) {
         }
     }
     else{
-        _name = filePath.filename();
+        _name = filePath.filename().string();
         filePath += ".scn";
         path = filePath.string();
     }

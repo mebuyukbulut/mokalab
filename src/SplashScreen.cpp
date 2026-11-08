@@ -22,10 +22,11 @@ void SplashScreen::init()
         800, 500, 
         "MOKALAB - PROJECT SELECTION",
         NULL, NULL);
-
     if (_window == NULL)
     {
-        LOG_CRITICAL("Failed to create GLFW window");
+        const char* description;
+        int code = glfwGetError(&description);
+        LOG_CRITICAL("Failed to create GLFW window: {}", description);
         glfwTerminate();
         std::exit(EXIT_FAILURE);
     }
@@ -59,7 +60,8 @@ void SplashScreen::init()
     //io.Fonts->AddFontFromFileTTF("fonts/Roboto-VariableFont_wdth,wght.ttf", 16.0f, NULL, ranges);
 
     // Eğer default fontu da korumak istersen:
-    io.FontDefault = io.Fonts->AddFontFromFileTTF("../assets/fonts/Roboto-VariableFont_wdth,wght.ttf", 16.0f, NULL, ranges);
+    LOG_ERROR("{}", std::filesystem::current_path().string());
+    io.FontDefault = io.Fonts->AddFontFromFileTTF("../../../assets/fonts/Roboto-VariableFont_wdth,wght.ttf", 16.0f, NULL, ranges);
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
 
@@ -283,6 +285,16 @@ void SplashScreen::drawUI()
     // ---------------------------------------
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    {
+        GLFWwindow* backup_context = glfwGetCurrentContext();
+
+        ImGui::UpdatePlatformWindows();
+        ImGui::RenderPlatformWindowsDefault();
+
+        glfwMakeContextCurrent(backup_context);
+    }
 }
 
 void SplashScreen::createProject(ProjectInfo pInfo)
@@ -311,7 +323,7 @@ void SplashScreen::startProject()
 // appData/last-projects-list.txt son açılan projeleri okur 
 std::vector<ProjectInfo> SplashScreen::getProjects()
 {
-    std::string lastProjectsPath = _pr.lastProjectsPath.c_str();
+    std::string lastProjectsPath = _pr.lastProjectsPath.string();
 
     if(!FileUtils::isExists(lastProjectsPath)){
         FileUtils::writeFile(lastProjectsPath, "");        
@@ -322,7 +334,7 @@ std::vector<ProjectInfo> SplashScreen::getProjects()
     for(auto path : StringUtils::split(lastProjectsList, '\n')){
         ProjectInfo info{};
         info.path = path;   
-        info.name = info.path.filename();     
+        info.name = info.path.filename().string();
         projects.push_back(info);
     }
 
@@ -332,11 +344,11 @@ std::vector<ProjectInfo> SplashScreen::getProjects()
 // appData/last-projects-list.txt son açılan projeleri yazar 
 void SplashScreen::setProjects(std::vector<ProjectInfo> projects)
 {
-    std::string lastProjectsPath = _pr.lastProjectsPath.c_str();
+    std::string lastProjectsPath = _pr.lastProjectsPath.string();
 
     std::string str{};
     for(auto i : projects)
-        str += i.path.c_str(), str += "\n";
+        str += i.path.string(), str += "\n";
 
     FileUtils::writeFile(lastProjectsPath, str); 
 }

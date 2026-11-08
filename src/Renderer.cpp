@@ -16,12 +16,14 @@
 #include "FX.h"
 #include <execution>
 #include "EngineContext.h"
+#include "PathResolver.h"
 
 void Renderer::initMatcap() {
     //matcapTexture = TextureFactory::load("data/matcaps/basic_1.png", false);
 	
     // Scan directory for matcap textures    
-    std::string path = "../assets/env/matcaps/";
+
+    std::string path = ece->paths->assetRoot.string() + "/env/matcaps/";
     for (const auto& entry : std::filesystem::directory_iterator(path))
         matcapTexturePaths.push_back(entry.path().string());
 
@@ -263,15 +265,16 @@ void Renderer::init(std::shared_ptr<Camera> camera, EngineContext& ece) {
     // Ayrıca CWD path olayını da daha net bir hale getirmemiz gerekecek
 
     // Init all engine::shaders 
+    auto shaderPath = ece.paths->assetRoot / "shaders";
     std::vector<ShaderSettings> shaders{
-        {Builtin::Shader::PBR, 		    "../assets/shaders/PBR0.vert", 			"../assets/shaders/PBR0.frag"},
-        {Builtin::Shader::Matcap, 	    "../assets/shaders/matcap.vert", 		"../assets/shaders/matcap.frag"},
-        {Builtin::Shader::Wireframe, 	"../assets/shaders/wireframe.vert", 	"../assets/shaders/wireframe.frag"},
-        {Builtin::Shader::Background,   "../assets/shaders/bg_grad.vert", 		"../assets/shaders/bg_grad.frag"},
-        {Builtin::Shader::Grid, 		"../assets/shaders/gridShader.vert", 	"../assets/shaders/gridShader.frag"},
-        {Builtin::Shader::Selection, 	"../assets/shaders/selection.vert", 	"../assets/shaders/selection.frag"},
-        {Builtin::Shader::Shadow,    	"../assets/shaders/simpleShadow.vert", 	"../assets/shaders/simpleShadow.frag"},
-        {Builtin::Shader::Light,    	"../assets/shaders/light.vert", 	    "../assets/shaders/light.frag"},
+        {Builtin::Shader::PBR, 		    shaderPath/"PBR0.vert",         shaderPath/"PBR0.frag" },
+        {Builtin::Shader::Matcap, 	    shaderPath/"matcap.vert", 	 	shaderPath/"matcap.frag" },
+        {Builtin::Shader::Wireframe, 	shaderPath/"wireframe.vert",    shaderPath/"wireframe.frag" },
+        {Builtin::Shader::Background,   shaderPath/"bg_grad.vert", 		shaderPath/"bg_grad.frag" },
+        {Builtin::Shader::Grid, 		shaderPath/"gridShader.vert", 	shaderPath/"gridShader.frag" },
+        {Builtin::Shader::Selection, 	shaderPath/"selection.vert",    shaderPath/"selection.frag" },
+        {Builtin::Shader::Shadow,    	shaderPath/"simpleShadow.vert", shaderPath/"simpleShadow.frag" },
+        {Builtin::Shader::Light,    	shaderPath/"light.vert",        shaderPath/"light.frag" },
     };
     //shaders.push_back({"lambertian", 	"../assets/shaders/lambertian.vert", 		"../assets/shaders/lambertian.frag"});
  	//shaders.push_back({"normal", 		"../assets/shaders/normal.vert", 			"../assets/shaders/normal.frag"});

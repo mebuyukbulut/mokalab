@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.20)
 project(MokaLab LANGUAGES C CXX)
 
+if(MSVC)
+    add_compile_options(/utf-8)
+endif()
+
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -11,12 +15,13 @@ find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
 find_package(assimp REQUIRED)
 find_package(Freetype REQUIRED)
-find_package(fmt REQUIRED)
+
+find_package(fmt CONFIG REQUIRED)
 
 # Bunlar büyük ihtimalle her sistemde düzgün bulunmayabilir
 find_package(tinygltf CONFIG QUIET)
-find_package(OpenMesh REQUIRED)
-
+find_package(yaml-cpp CONFIG REQUIRED)
+# find_package(OpenMesh REQUIRED)
 
 
 
@@ -61,10 +66,10 @@ target_link_libraries(imgui PUBLIC
 
 
 
-set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
-
-add_subdirectory(external/yaml-cpp)
+# set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+# set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
+# 
+# add_subdirectory(external/yaml-cpp)
 
 
 
@@ -102,6 +107,8 @@ target_include_directories(MokaLab PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+target_compile_definitions(MokaLab PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN)
+
 target_link_libraries(MokaLab PRIVATE
     OpenGL::GL
     glfw
@@ -110,7 +117,7 @@ target_link_libraries(MokaLab PRIVATE
     assimp::assimp
     Freetype::Freetype
     stb
-    fmt
+    fmt::fmt
     imgui
     yaml-cpp
     imguizmo
@@ -125,9 +132,9 @@ if(UNIX AND NOT APPLE)
     target_link_libraries(MokaLab PRIVATE dl pthread)
 endif()
 
-if(OpenMesh_FOUND)
-    target_link_libraries(MokaLab PRIVATE
-        OpenMeshCore
-        OpenMeshTools
-    )
-endif()
+# if(OpenMesh_FOUND)
+#     target_link_libraries(MokaLab PRIVATE
+#         OpenMeshCore
+#         OpenMeshTools
+#     )
+# endif()

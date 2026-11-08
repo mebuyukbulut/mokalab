@@ -11,7 +11,7 @@
 #include "Camera.h"
 #include "UI/UIManager.h"
 #include "LightManager.h"
-#include "Time.h"
+#include "EngineTime.h"
 #include "Mouse.h"
 #include "InputManager.h"
 #include "ParticleSystem.h"
@@ -38,7 +38,7 @@ class Engine
 	UIManager _UI{};
 	Mouse _mouse{};
 	InputManager _IM{}; // Input Manager
-	Time time{};
+	EngineTime time{};
 	ParticleSystem ps{};
 
 

@@ -5,8 +5,8 @@
 #include "Builtin.h"
 #include "Logger.h"
 #include <EMesh.h>
-
-
+#include <numbers>
+constexpr float PI = std::numbers::pi_v<float>;
 
 void Mesh::setupMesh()
 {
@@ -175,7 +175,7 @@ Mesh MeshFactory::createCone()
     std::vector<Vertex> base_vertices;
     for (int i{}; i < resolution; i++) {
         float ratio = static_cast<float>(i) / (resolution);
-        float angle = ratio * (M_PI * 2.0);
+        float angle = ratio * (PI * 2.0);
         float x = std::cos(angle) * radius;
         float z = std::sin(angle) * radius;
         vhandle.push_back(mesh.addVertex(glm::vec3(x, 0, z)));
@@ -223,7 +223,7 @@ Mesh MeshFactory::createCylinder()
     std::vector<Vertex> base_vertices;
     for (int i{}; i < resolution; i++) {
         float ratio = static_cast<float>(i) / (resolution);
-        float angle = ratio * (M_PI * 2.0);
+        float angle = ratio * (PI * 2.0);
         float x = std::cos(angle) * radius;
         float z = std::sin(angle) * radius;
         vhandle.push_back(mesh.addVertex({x,  height / 2, z})); // top 
@@ -305,8 +305,8 @@ Mesh MeshFactory::createTorus()
     // vertexleri oluşturuyoruz 
     for (size_t i = 0; i < radial_resolution; i++) {
         for (size_t j = 0; j < tubular_resolution; j++) {
-            float u = (float)j / tubular_resolution * M_PI * 2.0;
-            float v = (float)i / radial_resolution * M_PI * 2.0;
+            float u = (float)j / tubular_resolution * PI * 2.0;
+            float v = (float)i / radial_resolution * PI * 2.0;
             float x = (radius + thickness * std::cos(v)) * std::cos(u);
             float z = (radius + thickness * std::cos(v)) * std::sin(u);
             float y = thickness * std::sin(v); 
